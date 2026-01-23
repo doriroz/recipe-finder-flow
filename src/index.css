@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,8 +8,6 @@
    Warm, friendly cooking app for beginners
    Colors: Soft Oranges, Cream, Sage Green
 */
-
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -141,7 +141,11 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:opacity-90 transition-all duration-300 rounded-full px-8 py-4 font-semibold text-lg shadow-soft hover:shadow-elevated;
+    @apply bg-primary text-primary-foreground hover:opacity-90 transition-all duration-300 rounded-full px-8 py-4 font-semibold text-lg;
+    box-shadow: var(--shadow-soft);
+  }
+  .btn-primary:hover {
+    box-shadow: var(--shadow-elevated);
   }
 
   .btn-secondary {
@@ -153,15 +157,21 @@
   }
 
   .card-warm {
-    @apply bg-card rounded-2xl shadow-card border border-border/50 p-6;
+    @apply bg-card rounded-2xl border border-border/50 p-6;
+    box-shadow: var(--shadow-card);
   }
 
   .ingredient-chip {
-    @apply bg-card rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-all duration-200 border-2 border-border hover:border-primary/30 shadow-soft hover:shadow-elevated;
+    @apply bg-card rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-all duration-200 border-2 border-border hover:border-primary/30;
+    box-shadow: var(--shadow-soft);
+  }
+  .ingredient-chip:hover {
+    box-shadow: var(--shadow-elevated);
   }
 
   .ingredient-chip-selected {
-    @apply bg-accent border-primary shadow-soft;
+    @apply bg-accent border-primary;
+    box-shadow: var(--shadow-soft);
   }
 
   .step-indicator {
@@ -169,7 +179,8 @@
   }
 
   .step-active {
-    @apply bg-primary text-primary-foreground shadow-soft;
+    @apply bg-primary text-primary-foreground;
+    box-shadow: var(--shadow-soft);
   }
 
   .step-completed {
@@ -255,6 +266,21 @@
     to { 
       opacity: 1;
       transform: scale(1);
+    }
+  }
+
+  .animate-confetti {
+    animation: confetti 3s ease-out forwards;
+  }
+
+  @keyframes confetti {
+    0% { 
+      transform: translateY(0) rotate(0deg); 
+      opacity: 1; 
+    }
+    100% { 
+      transform: translateY(100vh) rotate(720deg); 
+      opacity: 0; 
     }
   }
 }

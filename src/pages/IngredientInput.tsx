@@ -5,16 +5,23 @@ import { useNavigate } from "react-router-dom";
 import IngredientChip from "@/components/IngredientChip";
 import { ingredients } from "@/data/mockData";
 
+interface Ingredient {
+  id: number;
+  name: string;
+  emoji: string;
+  category: string;
+}
+
 const IngredientInput = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedIngredients, setSelectedIngredients] = useState([]);
+  const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
 
   const filteredIngredients = ingredients.filter(ing =>
     ing.name.includes(searchQuery)
   );
 
-  const toggleIngredient = (ingredient) => {
+  const toggleIngredient = (ingredient: Ingredient) => {
     setSelectedIngredients(prev => {
       const isSelected = prev.find(i => i.id === ingredient.id);
       if (isSelected) {
