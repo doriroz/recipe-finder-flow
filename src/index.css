@@ -2,95 +2,125 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* מה שיש - Design System
+   Warm, friendly cooking app for beginners
+   Colors: Soft Oranges, Cream, Sage Green
 */
+
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Cream/Warm White Background */
+    --background: 30 50% 98%;
+    --foreground: 25 30% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Card surfaces - slightly warmer */
+    --card: 30 40% 99%;
+    --card-foreground: 25 30% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 30 40% 99%;
+    --popover-foreground: 25 30% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Warm Orange */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Sage Green */
+    --secondary: 120 20% 55%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted - Soft cream */
+    --muted: 30 30% 94%;
+    --muted-foreground: 25 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Light orange tint */
+    --accent: 25 80% 95%;
+    --accent-foreground: 25 95% 40%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Warm borders */
+    --border: 30 25% 88%;
+    --input: 30 25% 88%;
+    --ring: 25 95% 53%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Custom cooking app tokens */
+    --cream: 30 50% 96%;
+    --cream-dark: 30 35% 92%;
+    --orange-light: 25 100% 95%;
+    --orange-medium: 25 95% 60%;
+    --orange-dark: 25 90% 45%;
+    --sage: 120 20% 55%;
+    --sage-light: 120 25% 90%;
+    --sage-dark: 120 25% 40%;
+    --warm-brown: 25 30% 25%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(30 50% 98%) 0%, hsl(25 80% 95%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(35 95% 55%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(120 20% 55%) 0%, hsl(130 25% 60%) 100%);
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(25 30% 20% / 0.1);
+    --shadow-card: 0 8px 30px -8px hsl(25 30% 20% / 0.12);
+    --shadow-elevated: 0 12px 40px -12px hsl(25 30% 20% / 0.15);
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 30 50% 98%;
+    --sidebar-foreground: 25 30% 15%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 25 80% 95%;
+    --sidebar-accent-foreground: 25 95% 40%;
+    --sidebar-border: 30 25% 88%;
+    --sidebar-ring: 25 95% 53%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 25 25% 10%;
+    --foreground: 30 30% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 25 20% 14%;
+    --card-foreground: 30 30% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 25 20% 14%;
+    --popover-foreground: 30 30% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 25 95% 55%;
+    --primary-foreground: 25 30% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 120 20% 45%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 25 15% 20%;
+    --muted-foreground: 30 15% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 25 40% 20%;
+    --accent-foreground: 25 95% 65%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 25 15% 25%;
+    --input: 25 15% 25%;
+    --ring: 25 95% 55%;
+
+    --cream: 25 20% 12%;
+    --cream-dark: 25 15% 18%;
+    --orange-light: 25 40% 18%;
+    --sage-light: 120 15% 18%;
+
+    --sidebar-background: 25 25% 10%;
+    --sidebar-foreground: 30 30% 95%;
+    --sidebar-primary: 25 95% 55%;
+    --sidebar-primary-foreground: 25 30% 10%;
+    --sidebar-accent: 25 40% 20%;
+    --sidebar-accent-foreground: 25 95% 65%;
+    --sidebar-border: 25 15% 25%;
+    --sidebar-ring: 25 95% 55%;
   }
 }
 
@@ -99,7 +129,132 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    direction: rtl;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-heebo;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:opacity-90 transition-all duration-300 rounded-full px-8 py-4 font-semibold text-lg shadow-soft hover:shadow-elevated;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:opacity-90 transition-all duration-300 rounded-full px-6 py-3 font-medium;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-foreground hover:bg-accent transition-all duration-200 rounded-xl px-4 py-2;
+  }
+
+  .card-warm {
+    @apply bg-card rounded-2xl shadow-card border border-border/50 p-6;
+  }
+
+  .ingredient-chip {
+    @apply bg-card rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-all duration-200 border-2 border-border hover:border-primary/30 shadow-soft hover:shadow-elevated;
+  }
+
+  .ingredient-chip-selected {
+    @apply bg-accent border-primary shadow-soft;
+  }
+
+  .step-indicator {
+    @apply w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300;
+  }
+
+  .step-active {
+    @apply bg-primary text-primary-foreground shadow-soft;
+  }
+
+  .step-completed {
+    @apply bg-secondary text-secondary-foreground;
+  }
+
+  .step-pending {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-success {
+    background: var(--gradient-success);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from { 
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to { 
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
