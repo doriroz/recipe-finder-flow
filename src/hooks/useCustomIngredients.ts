@@ -31,7 +31,7 @@ export const useCustomIngredients = () => {
     }
   }, [customIngredients]);
 
-  const addCustomIngredient = (name: string): Ingredient => {
+  const addCustomIngredient = (name: string, emoji: string = "🥗"): Ingredient => {
     const trimmedName = name.trim();
     
     // Check if already exists
@@ -51,7 +51,7 @@ export const useCustomIngredients = () => {
     const newIngredient: Ingredient = {
       id: maxId + 1,
       name: trimmedName,
-      emoji: "🥗", // Default emoji for custom ingredients
+      emoji: emoji,
       category: "מותאם אישית",
     };
 

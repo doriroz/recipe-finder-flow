@@ -3,6 +3,7 @@ import { Search, ChefHat, ArrowRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import IngredientChip from "@/components/IngredientChip";
+import EmojiPicker from "@/components/EmojiPicker";
 import { ingredients as mockIngredients } from "@/data/mockData";
 import { useCustomIngredients } from "@/hooks/useCustomIngredients";
 
@@ -17,6 +18,7 @@ const IngredientInput = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
+  const [customEmoji, setCustomEmoji] = useState("🥗");
   const { customIngredients, addCustomIngredient } = useCustomIngredients();
 
   // Combine mock ingredients with custom ingredients
@@ -45,9 +47,10 @@ const IngredientInput = () => {
 
   const handleAddCustomIngredient = () => {
     if (searchQuery.trim() && !exactMatch) {
-      const newIngredient = addCustomIngredient(searchQuery.trim());
+      const newIngredient = addCustomIngredient(searchQuery.trim(), customEmoji);
       setSelectedIngredients((prev) => [...prev, newIngredient]);
       setSearchQuery("");
+      setCustomEmoji("🥗"); // Reset emoji for next time
     }
   };
 
@@ -63,6 +66,8 @@ const IngredientInput = () => {
       navigate("/recipe");
     }
   };
+
+  const showAddCustom = searchQuery.trim() && !exactMatch;
 
   return (
     <div className="min-h-screen bg-background">
@@ -100,7 +105,7 @@ const IngredientInput = () => {
         </div>
 
         {/* Search Bar with Add Button */}
-        <div className="relative max-w-md mx-auto mb-8 animate-slide-up">
+        <div className="max-w-md mx-auto mb-8 animate-slide-up">
           <div className="relative">
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
@@ -111,7 +116,7 @@ const IngredientInput = () => {
               onKeyDown={handleKeyDown}
               className="w-full bg-card border border-border rounded-full py-4 pr-12 pl-16 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             />
-            {searchQuery.trim() && !exactMatch && (
+            {showAddCustom && (
               <Button
                 size="icon"
                 variant="ghost"
@@ -124,11 +129,32 @@ const IngredientInput = () => {
             )}
           </div>
           
-          {/* Hint for adding custom ingredient */}
-          {searchQuery.trim() && !exactMatch && filteredIngredients.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center mt-2 animate-fade-in">
-              לחצו על <span className="text-primary font-medium">+</span> או Enter כדי להוסיף "{searchQuery}"
-            </p>
+          {/* Custom ingredient add panel */}
+          {showAddCustom && (
+            <div className="mt-4 p-4 bg-card rounded-2xl border border-border shadow-soft animate-fade-in">
+              <div className="flex items-center gap-4">
+                <EmojiPicker
+                  selectedEmoji={customEmoji}
+                  onSelect={setCustomEmoji}
+                />
+                <div className="flex-1 text-right">
+                  <p className="font-medium text-foreground">
+                    הוסף "{searchQuery}"
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    בחרו אימוג'י ולחצו על הכפתור להוספה
+                  </p>
+                </div>
+                <Button
+                  onClick={handleAddCustomIngredient}
+                  className="rounded-xl"
+                  size="lg"
+                >
+                  <Plus className="w-5 h-5 ml-2" />
+                  הוסף
+                </Button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -156,19 +182,6 @@ const IngredientInput = () => {
               />
             </div>
           ))}
-          
-          {/* Show add button in grid when searching with no exact match */}
-          {searchQuery.trim() && !exactMatch && filteredIngredients.length > 0 && (
-            <div className="animate-fade-in">
-              <button
-                onClick={handleAddCustomIngredient}
-                className="w-full h-full min-h-[72px] bg-primary/5 border-2 border-dashed border-primary/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 hover:bg-primary/10 hover:border-primary/50"
-              >
-                <Plus className="w-5 h-5 text-primary" />
-                <span className="font-medium text-primary">הוסף "{searchQuery}"</span>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Find Recipes Button */}
