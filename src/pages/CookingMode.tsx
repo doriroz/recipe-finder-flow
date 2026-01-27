@@ -1,21 +1,38 @@
 import { useState } from "react";
-import { ArrowRight, ArrowLeft, X, ChefHat } from "lucide-react";
+import { ArrowRight, ArrowLeft, X, ChefHat, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import CookingStep from "@/components/CookingStep";
 import StepProgress from "@/components/StepProgress";
+import { useRecipe } from "@/hooks/useRecipes";
 import { mockRecipe } from "@/data/mockData";
 
 const CookingMode = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const recipeId = searchParams.get("id");
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = mockRecipe.steps.length;
+  
+  const { data: recipe, isLoading } = useRecipe(recipeId !== 'mock' ? recipeId : null);
+  
+  // Transform DB recipe instructions to steps format, or use mock
+  const steps = recipe?.instructions 
+    ? recipe.instructions.map((instruction, index) => ({
+        number: index + 1,
+        title: `שלב ${index + 1}`,
+        instruction,
+        tip: undefined,
+      }))
+    : mockRecipe.steps;
+  
+  const displayTitle = recipe?.title || mockRecipe.title;
+  const totalSteps = steps.length;
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
     } else {
-      navigate("/complete");
+      navigate(`/complete?id=${recipeId || 'mock'}`);
     }
   };
 
@@ -27,9 +44,18 @@ const CookingMode = () => {
 
   const handleExit = () => {
     if (confirm("בטוח שאתם רוצים לצאת מהבישול?")) {
-      navigate("/recipe");
+      navigate(`/recipe${recipeId ? `?id=${recipeId}` : ''}`);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+        <p className="text-muted-foreground">טוען מתכון...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -47,7 +73,7 @@ const CookingMode = () => {
             </Button>
             <div className="flex items-center gap-2">
               <ChefHat className="w-6 h-6 text-primary" />
-              <span className="font-bold text-foreground">{mockRecipe.title}</span>
+              <span className="font-bold text-foreground">{displayTitle}</span>
             </div>
           </div>
         </div>
@@ -63,7 +89,7 @@ const CookingMode = () => {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-8">
         <CookingStep 
-          step={mockRecipe.steps[currentStep - 1]} 
+          step={steps[currentStep - 1]} 
           totalSteps={totalSteps}
         />
       </main>

@@ -1,13 +1,29 @@
 import { useState, useEffect } from "react";
-import { Camera, BookOpen, Home, ChefHat, Star } from "lucide-react";
+import { Camera, BookOpen, Home, ChefHat, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Confetti from "@/components/Confetti";
+import { useRecipe } from "@/hooks/useRecipes";
+import { useInsertGalleryItem } from "@/hooks/useUserGallery";
+import { useAuth } from "@/hooks/useAuth";
 import { mockRecipe } from "@/data/mockData";
+import { toast } from "@/hooks/use-toast";
 
 const PostCooking = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const recipeId = searchParams.get("id");
+  const { user } = useAuth();
+  
   const [showConfetti, setShowConfetti] = useState(true);
+  const [rating, setRating] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const { data: recipe } = useRecipe(recipeId !== 'mock' ? recipeId : null);
+  const insertGalleryItem = useInsertGalleryItem();
+  
+  // Use fetched recipe or fallback to mock
+  const displayTitle = recipe?.title || mockRecipe.title;
 
   useEffect(() => {
     const timer = setTimeout(() => setShowConfetti(false), 3000);
@@ -15,12 +31,53 @@ const PostCooking = () => {
   }, []);
 
   const handleUploadPhoto = () => {
-    alert("תכונה זו תהיה זמינה בקרוב! 📸");
+    toast({
+      title: "📸 בקרוב!",
+      description: "תכונת העלאת תמונות תהיה זמינה בקרוב",
+    });
   };
 
-  const handleSaveToCookbook = () => {
-    alert("המתכון נשמר לספר המתכונים שלכם! 📖");
-    navigate("/profile");
+  const handleSaveToCookbook = async () => {
+    if (!user) {
+      toast({
+        title: "יש להתחבר",
+        description: "התחברו כדי לשמור מתכונים לספר המתכונים",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await insertGalleryItem.mutateAsync({
+        recipe_id: recipeId !== 'mock' ? recipeId || undefined : undefined,
+        image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400", // Placeholder
+        user_notes: `${displayTitle} - דירוג: ${rating} כוכבים`,
+      });
+      
+      toast({
+        title: "✅ נשמר!",
+        description: "המתכון נשמר לגלריה שלכם",
+      });
+      navigate("/profile");
+    } catch (error) {
+      console.error("Error saving to gallery:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא הצלחנו לשמור את המתכון. נסו שוב.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRating = (star: number) => {
+    setRating(star);
+    toast({
+      title: `⭐ ${star} כוכבים`,
+      description: "תודה על הדירוג!",
+    });
   };
 
   return (
@@ -48,7 +105,7 @@ const PostCooking = () => {
             סיימתם להכין
           </p>
           <h2 className="text-2xl font-semibold text-primary mb-8">
-            {mockRecipe.title}
+            {displayTitle}
           </h2>
         </div>
 
@@ -60,9 +117,15 @@ const PostCooking = () => {
               <button
                 key={star}
                 className="text-4xl hover:scale-125 transition-transform cursor-pointer"
-                onClick={() => alert(`נתתם ${star} כוכבים! ⭐`)}
+                onClick={() => handleRating(star)}
               >
-                <Star className="w-8 h-8 text-primary fill-primary/20 hover:fill-primary transition-colors" />
+                <Star 
+                  className={`w-8 h-8 transition-colors ${
+                    star <= rating 
+                      ? "text-primary fill-primary" 
+                      : "text-primary fill-primary/20 hover:fill-primary"
+                  }`} 
+                />
               </button>
             ))}
           </div>
@@ -86,15 +149,24 @@ const PostCooking = () => {
 
           <button
             onClick={handleSaveToCookbook}
-            className="card-warm hover:shadow-elevated transition-all animate-slide-up flex flex-col items-center gap-4 py-8"
+            disabled={isSaving}
+            className="card-warm hover:shadow-elevated transition-all animate-slide-up flex flex-col items-center gap-4 py-8 disabled:opacity-50"
             style={{ animationDelay: "0.5s" }}
           >
             <div className="bg-sage-light rounded-full p-4">
-              <BookOpen className="w-8 h-8 text-secondary" />
+              {isSaving ? (
+                <Loader2 className="w-8 h-8 text-secondary animate-spin" />
+              ) : (
+                <BookOpen className="w-8 h-8 text-secondary" />
+              )}
             </div>
             <div>
-              <h3 className="font-semibold text-foreground mb-1">שמרו לספר המתכונים</h3>
-              <p className="text-sm text-muted-foreground">תמצאו אותו בפרופיל</p>
+              <h3 className="font-semibold text-foreground mb-1">
+                {isSaving ? "שומר..." : "שמרו לגלריה"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {user ? "תמצאו אותו בפרופיל" : "התחברו כדי לשמור"}
+              </p>
             </div>
           </button>
         </div>
