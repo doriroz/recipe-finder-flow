@@ -1,8 +1,9 @@
-interface Dish {
-  id: number;
+export interface Dish {
+  id: number | string;
   name: string;
   date: string;
   emoji: string;
+  imageUrl?: string;
 }
 
 interface DishCardProps {

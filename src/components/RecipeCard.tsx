@@ -7,8 +7,8 @@ interface Substitution {
   reason: string;
 }
 
-interface Recipe {
-  id: number;
+export interface RecipeCardData {
+  id: number | string;
   title: string;
   description: string;
   time: string;
@@ -20,7 +20,7 @@ interface Recipe {
 }
 
 interface RecipeCardProps {
-  recipe: Recipe;
+  recipe: RecipeCardData;
   onStartCooking: () => void;
 }
 
