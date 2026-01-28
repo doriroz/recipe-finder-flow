@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChefHat, Mail, Lock, Eye, EyeOff, ArrowRight, Chrome } from "lucide-react";
+import { ChefHat, Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -22,7 +22,17 @@ const Login = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/login`,
+        });
+        if (error) throw error;
+        toast({
+          title: "נשלח! 📧",
+          description: "בדוק את המייל שלך לאיפוס הסיסמה",
+        });
+        setMode("login");
+      } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -58,6 +68,18 @@ const Login = () => {
     }
   };
 
+  const getTitle = () => {
+    if (mode === "reset") return "שכחת סיסמה? 🔑";
+    if (mode === "login") return "שמחים לראות אותך! 👋";
+    return "הצטרפו אלינו! 🍳";
+  };
+
+  const getDescription = () => {
+    if (mode === "reset") return "הכנס את המייל שלך ונשלח לך קישור לאיפוס";
+    if (mode === "login") return "התחברו כדי להמשיך לבשל";
+    return "צרו חשבון ותתחילו לבשל";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-cream to-accent flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
@@ -72,12 +94,10 @@ const Login = () => {
         <Card className="shadow-elevated border-border/30">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-bold text-foreground">
-              {isLogin ? "שמחים לראות אותך! 👋" : "הצטרפו אלינו! 🍳"}
+              {getTitle()}
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              {isLogin
-                ? "התחברו כדי להמשיך לבשל"
-                : "צרו חשבון ותתחילו לבשל"}
+              {getDescription()}
             </CardDescription>
           </CardHeader>
 
@@ -102,36 +122,50 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground">
-                  סיסמה
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10 pl-10 text-left"
-                    dir="ltr"
-                    minLength={6}
-                    required
-                  />
+              {mode !== "reset" && (
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-foreground">
+                    סיסמה
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10 pl-10 text-left"
+                      dir="ltr"
+                      minLength={6}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mode === "login" && (
+                <div className="text-left">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setMode("reset")}
+                    className="text-sm text-primary hover:underline"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    שכחת סיסמה?
                   </button>
                 </div>
-              </div>
+              )}
 
               <Button
                 type="submit"
@@ -143,59 +177,37 @@ const Login = () => {
                   <span className="animate-pulse">מעבד...</span>
                 ) : (
                   <>
-                    {isLogin ? "התחברות" : "הרשמה"}
+                    {mode === "reset" ? "שלח קישור לאיפוס" : mode === "login" ? "התחברות" : "הרשמה"}
                     <ArrowRight className="w-5 h-5 mr-2" />
                   </>
                 )}
               </Button>
             </form>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
+            {mode === "reset" ? (
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => setMode("login")}
+                  className="text-primary hover:underline font-medium inline-flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  חזרה להתחברות
+                </button>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">או</span>
+            ) : (
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                  className="text-primary hover:underline font-medium"
+                >
+                  {mode === "login"
+                    ? "אין לך חשבון? הירשם עכשיו"
+                    : "כבר יש לך חשבון? התחבר"}
+                </button>
               </div>
-            </div>
-
-            {/* Google OAuth */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={async () => {
-                const { error } = await supabase.auth.signInWithOAuth({
-                  provider: "google",
-                  options: {
-                    redirectTo: `${window.location.origin}/ingredients`,
-                  },
-                });
-                if (error) {
-                  toast({
-                    title: "שגיאה",
-                    description: error.message,
-                    variant: "destructive",
-                  });
-                }
-              }}
-            >
-              <Chrome className="w-5 h-5 ml-2" />
-              המשך עם Google
-            </Button>
-
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-primary hover:underline font-medium"
-              >
-                {isLogin
-                  ? "אין לך חשבון? הירשם עכשיו"
-                  : "כבר יש לך חשבון? התחבר"}
-              </button>
-            </div>
+            )}
 
             <div className="mt-4 text-center">
               <button
