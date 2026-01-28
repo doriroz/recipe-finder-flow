@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChefHat, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { ChefHat, Mail, Lock, Eye, EyeOff, ArrowRight, Chrome } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,6 +149,41 @@ const Login = () => {
                 )}
               </Button>
             </form>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">או</span>
+              </div>
+            </div>
+
+            {/* Google OAuth */}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={async () => {
+                const { error } = await supabase.auth.signInWithOAuth({
+                  provider: "google",
+                  options: {
+                    redirectTo: `${window.location.origin}/ingredients`,
+                  },
+                });
+                if (error) {
+                  toast({
+                    title: "שגיאה",
+                    description: error.message,
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              <Chrome className="w-5 h-5 ml-2" />
+              המשך עם Google
+            </Button>
 
             <div className="mt-6 text-center">
               <button
