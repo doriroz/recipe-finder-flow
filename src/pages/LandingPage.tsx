@@ -89,9 +89,8 @@ const LandingPage = () => {
             </div>
             
             {/* Floating decorative elements with gentle pulse animation */}
-            <span className="absolute -top-4 -right-4 text-4xl animate-pulse opacity-80">🍳</span>
-            <span className="absolute -bottom-2 -left-4 text-3xl animate-pulse opacity-80" style={{ animationDelay: "0.7s" }}>🥗</span>
-            <span className="absolute top-1/2 -right-8 text-2xl animate-pulse opacity-80" style={{ animationDelay: "1.4s" }}>🍅</span>
+            <span className="absolute -top-4 -left-4 text-4xl animate-pulse opacity-80">🍳</span>
+            <span className="absolute -bottom-2 -right-4 text-3xl animate-pulse opacity-80" style={{ animationDelay: "0.7s" }}>🥗</span>
           </div>
         </div>
 
