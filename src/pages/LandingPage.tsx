@@ -1,7 +1,8 @@
-import { ChefHat, Sparkles, Heart, User, LogIn } from "lucide-react";
+import { ChefHat, Sparkles, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-fridge.jpg";
+import UserMenu from "@/components/UserMenu";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -24,25 +25,7 @@ const LandingPage = () => {
               </div>
               <span className="text-xl font-bold text-foreground">מה שיש</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => navigate("/profile")}
-                className="hover:bg-accent rounded-full"
-                title="הפרופיל שלי"
-              >
-                <User className="w-5 h-5 text-foreground" />
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => navigate("/login")}
-                className="flex items-center gap-2 rounded-full border-primary/30 hover:bg-primary/10"
-              >
-                <LogIn className="w-4 h-4" />
-                התחברות
-              </Button>
-            </div>
+            <UserMenu />
           </nav>
         </div>
       </header>
