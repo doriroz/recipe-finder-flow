@@ -26,7 +26,9 @@ const RecipeResult = () => {
   const displayRecipe = recipe ? {
     id: recipe.id,
     title: recipe.title,
-    description: `מתכון מותאם אישית`,
+    description: recipe.cooking_time 
+      ? `מתכון מהיר ב-${recipe.cooking_time} דקות` 
+      : "מתכון מותאם אישית",
     time: recipe.cooking_time ? `${recipe.cooking_time} דקות` : "30 דקות",
     difficulty: "בינוני",
     servings: 4,

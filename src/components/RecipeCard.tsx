@@ -65,27 +65,29 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         </ul>
       </div>
 
-      {/* Smart Substitutions */}
-      <div className="bg-sage-light rounded-xl p-4 mb-6">
-        <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-sage-dark">
-          <span>💡</span>
-          החלפות חכמות
-        </h3>
-        <div className="space-y-3">
-          {recipe.substitutions.map((sub, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <div className="bg-card rounded-lg p-3 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-foreground">{sub.original}</span>
-                  <span className="text-muted-foreground">←</span>
-                  <span className="font-medium text-secondary">{sub.alternative}</span>
+      {/* Smart Substitutions - only show if available */}
+      {recipe.substitutions && recipe.substitutions.length > 0 && (
+        <div className="bg-sage-light rounded-xl p-4 mb-6">
+          <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-sage-dark">
+            <span>💡</span>
+            החלפות חכמות
+          </h3>
+          <div className="space-y-3">
+            {recipe.substitutions.map((sub, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <div className="bg-card rounded-lg p-3 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-foreground">{sub.original}</span>
+                    <span className="text-muted-foreground">←</span>
+                    <span className="font-medium text-secondary">{sub.alternative}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{sub.reason}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{sub.reason}</p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Start Cooking Button */}
       <Button 
