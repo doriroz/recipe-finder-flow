@@ -31,10 +31,10 @@ serve(async (req) => {
       });
     }
 
-    // Get Gemini API key
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured");
+    // Get Lovable AI API key
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     // Initialize Supabase client with user's auth
@@ -111,17 +111,17 @@ serve(async (req) => {
       ];
     }
 
-    // Call Gemini API (using OpenAI-compatible endpoint)
+    // Call Lovable AI Gateway
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`,
+      "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${GEMINI_API_KEY}`,
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gemini-2.0-flash",
+          model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userContent },
@@ -134,8 +134,21 @@ serve(async (req) => {
 
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
-      console.error("Gemini API error:", geminiResponse.status, errorText);
-      throw new Error(`Gemini API error: ${geminiResponse.status}`);
+      console.error("Lovable AI error:", geminiResponse.status, errorText);
+      
+      if (geminiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "יותר מדי בקשות, נסו שוב בעוד מספר שניות" }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (geminiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "נדרש חיוב נוסף עבור שירות AI" }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw new Error(`AI Gateway error: ${geminiResponse.status}`);
     }
 
     const geminiData = await geminiResponse.json();
