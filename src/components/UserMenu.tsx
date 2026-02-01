@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, ChefHat, LogIn } from "lucide-react";
+import { User, LogOut, ChefHat, LogIn, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -100,6 +100,13 @@ const UserMenu = () => {
         >
           <User className="ml-2 h-4 w-4" />
           הפרופיל שלי
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => navigate("/gallery")}
+          className="cursor-pointer"
+        >
+          <BookOpen className="ml-2 h-4 w-4" />
+          הגלריה שלי
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate("/ingredients")}

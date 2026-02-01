@@ -152,22 +152,42 @@ const UserProfile = () => {
                   <BookOpen className="w-5 h-5 text-primary" />
                   גלריית הבישולים שלי
                 </h2>
-                <span className="text-muted-foreground">{userDishes.length} מנות</span>
+                {userDishes.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/gallery")}
+                  >
+                    צפו בכל הגלריה
+                  </Button>
+                )}
               </div>
 
               {/* Dishes Grid */}
               {userDishes.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {userDishes.map((dish, index) => (
-                    <div 
-                      key={dish.id}
-                      style={{ animationDelay: `${0.4 + index * 0.1}s` }}
-                      className="animate-scale-in"
-                    >
-                      <DishCard dish={dish} />
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {userDishes.slice(0, 6).map((dish, index) => (
+                      <div
+                        key={dish.id}
+                        style={{ animationDelay: `${0.4 + index * 0.1}s` }}
+                        className="animate-scale-in"
+                      >
+                        <DishCard dish={dish} />
+                      </div>
+                    ))}
+                  </div>
+                  {userDishes.length > 6 && (
+                    <div className="text-center mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate("/gallery")}
+                      >
+                        צפו בעוד {userDishes.length - 6} מנות
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <span className="text-6xl mb-4 block">📖</span>

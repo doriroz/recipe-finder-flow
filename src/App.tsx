@@ -10,6 +10,7 @@ import RecipeResult from "./pages/RecipeResult";
 import CookingMode from "./pages/CookingMode";
 import PostCooking from "./pages/PostCooking";
 import UserProfile from "./pages/UserProfile";
+import Gallery from "./pages/Gallery";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/cooking" element={<CookingMode />} />
           <Route path="/complete" element={<PostCooking />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/login" element={<Login />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { Camera, BookOpen, Home, ChefHat, Star, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Camera, BookOpen, Home, ChefHat, Star, Loader2, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Confetti from "@/components/Confetti";
 import { useRecipe } from "@/hooks/useRecipes";
@@ -18,11 +19,14 @@ const PostCooking = () => {
   const [showConfetti, setShowConfetti] = useState(true);
   const [rating, setRating] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  
+  const [dishPhoto, setDishPhoto] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { data: recipe } = useRecipe(recipeId !== 'mock' ? recipeId : null);
   const insertGalleryItem = useInsertGalleryItem();
-  
-  // Use fetched recipe or fallback to mock
+
   const displayTitle = recipe?.title || mockRecipe.title;
 
   useEffect(() => {
@@ -30,18 +34,55 @@ const PostCooking = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "שגיאה",
+        description: "יש לבחור קובץ תמונה",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "שגיאה",
+        description: "גודל התמונה חייב להיות עד 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setDishPhoto(reader.result as string);
+      setShowSaveForm(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleUploadPhoto = () => {
-    toast({
-      title: "📸 בקרוב!",
-      description: "תכונת העלאת תמונות תהיה זמינה בקרוב",
-    });
+    fileInputRef.current?.click();
   };
 
   const handleSaveToCookbook = async () => {
     if (!user) {
       toast({
         title: "יש להתחבר",
-        description: "התחברו כדי לשמור מתכונים לספר המתכונים",
+        description: "התחברו כדי לשמור מתכונים לגלריה",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+
+    if (!dishPhoto) {
+      toast({
+        title: "חסרה תמונה",
+        description: "יש להעלות תמונה של המנה",
         variant: "destructive",
       });
       return;
@@ -49,22 +90,24 @@ const PostCooking = () => {
 
     setIsSaving(true);
     try {
+      const notesText = notes.trim() || `${displayTitle} - דירוג: ${rating} כוכבים`;
+
       await insertGalleryItem.mutateAsync({
         recipe_id: recipeId !== 'mock' ? recipeId || undefined : undefined,
-        image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400", // Placeholder
-        user_notes: `${displayTitle} - דירוג: ${rating} כוכבים`,
+        image_url: dishPhoto,
+        user_notes: notesText,
       });
-      
+
       toast({
-        title: "✅ נשמר!",
-        description: "המתכון נשמר לגלריה שלכם",
+        title: "נשמר בהצלחה!",
+        description: "המנה נוספה לגלריה שלכם",
       });
-      navigate("/profile");
+      navigate("/gallery");
     } catch (error) {
       console.error("Error saving to gallery:", error);
       toast({
         title: "שגיאה",
-        description: "לא הצלחנו לשמור את המתכון. נסו שוב.",
+        description: "לא הצלחנו לשמור את המנה. נסו שוב.",
         variant: "destructive",
       });
     } finally {
@@ -131,45 +174,95 @@ const PostCooking = () => {
           </div>
         </div>
 
-        {/* Action Cards */}
-        <div className="grid md:grid-cols-2 gap-4 max-w-lg mx-auto mb-8">
-          <button
-            onClick={handleUploadPhoto}
-            className="card-warm hover:shadow-elevated transition-all animate-slide-up flex flex-col items-center gap-4 py-8"
-            style={{ animationDelay: "0.4s" }}
-          >
-            <div className="bg-accent rounded-full p-4">
-              <Camera className="w-8 h-8 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground mb-1">העלו תמונה</h3>
-              <p className="text-sm text-muted-foreground">שתפו את היצירה שלכם</p>
-            </div>
-          </button>
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileChange}
+          className="hidden"
+        />
 
-          <button
-            onClick={handleSaveToCookbook}
-            disabled={isSaving}
-            className="card-warm hover:shadow-elevated transition-all animate-slide-up flex flex-col items-center gap-4 py-8 disabled:opacity-50"
-            style={{ animationDelay: "0.5s" }}
-          >
-            <div className="bg-sage-light rounded-full p-4">
-              {isSaving ? (
-                <Loader2 className="w-8 h-8 text-secondary animate-spin" />
-              ) : (
-                <BookOpen className="w-8 h-8 text-secondary" />
+        {/* Photo Upload Card or Save Form */}
+        {!showSaveForm ? (
+          <div className="max-w-md mx-auto mb-8">
+            <button
+              onClick={handleUploadPhoto}
+              className="card-warm hover:shadow-elevated transition-all animate-slide-up flex flex-col items-center gap-4 py-8 w-full"
+              style={{ animationDelay: "0.4s" }}
+            >
+              <div className="bg-accent rounded-full p-4">
+                <Camera className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground mb-1">צלמו את המנה</h3>
+                <p className="text-sm text-muted-foreground">שתפו את היצירה שלכם בגלריה</p>
+              </div>
+            </button>
+          </div>
+        ) : (
+          <div className="max-w-2xl mx-auto mb-8 animate-fade-in">
+            <div className="card-warm">
+              {/* Photo Preview */}
+              {dishPhoto && (
+                <div className="relative mb-6">
+                  <img
+                    src={dishPhoto}
+                    alt="המנה שלכם"
+                    className="w-full h-64 object-cover rounded-xl"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => {
+                      setDishPhoto(null);
+                      setShowSaveForm(false);
+                    }}
+                    className="absolute top-2 left-2 h-8 w-8 rounded-full"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
               )}
+
+              {/* Notes Input */}
+              <div className="mb-6">
+                <label className="block text-foreground font-medium mb-2 text-right">
+                  הוסיפו הערות
+                </label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="איך היה? מה שינית? טיפים לפעם הבאה..."
+                  className="min-h-32"
+                  dir="rtl"
+                />
+              </div>
+
+              {/* Save Button */}
+              <Button
+                onClick={handleSaveToCookbook}
+                disabled={isSaving}
+                variant="hero"
+                size="lg"
+                className="w-full"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    שומר...
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="w-5 h-5" />
+                    שמרו לגלריה
+                  </>
+                )}
+              </Button>
             </div>
-            <div>
-              <h3 className="font-semibold text-foreground mb-1">
-                {isSaving ? "שומר..." : "שמרו לגלריה"}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {user ? "תמצאו אותו בפרופיל" : "התחברו כדי לשמור"}
-              </p>
-            </div>
-          </button>
-        </div>
+          </div>
+        )}
 
         {/* Home Button */}
         <Button
