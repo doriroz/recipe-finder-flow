@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, BookOpen, Home, ChefHat, Star, Loader2, X, Image as ImageIcon } from "lucide-react";
+import { Camera, BookOpen, Home, ChefHat, Star, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -7,6 +7,7 @@ import Confetti from "@/components/Confetti";
 import { useRecipe } from "@/hooks/useRecipes";
 import { useInsertGalleryItem } from "@/hooks/useUserGallery";
 import { useAuth } from "@/hooks/useAuth";
+import { useGalleryImageUpload } from "@/hooks/useGalleryImageUpload";
 import { mockRecipe } from "@/data/mockData";
 import { toast } from "@/hooks/use-toast";
 
@@ -26,6 +27,7 @@ const PostCooking = () => {
 
   const { data: recipe } = useRecipe(recipeId !== 'mock' ? recipeId : null);
   const insertGalleryItem = useInsertGalleryItem();
+  const { uploadImage, isUploading } = useGalleryImageUpload();
 
   const displayTitle = recipe?.title || mockRecipe.title;
 
@@ -90,11 +92,14 @@ const PostCooking = () => {
 
     setIsSaving(true);
     try {
+      // Upload image to Supabase Storage
+      const imageUrl = await uploadImage(dishPhoto, user.id);
+      
       const notesText = notes.trim() || `${displayTitle} - דירוג: ${rating} כוכבים`;
 
       await insertGalleryItem.mutateAsync({
         recipe_id: recipeId !== 'mock' ? recipeId || undefined : undefined,
-        image_url: dishPhoto,
+        image_url: imageUrl,
         user_notes: notesText,
       });
 
@@ -243,15 +248,15 @@ const PostCooking = () => {
               {/* Save Button */}
               <Button
                 onClick={handleSaveToCookbook}
-                disabled={isSaving}
+                disabled={isSaving || isUploading}
                 variant="hero"
                 size="lg"
                 className="w-full"
               >
-                {isSaving ? (
+                {isSaving || isUploading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    שומר...
+                    {isUploading ? "מעלה תמונה..." : "שומר..."}
                   </>
                 ) : (
                   <>
