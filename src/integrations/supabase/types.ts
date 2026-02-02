@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ingredients: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          emoji: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          emoji?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          emoji?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       recipes: {
         Row: {
           cooking_time: number | null
