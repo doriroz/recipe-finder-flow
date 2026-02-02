@@ -47,6 +47,13 @@ export interface UserGalleryItem {
   image_url: string;
   user_notes: string | null;
   created_at: string | null;
-  // Joined data
-  recipe?: Recipe;
+  // Joined data - partial recipe for gallery display
+  recipe?: {
+    id: string;
+    title: string;
+    ingredients?: RecipeIngredient[];
+    instructions?: string[];
+    cooking_time?: number | null;
+    substitutions?: RecipeSubstitution[] | null;
+  } | null;
 }

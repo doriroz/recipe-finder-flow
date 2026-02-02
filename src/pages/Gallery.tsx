@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ArrowRight, ChefHat, Loader2, BookOpen, Download, Trash2 } from "lucide-react";
+import { ArrowRight, ChefHat, Loader2, BookOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useUserGallery, useDeleteGalleryItem } from "@/hooks/useUserGallery";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import GalleryItemCard from "@/components/GalleryItemCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -156,46 +157,15 @@ const Gallery = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {galleryItems.map((item, index) => (
-                <div
+                <GalleryItemCard
                   key={item.id}
-                  className="card-warm group overflow-hidden animate-slide-up"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="aspect-square bg-cream rounded-xl overflow-hidden mb-4 relative">
-                    <img
-                      src={item.image_url}
-                      alt={item.recipe?.title || item.user_notes || "מנה"}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedItem(item.id);
-                        setShowDeleteDialog(true);
-                      }}
-                      className="absolute top-2 left-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <h3 className="font-semibold text-foreground mb-2 truncate">
-                    {item.recipe?.title || "מנה ללא שם"}
-                  </h3>
-
-                  {item.user_notes && (
-                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                      {item.user_notes}
-                    </p>
-                  )}
-
-                  <p className="text-xs text-muted-foreground">
-                    {item.created_at
-                      ? new Date(item.created_at).toLocaleDateString("he-IL")
-                      : ""}
-                  </p>
-                </div>
+                  item={item}
+                  index={index}
+                  onDelete={(id) => {
+                    setSelectedItem(id);
+                    setShowDeleteDialog(true);
+                  }}
+                />
               ))}
             </div>
 

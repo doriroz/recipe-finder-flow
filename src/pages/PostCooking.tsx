@@ -231,6 +231,22 @@ const PostCooking = () => {
                 </div>
               )}
 
+              {/* Attached Recipe Info */}
+              {recipe && (
+                <div className="mb-6 p-4 bg-accent/30 rounded-xl border border-border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ChefHat className="w-5 h-5 text-primary" />
+                    <span className="font-medium text-foreground">מתכון מצורף:</span>
+                  </div>
+                  <p className="text-foreground font-semibold">{recipe.title}</p>
+                  {recipe.cooking_time && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      ⏱️ {recipe.cooking_time} דקות
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Notes Input */}
               <div className="mb-6">
                 <label className="block text-foreground font-medium mb-2 text-right">

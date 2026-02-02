@@ -16,13 +16,13 @@ export const useUserGallery = () => {
         .from("user_gallery")
         .select(`
           *,
-          recipe:recipes(id, title)
+          recipe:recipes(id, title, ingredients, instructions, cooking_time, substitutions)
         `)
         .eq("user_id", session.session.user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as UserGalleryItem[];
+      return (data || []) as unknown as UserGalleryItem[];
     },
   });
 };
