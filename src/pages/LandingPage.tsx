@@ -26,42 +26,38 @@ const LandingPage = () => {
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
         <div className="container mx-auto px-4 py-4">
           <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-xl">
                 <ChefHat className="w-7 h-7 text-primary" />
               </div>
               <span className="text-xl font-bold text-foreground">מה שיש</span>
+
+              {/* Search & History Buttons - next to logo */}
+              {user && (
+                <div className="flex items-center gap-1 mr-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsSearchOpen(true)}
+                    className="h-9 w-9 rounded-xl hover:bg-primary/10 transition-all duration-200 group"
+                    title="חיפוש מתכון"
+                  >
+                    <Search className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="h-9 w-9 rounded-xl hover:bg-primary/10 transition-all duration-200 group"
+                    title="מתכונים אחרונים"
+                  >
+                    <History className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </Button>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Search Button */}
-              {user && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsSearchOpen(true)}
-                  className="h-10 w-10 rounded-xl hover:bg-primary/10 transition-all duration-200 group"
-                  title="חיפוש מתכון"
-                >
-                  <Search className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                </Button>
-              )}
-
-              {/* History Button */}
-              {user && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="h-10 w-10 rounded-xl hover:bg-primary/10 transition-all duration-200 group"
-                  title="מתכונים אחרונים"
-                >
-                  <History className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                </Button>
-              )}
-
-              <UserMenu />
-            </div>
+            <UserMenu />
           </nav>
         </div>
       </header>
