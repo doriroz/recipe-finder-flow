@@ -1,11 +1,18 @@
-import { ChefHat, Sparkles, Heart } from "lucide-react";
+import { useState } from "react";
+import { ChefHat, Sparkles, Heart, Search, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-fridge.jpg";
 import UserMenu from "@/components/UserMenu";
+import RecipeSearchOverlay from "@/components/RecipeSearchOverlay";
+import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
+import { useAuth } from "@/hooks/useAuth";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const features = [
     { icon: "🥘", title: "מתכונים מהמקרר", description: "הכניסו את מה שיש והקסם יקרה" },
@@ -25,7 +32,36 @@ const LandingPage = () => {
               </div>
               <span className="text-xl font-bold text-foreground">מה שיש</span>
             </div>
-            <UserMenu />
+
+            <div className="flex items-center gap-2">
+              {/* Search Button */}
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSearchOpen(true)}
+                  className="h-10 w-10 rounded-xl hover:bg-primary/10 transition-all duration-200 group"
+                  title="חיפוש מתכון"
+                >
+                  <Search className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </Button>
+              )}
+
+              {/* History Button */}
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="h-10 w-10 rounded-xl hover:bg-primary/10 transition-all duration-200 group"
+                  title="מתכונים אחרונים"
+                >
+                  <History className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </Button>
+              )}
+
+              <UserMenu />
+            </div>
           </nav>
         </div>
       </header>
@@ -47,7 +83,7 @@ const LandingPage = () => {
               בישול פשוט, טעים, ובלי בזבוז!
             </p>
 
-            <div className="animate-scale-in" style={{ animationDelay: "0.3s", animationFillMode: "both" }}>
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-4 animate-scale-in" style={{ animationDelay: "0.3s", animationFillMode: "both" }}>
               <Button 
                 size="lg"
                 onClick={() => navigate("/ingredients")}
@@ -56,6 +92,18 @@ const LandingPage = () => {
                 <Sparkles className="w-6 h-6" />
                 בואו נתחיל לבשל
               </Button>
+
+              {user && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setIsSearchOpen(true)}
+                  className="text-lg px-6 py-6 h-auto rounded-full transition-all duration-300"
+                >
+                  <Search className="w-5 h-5" />
+                  חפשו מתכון
+                </Button>
+              )}
             </div>
           </div>
 
@@ -100,6 +148,18 @@ const LandingPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Search Overlay */}
+      <RecipeSearchOverlay 
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
+
+      {/* Recent Recipes Sidebar */}
+      <RecentRecipesSidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
     </div>
   );
 };
