@@ -34,7 +34,7 @@ const LandingPage = () => {
 
               {/* Search & History Buttons - next to logo */}
               {user && (
-                <div className="flex items-center gap-1 mr-4">
+                <div className="flex items-center gap-1 mr-8">
                   <Button
                     variant="ghost"
                     size="icon"
