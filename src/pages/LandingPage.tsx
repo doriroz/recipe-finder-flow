@@ -83,7 +83,7 @@ const LandingPage = () => {
               <Button 
                 size="lg"
                 onClick={() => navigate("/ingredients")}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 h-auto rounded-full shadow-elevated hover:shadow-card transition-all duration-300"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 h-auto rounded-full shadow-elevated hover:shadow-card transition-all duration-300 flex-row-reverse"
               >
                 <Sparkles className="w-6 h-6" />
                 בואו נתחיל לבשל
