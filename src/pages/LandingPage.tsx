@@ -83,9 +83,9 @@ const LandingPage = () => {
               <Button 
                 size="lg"
                 onClick={() => navigate("/ingredients")}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 h-auto rounded-full shadow-elevated hover:shadow-card transition-all duration-300 flex-row-reverse"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 h-auto rounded-full shadow-elevated hover:shadow-card transition-all duration-300 flex-row-reverse hover:scale-105 hover:-translate-y-1 group"
               >
-                <Sparkles className="w-6 h-6" />
+                <Sparkles className="w-6 h-6 transition-transform duration-300 group-hover:rotate-12" />
                 בואו נתחיל לבשל
               </Button>
 
@@ -94,9 +94,9 @@ const LandingPage = () => {
                   variant="outline"
                   size="lg"
                   onClick={() => setIsSearchOpen(true)}
-                  className="text-lg px-6 py-6 h-auto rounded-full transition-all duration-300"
+                  className="text-lg px-6 py-6 h-auto rounded-full transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-soft group"
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
                   חפשו מתכון
                 </Button>
               )}
