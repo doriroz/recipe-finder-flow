@@ -2,3 +2,9 @@ project_id = "njjggyhqddbuzbzibbja"
 
 [functions.generate-and-save-recipe]
 verify_jwt = false
+
+[functions.validate-substitution]
+verify_jwt = false
+
+[functions.search-recipe]
+verify_jwt = false
