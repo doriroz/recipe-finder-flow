@@ -79,7 +79,7 @@ const LandingPage = () => {
               בישול פשוט, טעים, ובלי בזבוז!
             </p>
 
-            <div className="flex flex-row items-center justify-end gap-4 animate-scale-in" style={{ animationDelay: "0.3s", animationFillMode: "both" }}>
+            <div className="flex flex-row items-center justify-start gap-4 animate-scale-in" style={{ animationDelay: "0.3s", animationFillMode: "both" }}>
               <Button 
                 size="lg"
                 onClick={() => navigate("/ingredients")}
