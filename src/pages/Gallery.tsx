@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, ChefHat, Loader2, BookOpen, Download } from "lucide-react";
+import { ArrowRight, ChefHat, Loader2, BookOpen, Download, BookMarked } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useUserGallery, useDeleteGalleryItem } from "@/hooks/useUserGallery";
@@ -125,6 +125,15 @@ const Gallery = () => {
               <BookOpen className="w-6 h-6 text-primary" />
               <span className="font-bold text-foreground">הגלריה שלי</span>
             </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate("/cookbook")}
+              className="border-primary/30"
+              title="יצירת ספר מתכונים"
+            >
+              <BookMarked className="w-5 h-5" />
+            </Button>
             <Button
               variant="outline"
               size="icon"
