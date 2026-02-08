@@ -17,8 +17,8 @@ const RecipeResult = () => {
   const { user, loading: authLoading } = useAuth();
   
   const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>("medium");
+  const [pendingDifficulty, setPendingDifficulty] = useState<DifficultyLevel>("medium");
   const [isRegenerating, setIsRegenerating] = useState(false);
-  
   // Fetch specific recipe if ID provided, otherwise get latest user recipe
   const { data: specificRecipe, isLoading: loadingSpecific, refetch: refetchRecipe } = useRecipe(recipeId);
   const { data: userRecipes, isLoading: loadingRecipes, refetch: refetchUserRecipes } = useUserRecipes();
@@ -38,49 +38,57 @@ const RecipeResult = () => {
   };
   
   const handleDifficultyChange = async (difficulty: DifficultyLevel) => {
-    if (difficulty === currentDifficulty || !user) {
+    if (difficulty === pendingDifficulty || !user) {
       if (!user) {
         toast.error("יש להתחבר כדי לשנות רמת קושי");
         return;
       }
       return;
     }
-    
+
+    const previousDifficulty = pendingDifficulty;
     setIsRegenerating(true);
-    setCurrentDifficulty(difficulty);
-    
+    setPendingDifficulty(difficulty);
+
     try {
       const ingredients = getIngredientsFromRecipe();
-      
+
       if (ingredients.length === 0) {
         toast.error("לא נמצאו מצרכים במתכון");
-        setIsRegenerating(false);
+        setPendingDifficulty(previousDifficulty);
         return;
       }
-      
+
       const { data, error } = await supabase.functions.invoke("generate-and-save-recipe", {
-        body: { 
+        body: {
           ingredients,
-          difficulty 
+          difficulty,
         },
       });
-      
+
       if (error) {
         console.error("Regeneration error:", error);
         toast.error("שגיאה ביצירת המתכון. נסו שוב.");
+        setPendingDifficulty(previousDifficulty);
         return;
       }
-      
+
       if (data?.success && data?.recipe) {
-        toast.success(`המתכון הותאם לרמת קושי ${difficulty === 'low' ? 'קלה' : difficulty === 'high' ? 'מאתגרת' : 'בינונית'}!`);
+        toast.success(
+          `המתכון הותאם לרמת קושי ${
+            difficulty === "low" ? "קלה" : difficulty === "high" ? "מאתגרת" : "בינונית"
+          }!`
+        );
         // Navigate to new recipe
         setSearchParams({ id: data.recipe.id });
+        setCurrentDifficulty(difficulty);
         refetchRecipe();
         refetchUserRecipes();
       }
     } catch (err) {
       console.error("Difficulty change error:", err);
       toast.error("שגיאה בלתי צפויה. נסו שוב.");
+      setPendingDifficulty(previousDifficulty);
     } finally {
       setIsRegenerating(false);
     }
@@ -177,7 +185,7 @@ const RecipeResult = () => {
             {user && recipe && (
               <div className="max-w-2xl mx-auto mb-6 card-warm animate-fade-in">
                 <DifficultyTuning
-                  currentDifficulty={currentDifficulty}
+                  currentDifficulty={pendingDifficulty}
                   onDifficultyChange={handleDifficultyChange}
                   isRegenerating={isRegenerating}
                 />
