@@ -86,6 +86,15 @@ const RecipeResult = () => {
     }
   };
   
+  // Map difficulty to Hebrew display text
+  const getDifficultyLabel = (difficulty: DifficultyLevel): string => {
+    switch (difficulty) {
+      case "low": return "קל";
+      case "high": return "מאתגר";
+      default: return "בינוני";
+    }
+  };
+  
   // Transform DB recipe to display format
   const displayRecipe = recipe ? {
     id: recipe.id,
@@ -94,7 +103,7 @@ const RecipeResult = () => {
       ? `מתכון מהיר ב-${recipe.cooking_time} דקות` 
       : "מתכון מותאם אישית",
     time: recipe.cooking_time ? `${recipe.cooking_time} דקות` : "30 דקות",
-    difficulty: "בינוני",
+    difficulty: getDifficultyLabel(currentDifficulty),
     servings: 4,
     image: "🍳",
     ingredients: recipe.ingredients.map(ing => 
