@@ -1,26 +1,90 @@
+import { useState } from "react";
 import { ArrowRight, ChefHat, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import RecipeCard, { RecipeCardData } from "@/components/RecipeCard";
+import DifficultyTuning, { DifficultyLevel } from "@/components/DifficultyTuning";
 import { useRecipe, useUserRecipes } from "@/hooks/useRecipes";
 import { useAuth } from "@/hooks/useAuth";
 import { mockRecipe } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const RecipeResult = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const recipeId = searchParams.get("id");
   const { user, loading: authLoading } = useAuth();
   
+  const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>("medium");
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  
   // Fetch specific recipe if ID provided, otherwise get latest user recipe
-  const { data: specificRecipe, isLoading: loadingSpecific } = useRecipe(recipeId);
-  const { data: userRecipes, isLoading: loadingRecipes } = useUserRecipes();
+  const { data: specificRecipe, isLoading: loadingSpecific, refetch: refetchRecipe } = useRecipe(recipeId);
+  const { data: userRecipes, isLoading: loadingRecipes, refetch: refetchUserRecipes } = useUserRecipes();
   
   const isLoading = authLoading || loadingSpecific || loadingRecipes;
   
   // Use specific recipe, or first user recipe, or fall back to mock
   const latestRecipe = userRecipes?.[0];
   const recipe = specificRecipe || latestRecipe;
+  
+  // Extract ingredients from current recipe for regeneration
+  const getIngredientsFromRecipe = () => {
+    if (!recipe) return [];
+    return recipe.ingredients.map((ing: any) => 
+      typeof ing === 'string' ? ing : ing.name
+    );
+  };
+  
+  const handleDifficultyChange = async (difficulty: DifficultyLevel) => {
+    if (difficulty === currentDifficulty || !user) {
+      if (!user) {
+        toast.error("יש להתחבר כדי לשנות רמת קושי");
+        return;
+      }
+      return;
+    }
+    
+    setIsRegenerating(true);
+    setCurrentDifficulty(difficulty);
+    
+    try {
+      const ingredients = getIngredientsFromRecipe();
+      
+      if (ingredients.length === 0) {
+        toast.error("לא נמצאו מצרכים במתכון");
+        setIsRegenerating(false);
+        return;
+      }
+      
+      const { data, error } = await supabase.functions.invoke("generate-and-save-recipe", {
+        body: { 
+          ingredients,
+          difficulty 
+        },
+      });
+      
+      if (error) {
+        console.error("Regeneration error:", error);
+        toast.error("שגיאה ביצירת המתכון. נסו שוב.");
+        return;
+      }
+      
+      if (data?.success && data?.recipe) {
+        toast.success(`המתכון הותאם לרמת קושי ${difficulty === 'low' ? 'קלה' : difficulty === 'high' ? 'מאתגרת' : 'בינונית'}!`);
+        // Navigate to new recipe
+        setSearchParams({ id: data.recipe.id });
+        refetchRecipe();
+        refetchUserRecipes();
+      }
+    } catch (err) {
+      console.error("Difficulty change error:", err);
+      toast.error("שגיאה בלתי צפויה. נסו שוב.");
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
   
   // Transform DB recipe to display format
   const displayRecipe = recipe ? {
@@ -99,6 +163,17 @@ const RecipeResult = () => {
                 </p>
               )}
             </div>
+
+            {/* Difficulty Tuning - Only show for logged in users with a real recipe */}
+            {user && recipe && (
+              <div className="max-w-2xl mx-auto mb-6 card-warm animate-fade-in">
+                <DifficultyTuning
+                  currentDifficulty={currentDifficulty}
+                  onDifficultyChange={handleDifficultyChange}
+                  isRegenerating={isRegenerating}
+                />
+              </div>
+            )}
 
             {/* Recipe Card */}
             <RecipeCard 

@@ -13,7 +13,34 @@ interface RecipeResponse {
   instructions: string[];
   substitutions: { original: string; alternative: string; reason: string }[];
   cooking_time: number;
+  difficulty: string;
 }
+
+type DifficultyLevel = "low" | "medium" | "high";
+
+const getDifficultyPrompt = (difficulty: DifficultyLevel): string => {
+  switch (difficulty) {
+    case "low":
+      return `רמת קושי: קל
+- השתמש במקסימום 5 שלבים פשוטים
+- הימנע מטכניקות מורכבות כמו הקצפה, צריבה, או אידוי
+- העדף שיטות בישול פשוטות: ערבוב, חימום, אפייה בסיסית
+- זמן הכנה קצר יותר
+- פחות מצרכים (עד 8)`;
+    case "high":
+      return `רמת קושי: מאתגר
+- כלול 8-12 שלבים מפורטים
+- השתמש בטכניקות מתקדמות: צריבה, הקצפה, רדוקציה, אידוי, מרינדה
+- הוסף שלבי הכנה מורכבים יותר
+- כלול טיפים מקצועיים לשף
+- יותר מצרכים ותבלינים מגוונים`;
+    default:
+      return `רמת קושי: בינונית
+- כלול 5-8 שלבים
+- שילוב של טכניקות פשוטות ובינוניות
+- מתאים לבשלנים ביתיים עם ניסיון בסיסי`;
+  }
+};
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -56,7 +83,7 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
 
     // Parse request body
-    const { ingredients, imageBase64 } = await req.json();
+    const { ingredients, imageBase64, difficulty = "medium" } = await req.json();
 
     if (!ingredients && !imageBase64) {
       return new Response(
@@ -65,16 +92,23 @@ serve(async (req) => {
       );
     }
 
+    // Get difficulty-specific instructions
+    const difficultyInstructions = getDifficultyPrompt(difficulty as DifficultyLevel);
+
     // Build the prompt
-    const systemPrompt = `אתה שף מקצועי שמתמחה במתכונים למתחילים. 
+    const systemPrompt = `אתה שף מקצועי שמתמחה במתכונים. 
 בהתבסס על המצרכים שניתנו, ספק מתכון בפורמט JSON בלבד.
+
+${difficultyInstructions}
+
 הפורמט צריך להיות בדיוק כזה:
 {
   "title": "שם המתכון בעברית",
   "ingredients": [{"name": "שם המצרך", "amount": "כמות", "unit": "יחידה"}],
   "instructions": ["שלב 1", "שלב 2", "שלב 3"],
   "substitutions": [{"original": "מצרך מקורי", "alternative": "תחליף אפשרי", "reason": "הסבר"}],
-  "cooking_time": 30
+  "cooking_time": 30,
+  "difficulty": "${difficulty}"
 }
 השפה חייבת להיות עברית בלבד.
 החזר רק את ה-JSON, ללא טקסט נוסף.`;
