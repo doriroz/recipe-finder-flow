@@ -1,4 +1,6 @@
 import { Lightbulb } from "lucide-react";
+import SmartTimer from "@/components/SmartTimer";
+import { parseTimersFromText } from "@/lib/parseTimers";
 
 interface Step {
   number: number;
@@ -13,6 +15,8 @@ interface CookingStepProps {
 }
 
 const CookingStep = ({ step, totalSteps }: CookingStepProps) => {
+  const timers = parseTimersFromText(step.instruction);
+
   return (
     <div className="animate-fade-in">
       {/* Step Number */}
@@ -33,6 +37,19 @@ const CookingStep = ({ step, totalSteps }: CookingStepProps) => {
         <p className="text-xl leading-relaxed text-foreground">
           {step.instruction}
         </p>
+
+        {/* Smart Timers */}
+        {timers.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {timers.map((timer, i) => (
+              <SmartTimer
+                key={`${step.number}-${i}`}
+                durationSeconds={timer.durationSeconds}
+                label={timer.label}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tip Box */}
