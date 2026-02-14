@@ -97,6 +97,28 @@ const AdminAnalytics = () => {
     }
   };
 
+  const handleRestore = async () => {
+    setDisabling(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      const res = await supabase.functions.invoke("toggle-analytics-dashboard", {
+        headers: { Authorization: `Bearer ${token}` },
+        body: { enabled: true },
+      });
+
+      if (res.error) throw res.error;
+      toast({ title: "הדשבורד הופעל מחדש" });
+      setData(null);
+      fetchAnalytics();
+    } catch (err: any) {
+      toast({ title: "שגיאה", description: err.message, variant: "destructive" });
+    } finally {
+      setDisabling(false);
+    }
+  };
+
   if (adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -113,14 +135,16 @@ const AdminAnalytics = () => {
             <ShieldOff className="h-12 w-12 mx-auto text-muted-foreground" />
             <h2 className="text-xl font-semibold text-foreground">הדשבורד מושבת כרגע</h2>
             <p className="text-muted-foreground text-sm">
-              ניתן להפעיל מחדש דרך SQL Editor:
+              ניתן להפעיל מחדש בלחיצה על הכפתור למטה
             </p>
-            <code className="block bg-muted p-3 rounded-lg text-xs" dir="ltr">
-              UPDATE app_settings SET value = 'true' WHERE key = 'analytics_dashboard_enabled';
-            </code>
-            <Button variant="outline" onClick={() => navigate("/")}>
-              חזרה לדף הבית
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleRestore} disabled={disabling}>
+                {disabling ? "מפעיל..." : "הפעל דשבורד מחדש"}
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/")}>
+                חזרה לדף הבית
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
