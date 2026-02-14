@@ -47,6 +47,10 @@ const getDifficultyPrompt = (difficulty: DifficultyLevel): string => {
 // Verify recipe with Spoonacular API
 async function verifyWithSpoonacular(ingredients: string[]): Promise<{ verified: boolean; similarRecipe?: string }> {
   const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
+  console.log("=== SPOONACULAR VERIFICATION START ===");
+  console.log("API key exists:", !!SPOONACULAR_API_KEY);
+  console.log("API key length:", SPOONACULAR_API_KEY?.length ?? 0);
+  
   if (!SPOONACULAR_API_KEY) {
     console.log("Spoonacular API key not configured, skipping verification");
     return { verified: false };
@@ -54,20 +58,29 @@ async function verifyWithSpoonacular(ingredients: string[]): Promise<{ verified:
 
   try {
     const ingredientList = ingredients.join(",");
-    const response = await fetch(
-      `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientList)}&number=1&ranking=2&apiKey=${SPOONACULAR_API_KEY}`,
-      { method: "GET" }
-    );
+    const url = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientList)}&number=1&ranking=2&apiKey=${SPOONACULAR_API_KEY}`;
+    console.log("Spoonacular request URL (without key):", url.replace(SPOONACULAR_API_KEY, "***"));
+    console.log("Ingredients sent:", ingredientList);
+    
+    const response = await fetch(url, { method: "GET" });
+    console.log("Spoonacular response status:", response.status);
+    console.log("Spoonacular response ok:", response.ok);
 
     if (!response.ok) {
-      console.error("Spoonacular API error:", response.status);
+      const errorBody = await response.text();
+      console.error("Spoonacular API error body:", errorBody);
       return { verified: false };
     }
 
     const data = await response.json();
+    console.log("Spoonacular results count:", data?.length ?? 0);
+    console.log("Spoonacular first result:", data?.[0] ? JSON.stringify({ title: data[0].title, id: data[0].id, usedIngredientCount: data[0].usedIngredientCount, missedIngredientCount: data[0].missedIngredientCount }) : "none");
+    
     if (data && data.length > 0) {
+      console.log("=== SPOONACULAR: VERIFIED ===");
       return { verified: true, similarRecipe: data[0].title };
     }
+    console.log("=== SPOONACULAR: NOT VERIFIED (no results) ===");
     return { verified: false };
   } catch (err) {
     console.error("Spoonacular verification error:", err);
