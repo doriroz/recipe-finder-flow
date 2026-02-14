@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, ChefHat, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import RecipeCard, { RecipeCardData } from "@/components/RecipeCard";
 import DifficultyTuning, { DifficultyLevel } from "@/components/DifficultyTuning";
 import { useRecipe, useUserRecipes } from "@/hooks/useRecipes";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 const RecipeResult = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const recipeId = searchParams.get("id");
   const { user, loading: authLoading } = useAuth();
@@ -19,6 +20,15 @@ const RecipeResult = () => {
   const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>("medium");
   const [pendingDifficulty, setPendingDifficulty] = useState<DifficultyLevel>("medium");
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [whyItWorks, setWhyItWorks] = useState<string | undefined>();
+  const [reliabilityScore, setReliabilityScore] = useState<"high" | "medium" | "creative">("medium");
+
+  // Pick up why_it_works and reliability_score from navigation state
+  useEffect(() => {
+    const state = location.state as { why_it_works?: string; reliability_score?: string } | null;
+    if (state?.why_it_works) setWhyItWorks(state.why_it_works);
+    if (state?.reliability_score) setReliabilityScore(state.reliability_score as any);
+  }, [location.state]);
   // Fetch specific recipe if ID provided, otherwise get latest user recipe
   const { data: specificRecipe, isLoading: loadingSpecific, refetch: refetchRecipe } = useRecipe(recipeId);
   const { data: userRecipes, isLoading: loadingRecipes, refetch: refetchUserRecipes } = useUserRecipes();
@@ -79,9 +89,10 @@ const RecipeResult = () => {
             difficulty === "low" ? "קלה" : difficulty === "high" ? "מאתגרת" : "בינונית"
           }!`
         );
-        // Navigate to new recipe
         setSearchParams({ id: data.recipe.id });
         setCurrentDifficulty(difficulty);
+        setWhyItWorks(data.why_it_works || undefined);
+        setReliabilityScore(data.reliability_score || "medium");
         refetchRecipe();
         refetchUserRecipes();
       }
@@ -118,6 +129,8 @@ const RecipeResult = () => {
       typeof ing === 'string' ? ing : `${ing.amount || ''} ${ing.unit || ''} ${ing.name}`.trim()
     ),
     substitutions: recipe.substitutions || [],
+    why_it_works: whyItWorks,
+    reliability_score: reliabilityScore,
   } : {
     // Fallback to mock data when no recipes exist
     id: mockRecipe.id,

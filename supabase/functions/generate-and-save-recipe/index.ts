@@ -14,6 +14,8 @@ interface RecipeResponse {
   substitutions: { original: string; alternative: string; reason: string }[];
   cooking_time: number;
   difficulty: string;
+  why_it_works: string;
+  reliability_score: "high" | "medium" | "creative";
 }
 
 type DifficultyLevel = "low" | "medium" | "high";
@@ -41,6 +43,37 @@ const getDifficultyPrompt = (difficulty: DifficultyLevel): string => {
 - מתאים לבשלנים ביתיים עם ניסיון בסיסי`;
   }
 };
+
+// Verify recipe with Spoonacular API
+async function verifyWithSpoonacular(ingredients: string[]): Promise<{ verified: boolean; similarRecipe?: string }> {
+  const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
+  if (!SPOONACULAR_API_KEY) {
+    console.log("Spoonacular API key not configured, skipping verification");
+    return { verified: false };
+  }
+
+  try {
+    const ingredientList = ingredients.join(",");
+    const response = await fetch(
+      `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientList)}&number=1&ranking=2&apiKey=${SPOONACULAR_API_KEY}`,
+      { method: "GET" }
+    );
+
+    if (!response.ok) {
+      console.error("Spoonacular API error:", response.status);
+      return { verified: false };
+    }
+
+    const data = await response.json();
+    if (data && data.length > 0) {
+      return { verified: true, similarRecipe: data[0].title };
+    }
+    return { verified: false };
+  } catch (err) {
+    console.error("Spoonacular verification error:", err);
+    return { verified: false };
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -95,11 +128,19 @@ serve(async (req) => {
     // Get difficulty-specific instructions
     const difficultyInstructions = getDifficultyPrompt(difficulty as DifficultyLevel);
 
+    // Verify with Spoonacular if we have text ingredients
+    let spoonacularResult = { verified: false, similarRecipe: undefined as string | undefined };
+    if (ingredients && Array.isArray(ingredients)) {
+      const ingredientNames = ingredients.map((i: any) => typeof i === 'string' ? i : i.name);
+      spoonacularResult = await verifyWithSpoonacular(ingredientNames);
+    }
+
     // Build the prompt
-    const systemPrompt = `אתה שף מקצועי שמתמחה במתכונים. 
-בהתבסס על המצרכים שניתנו, ספק מתכון בפורמט JSON בלבד.
+    const systemPrompt = `You are a culinary expert. Your task is to provide a recipe based on the provided ingredients. Constraint: You must only suggest flavor combinations and cooking techniques that are established in professional cooking. If a combination is physiologically impossible or culinary nonsensical, explain why instead of inventing a recipe.
 
 ${difficultyInstructions}
+
+${spoonacularResult.verified ? `הערה: נמצא מתכון דומה במאגר מקצועי: "${spoonacularResult.similarRecipe}". השתמש בזה כהשראה לפרופורציות מדויקות.` : ""}
 
 הפורמט צריך להיות בדיוק כזה:
 {
@@ -108,15 +149,27 @@ ${difficultyInstructions}
   "instructions": ["שלב 1", "שלב 2", "שלב 3"],
   "substitutions": [{"original": "מצרך מקורי", "alternative": "תחליף אפשרי", "reason": "הסבר"}],
   "cooking_time": 30,
-  "difficulty": "${difficulty}"
+  "difficulty": "${difficulty}",
+  "why_it_works": "הסבר קולינרי קצר מדוע שילוב המצרכים הזה עובד מבחינת טעמים, מרקמים וטכניקות בישול",
+  "reliability_score": "high | medium | creative"
 }
+
+הנחיות עבור reliability_score:
+- "high": שילוב מצרכים קלאסי ומוכר (כמו פסטה ועגבניות, עוף וירקות)
+- "medium": שילוב סביר אך פחות נפוץ
+- "creative": שילוב יצירתי וחריג שדורש ניסוי
+
+הנחיות עבור why_it_works:
+- הסבר קצר (2-3 משפטים) של הלוגיקה הקולינרית
+- התייחס לטעמים, מרקמים, וטכניקות בישול
+- למשל: "החמיצות של הלימון חותכת את השומן של הסלמון ומוסיפה פרשנות"
+
 השפה חייבת להיות עברית בלבד.
 החזר רק את ה-JSON, ללא טקסט נוסף.`;
 
     let userContent: any[];
 
     if (imageBase64) {
-      // Multimodal request with image
       userContent = [
         {
           type: "text",
@@ -132,7 +185,6 @@ ${difficultyInstructions}
         },
       ];
     } else {
-      // Text-only request with ingredients list
       const ingredientsList = Array.isArray(ingredients) 
         ? ingredients.map((i: any) => typeof i === 'string' ? i : i.name).join(", ")
         : ingredients;
@@ -192,10 +244,9 @@ ${difficultyInstructions}
       throw new Error("No content returned from Gemini");
     }
 
-    // Parse JSON from response (handle potential markdown code blocks)
+    // Parse JSON from response
     let recipeJson: RecipeResponse;
     try {
-      // Try to extract JSON from markdown code block if present
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
       const jsonString = jsonMatch ? jsonMatch[1].trim() : content.trim();
       recipeJson = JSON.parse(jsonString);
@@ -232,6 +283,9 @@ ${difficultyInstructions}
       JSON.stringify({ 
         success: true, 
         recipe: insertedRecipe,
+        why_it_works: recipeJson.why_it_works || null,
+        reliability_score: recipeJson.reliability_score || "medium",
+        spoonacular_verified: spoonacularResult.verified,
         message: "המתכון נוצר ונשמר בהצלחה!" 
       }),
       { 
