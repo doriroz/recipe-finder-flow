@@ -13,6 +13,7 @@ import {
 import type { CookbookSettings, CookbookRecipe, ExportOption } from "@/types/cookbook";
 import { exportOptions } from "@/types/cookbook";
 import { toast } from "@/hooks/use-toast";
+import { generateCookbookPDF } from "@/lib/generateCookbookPDF";
 
 interface CookbookCheckoutProps {
   settings: CookbookSettings;
@@ -30,6 +31,7 @@ const CookbookCheckout = ({
   const [selectedOption, setSelectedOption] = useState<string>("pdf");
   const [step, setStep] = useState<"select" | "shipping" | "payment" | "complete">("select");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState("");
   const [shippingInfo, setShippingInfo] = useState({
     fullName: "",
     address: "",
@@ -63,14 +65,37 @@ const CookbookCheckout = ({
 
   const handleDownloadPDF = async () => {
     setIsProcessing(true);
-    // Simulate PDF generation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsProcessing(false);
-    setStep("complete");
-    toast({
-      title: "ה-PDF מוכן!",
-      description: "הספר שלך מוכן להורדה",
-    });
+    setPdfProgress("מכין את הספר...");
+    try {
+      const blob = await generateCookbookPDF(settings, recipes, (current, total) => {
+        setPdfProgress(`מעבד עמוד ${current} מתוך ${total}...`);
+      });
+      // Trigger download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${settings.title || "cookbook"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setStep("complete");
+      toast({
+        title: "ה-PDF מוכן!",
+        description: "הקובץ הורד בהצלחה",
+      });
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      toast({
+        title: "שגיאה ביצירת PDF",
+        description: "נסו שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+      setPdfProgress("");
+    }
   };
 
   const handlePayment = async () => {
@@ -150,7 +175,7 @@ const CookbookCheckout = ({
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                    מעבד...
+                    {pdfProgress || "מעבד..."}
                   </>
                 ) : needsShipping ? (
                   "המשך לפרטי משלוח"
