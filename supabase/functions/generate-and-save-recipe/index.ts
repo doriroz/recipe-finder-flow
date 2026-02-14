@@ -44,12 +44,47 @@ const getDifficultyPrompt = (difficulty: DifficultyLevel): string => {
   }
 };
 
+// Translate Hebrew ingredients to English using AI Gateway
+async function translateIngredients(hebrewIngredients: string[]): Promise<string[]> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) return hebrewIngredients;
+
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: "Translate the following Hebrew ingredient names to English. Return ONLY a JSON array of strings, nothing else. Example: [\"flour\", \"lemon\", \"garlic\"]" },
+          { role: "user", content: JSON.stringify(hebrewIngredients) },
+        ],
+        temperature: 0,
+        max_tokens: 256,
+      }),
+    });
+
+    if (!response.ok) return hebrewIngredients;
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim();
+    const jsonMatch = content?.match(/\[[\s\S]*\]/);
+    const translated = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+    console.log("Translated ingredients:", hebrewIngredients, "->", translated);
+    return Array.isArray(translated) ? translated : hebrewIngredients;
+  } catch (err) {
+    console.error("Translation error:", err);
+    return hebrewIngredients;
+  }
+}
+
 // Verify recipe with Spoonacular API
 async function verifyWithSpoonacular(ingredients: string[]): Promise<{ verified: boolean; similarRecipe?: string }> {
   const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
   console.log("=== SPOONACULAR VERIFICATION START ===");
-  console.log("API key exists:", !!SPOONACULAR_API_KEY);
-  console.log("API key length:", SPOONACULAR_API_KEY?.length ?? 0);
   
   if (!SPOONACULAR_API_KEY) {
     console.log("Spoonacular API key not configured, skipping verification");
@@ -57,10 +92,12 @@ async function verifyWithSpoonacular(ingredients: string[]): Promise<{ verified:
   }
 
   try {
-    const ingredientList = ingredients.join(",");
+    // Translate Hebrew ingredients to English for Spoonacular
+    const englishIngredients = await translateIngredients(ingredients);
+    const ingredientList = englishIngredients.join(",");
     const url = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientList)}&number=1&ranking=2&apiKey=${SPOONACULAR_API_KEY}`;
-    console.log("Spoonacular request URL (without key):", url.replace(SPOONACULAR_API_KEY, "***"));
-    console.log("Ingredients sent:", ingredientList);
+    console.log("Ingredients (Hebrew):", ingredients.join(","));
+    console.log("Ingredients (English):", ingredientList);
     
     const response = await fetch(url, { method: "GET" });
     console.log("Spoonacular response status:", response.status);
