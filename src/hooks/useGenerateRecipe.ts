@@ -59,7 +59,12 @@ export const useGenerateRecipe = () => {
 
       if (data?.success && data?.recipe) {
         toast.success("המתכון נוצר בהצלחה!");
-        navigate(`/recipe?id=${data.recipe.id}`);
+        navigate(`/recipe?id=${data.recipe.id}`, {
+          state: {
+            why_it_works: data.why_it_works,
+            reliability_score: data.reliability_score,
+          },
+        });
       }
     } catch (err) {
       console.error("Generate recipe error:", err);

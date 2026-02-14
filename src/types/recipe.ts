@@ -37,6 +37,8 @@ export interface RecipeDisplay extends Recipe {
   servings?: number;
   image?: string;
   steps?: RecipeStep[];
+  why_it_works?: string;
+  reliability_score?: "high" | "medium" | "creative";
 }
 
 // User gallery item matching Supabase schema

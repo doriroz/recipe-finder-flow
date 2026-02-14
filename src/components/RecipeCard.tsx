@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Clock, Users, ChefHat, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SubstitutionSection from "@/components/SubstitutionSection";
+import ChefTip from "@/components/ChefTip";
+import ReliabilityScore from "@/components/ReliabilityScore";
 
 interface Substitution {
   original: string;
@@ -19,6 +21,8 @@ export interface RecipeCardData {
   image: string;
   ingredients: string[];
   substitutions: Substitution[];
+  why_it_works?: string;
+  reliability_score?: "high" | "medium" | "creative";
 }
 
 interface RecipeCardProps {
@@ -178,6 +182,18 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         </ul>
       </div>
 
+      {/* Reliability Score & Chef's Tip */}
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center justify-between">
+          {recipe.reliability_score && (
+            <ReliabilityScore score={recipe.reliability_score} />
+          )}
+        </div>
+        {recipe.why_it_works && (
+          <ChefTip tip={recipe.why_it_works} />
+        )}
+      </div>
+
       {/* Smart Substitutions Section */}
       <div className="mb-6">
         <SubstitutionSection
@@ -186,6 +202,11 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
           recipeTitle={recipe.title}
         />
       </div>
+
+      {/* AI Disclaimer */}
+      <p className="text-xs text-muted-foreground text-center mb-4 leading-relaxed">
+        המתכון נוצר על ידי בינה מלאכותית ומבוסס על עקרונות בישול קלאסיים. תמיד כדאי להפעיל שיקול דעת במטבח!
+      </p>
 
       {/* Start Cooking Button */}
       <Button 

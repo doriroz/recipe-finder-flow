@@ -8,6 +8,7 @@ import { useRecipe } from "@/hooks/useRecipes";
 import { useInsertGalleryItem } from "@/hooks/useUserGallery";
 import { useAuth } from "@/hooks/useAuth";
 import { useGalleryImageUpload } from "@/hooks/useGalleryImageUpload";
+import { supabase } from "@/integrations/supabase/client";
 import { mockRecipe } from "@/data/mockData";
 import { toast } from "@/hooks/use-toast";
 
@@ -120,12 +121,27 @@ const PostCooking = () => {
     }
   };
 
-  const handleRating = (star: number) => {
+  const handleRating = async (star: number) => {
     setRating(star);
     toast({
       title: `⭐ ${star} כוכבים`,
       description: "תודה על הדירוג!",
     });
+
+    // Save rating to database
+    if (user && recipeId && recipeId !== 'mock') {
+      try {
+        const { error } = await supabase
+          .from("recipe_ratings" as any)
+          .upsert(
+            { recipe_id: recipeId, user_id: user.id, rating: star },
+            { onConflict: "recipe_id,user_id" }
+          );
+        if (error) console.error("Rating save error:", error);
+      } catch (err) {
+        console.error("Rating save error:", err);
+      }
+    }
   };
 
   return (
