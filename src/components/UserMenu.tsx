@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, ChefHat, LogIn, BookOpen } from "lucide-react";
+import { User, LogOut, ChefHat, LogIn, BookOpen, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,12 +11,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const UserMenu = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -115,6 +117,18 @@ const UserMenu = () => {
           <ChefHat className="ml-2 h-4 w-4" />
           בישול חדש
         </DropdownMenuItem>
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => navigate("/admin/analytics")}
+              className="cursor-pointer"
+            >
+              <BarChart3 className="ml-2 h-4 w-4" />
+              דשבורד אנליטיקס
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleLogout}

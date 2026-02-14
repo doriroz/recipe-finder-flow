@@ -13,6 +13,7 @@ import UserProfile from "./pages/UserProfile";
 import Gallery from "./pages/Gallery";
 import CookbookBuilder from "./pages/CookbookBuilder";
 import Login from "./pages/Login";
+import AdminAnalytics from "./pages/AdminAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/cookbook" element={<CookbookBuilder />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
