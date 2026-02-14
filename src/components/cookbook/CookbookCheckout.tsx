@@ -14,6 +14,7 @@ import type { CookbookSettings, CookbookRecipe, ExportOption } from "@/types/coo
 import { exportOptions } from "@/types/cookbook";
 import { toast } from "@/hooks/use-toast";
 import { generateCookbookPDF } from "@/lib/generateCookbookPDF";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 interface CookbookCheckoutProps {
   settings: CookbookSettings;
@@ -28,6 +29,7 @@ const CookbookCheckout = ({
   isOpen,
   onClose,
 }: CookbookCheckoutProps) => {
+  const { track } = useAnalytics();
   const [selectedOption, setSelectedOption] = useState<string>("pdf");
   const [step, setStep] = useState<"select" | "shipping" | "payment" | "complete">("select");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -45,6 +47,7 @@ const CookbookCheckout = ({
 
   const handleContinue = () => {
     if (step === "select") {
+      track("cookbook_format_selected", { format: selectedOption, price: selectedExportOption?.price });
       if (needsShipping) {
         setStep("shipping");
       } else {
@@ -81,6 +84,7 @@ const CookbookCheckout = ({
       URL.revokeObjectURL(url);
 
       setStep("complete");
+      track("cookbook_pdf_downloaded", { title: settings.title, recipeCount: recipes.length });
       toast({
         title: "ה-PDF מוכן!",
         description: "הקובץ הורד בהצלחה",
@@ -104,6 +108,11 @@ const CookbookCheckout = ({
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsProcessing(false);
     setStep("complete");
+    track("cookbook_order_completed", { 
+      format: selectedOption, 
+      price: selectedExportOption?.price,
+      recipeCount: recipes.length 
+    });
     toast({
       title: "ההזמנה התקבלה!",
       description: "נשלח לך עדכון כשהספר יישלח",

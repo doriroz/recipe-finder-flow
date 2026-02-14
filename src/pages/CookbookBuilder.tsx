@@ -14,13 +14,14 @@ import CookbookPreview from "@/components/cookbook/CookbookPreview";
 import CookbookCheckout from "@/components/cookbook/CookbookCheckout";
 import CookbookStepIndicator from "@/components/cookbook/CookbookStepIndicator";
 import type { CookbookRecipe } from "@/types/cookbook";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 const CookbookBuilder = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
   const cookbook = useCookbook();
-
+  const { track } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeRecipeIndex, setActiveRecipeIndex] = useState(0);
   const [activePageIndex, setActivePageIndex] = useState(0);
@@ -40,6 +41,8 @@ const CookbookBuilder = () => {
     if (cookbook.step === "customize" && galleryItems) {
       cookbook.initializeRecipes(galleryItems);
     }
+    // Track step views
+    track("cookbook_step_view", { step: cookbook.step });
   }, [cookbook.step, galleryItems]);
 
   const handleReorderRecipes = (newOrder: CookbookRecipe[]) => {
@@ -307,7 +310,10 @@ const CookbookBuilder = () => {
                   </Button>
                   <Button
                     variant="hero"
-                    onClick={() => setShowCheckout(true)}
+                    onClick={() => {
+                      track("cookbook_checkout_opened", { recipeCount: cookbook.recipes.length });
+                      setShowCheckout(true);
+                    }}
                     className="gap-2"
                   >
                     <BookMarked className="w-5 h-5" />
