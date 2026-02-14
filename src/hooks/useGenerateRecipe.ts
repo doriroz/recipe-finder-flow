@@ -63,6 +63,7 @@ export const useGenerateRecipe = () => {
           state: {
             why_it_works: data.why_it_works,
             reliability_score: data.reliability_score,
+            spoonacular_verified: data.spoonacular_verified ?? false,
           },
         });
       }

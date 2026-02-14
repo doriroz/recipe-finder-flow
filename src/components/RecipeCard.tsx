@@ -23,6 +23,7 @@ export interface RecipeCardData {
   substitutions: Substitution[];
   why_it_works?: string;
   reliability_score?: "high" | "medium" | "creative";
+  spoonacular_verified?: boolean;
 }
 
 interface RecipeCardProps {
@@ -182,12 +183,20 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         </ul>
       </div>
 
-      {/* Reliability Score & Chef's Tip */}
+      {/* Reliability Score, Spoonacular Badge & Chef's Tip */}
       <div className="mb-6 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           {recipe.reliability_score && (
             <ReliabilityScore score={recipe.reliability_score} />
           )}
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+            recipe.spoonacular_verified
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+              : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+          }`}>
+            <span>{recipe.spoonacular_verified ? '✅' : '🧪'}</span>
+            <span>{recipe.spoonacular_verified ? 'מאומת ע״י Spoonacular' : 'לא אומת – מבוסס AI בלבד'}</span>
+          </div>
         </div>
         {recipe.why_it_works && (
           <ChefTip tip={recipe.why_it_works} />
