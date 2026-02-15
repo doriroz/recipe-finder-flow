@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChefHat, Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+import { ChefHat, Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,10 +16,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage("");
 
     try {
       if (mode === "reset") {
@@ -58,11 +60,16 @@ const Login = () => {
         });
       }
     } catch (error: any) {
-      toast({
-        title: "שגיאה",
-        description: error.message || "משהו השתבש, נסה שוב",
-        variant: "destructive",
-      });
+      const raw = error.message || "";
+      let friendly = "משהו השתבש, נסה שוב";
+      if (raw.includes("Invalid login credentials")) {
+        friendly = "האימייל או הסיסמה שגויים. נסה שוב או הירשם לחשבון חדש.";
+      } else if (raw.includes("Email not confirmed")) {
+        friendly = "האימייל עדיין לא אושר. בדוק את תיבת הדואר שלך.";
+      } else if (raw.includes("User already registered")) {
+        friendly = "כבר קיים חשבון עם אימייל זה. נסה להתחבר.";
+      }
+      setErrorMessage(friendly);
     } finally {
       setLoading(false);
     }
@@ -164,6 +171,13 @@ const Login = () => {
                   >
                     שכחת סיסמה?
                   </button>
+                </div>
+              )}
+
+              {errorMessage && (
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm text-center">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <span>{errorMessage}</span>
                 </div>
               )}
 
