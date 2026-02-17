@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          credits_used: number | null
+          id: string
+          source: string | null
+          tokens_estimated: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          credits_used?: number | null
+          id?: string
+          source?: string | null
+          tokens_estimated?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          credits_used?: number | null
+          id?: string
+          source?: string | null
+          tokens_estimated?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -56,6 +86,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ingredient_substitutions: {
+        Row: {
+          alternative_ingredient: string
+          confidence: string
+          created_at: string
+          id: string
+          is_valid: boolean
+          original_ingredient: string
+          reason: string
+          tips: string | null
+        }
+        Insert: {
+          alternative_ingredient: string
+          confidence?: string
+          created_at?: string
+          id?: string
+          is_valid?: boolean
+          original_ingredient: string
+          reason: string
+          tips?: string | null
+        }
+        Update: {
+          alternative_ingredient?: string
+          confidence?: string
+          created_at?: string
+          id?: string
+          is_valid?: boolean
+          original_ingredient?: string
+          reason?: string
+          tips?: string | null
+        }
+        Relationships: []
+      }
       ingredients: {
         Row: {
           category: string
@@ -80,6 +143,45 @@ export type Database = {
           emoji?: string
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      recipe_library: {
+        Row: {
+          category: string | null
+          cooking_time: number | null
+          created_at: string
+          difficulty: string | null
+          id: string
+          ingredient_names: string[]
+          ingredients: Json
+          instructions: string[]
+          substitutions: Json | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          cooking_time?: number | null
+          created_at?: string
+          difficulty?: string | null
+          id?: string
+          ingredient_names?: string[]
+          ingredients?: Json
+          instructions?: string[]
+          substitutions?: Json | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          cooking_time?: number | null
+          created_at?: string
+          difficulty?: string | null
+          id?: string
+          ingredient_names?: string[]
+          ingredients?: Json
+          instructions?: string[]
+          substitutions?: Json | null
+          title?: string
         }
         Relationships: []
       }
@@ -145,6 +247,42 @@ export type Database = {
           substitutions?: Json | null
           title?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          created_at: string
+          credits_remaining: number
+          daily_ai_calls: number
+          daily_reset_at: string
+          id: string
+          total_ai_calls: number
+          total_local_matches: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_remaining?: number
+          daily_ai_calls?: number
+          daily_reset_at?: string
+          id?: string
+          total_ai_calls?: number
+          total_local_matches?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_remaining?: number
+          daily_ai_calls?: number
+          daily_reset_at?: string
+          id?: string
+          total_ai_calls?: number
+          total_local_matches?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
