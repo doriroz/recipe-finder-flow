@@ -1,17 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-interface ValidationResult {
-  isValid: boolean;
-  confidence: "high" | "medium" | "low";
-  explanation: string;
-  tips?: string;
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -28,6 +22,85 @@ serve(async (req) => {
       );
     }
 
+    // Service role client for reading substitutions table (public read)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // ---- STEP 1: Check local substitutions table first ----
+    const { data: localSub } = await supabaseAdmin
+      .from("ingredient_substitutions")
+      .select("*")
+      .eq("original_ingredient", originalIngredient)
+      .eq("alternative_ingredient", suggestedReplacement)
+      .single();
+
+    if (localSub) {
+      console.log("Substitution found in local table:", localSub);
+
+      // Log as local usage (0 credits)
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader) {
+        const supabaseUser = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: authHeader } } }
+        );
+        const token = authHeader.replace("Bearer ", "");
+        const { data: claims } = await supabaseUser.auth.getClaims(token);
+        if (claims?.claims?.sub) {
+          await supabaseAdmin.from("ai_usage_logs").insert({
+            user_id: claims.claims.sub,
+            action_type: "substitution_validation",
+            tokens_estimated: 0,
+            credits_used: 0,
+            source: "local",
+          });
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          result: {
+            isValid: localSub.is_valid,
+            confidence: localSub.confidence,
+            explanation: localSub.reason,
+            tips: localSub.tips || undefined,
+          },
+          source: "local",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Also check reverse direction
+    const { data: reverseSub } = await supabaseAdmin
+      .from("ingredient_substitutions")
+      .select("*")
+      .eq("original_ingredient", suggestedReplacement)
+      .eq("alternative_ingredient", originalIngredient)
+      .single();
+
+    if (reverseSub) {
+      console.log("Reverse substitution found:", reverseSub);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          result: {
+            isValid: reverseSub.is_valid,
+            confidence: reverseSub.confidence,
+            explanation: reverseSub.reason,
+            tips: reverseSub.tips || undefined,
+          },
+          source: "local",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ---- STEP 2: AI fallback (short explanation only, 1 credit) ----
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
@@ -36,38 +109,61 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `אתה שף מומחה ויועץ קולינרי. המשימה שלך היא להעריך האם החלפת מצרך אחד באחר תעבוד במתכון נתון.
+    // Check credits if authenticated
+    const authHeader = req.headers.get("Authorization");
+    let userId: string | null = null;
+    if (authHeader?.startsWith("Bearer ")) {
+      const supabaseUser = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claims } = await supabaseUser.auth.getClaims(token);
+      userId = claims?.claims?.sub || null;
 
-עליך להחזיר JSON בלבד בפורמט הבא:
+      if (userId) {
+        // Check user credits (1 credit for substitution)
+        let { data: userCredits } = await supabaseAdmin
+          .from("user_credits")
+          .select("credits_remaining")
+          .eq("user_id", userId)
+          .single();
+
+        if (!userCredits) {
+          await supabaseAdmin.from("user_credits").insert({ user_id: userId, credits_remaining: 10 });
+          userCredits = { credits_remaining: 10 };
+        }
+
+        if (userCredits.credits_remaining < 1) {
+          return new Response(
+            JSON.stringify({ error: "אין מספיק קרדיטים לבדיקת החלפה" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Deduct 1 credit
+        await supabaseAdmin
+          .from("user_credits")
+          .update({ credits_remaining: userCredits.credits_remaining - 1 })
+          .eq("user_id", userId);
+      }
+    }
+
+    const systemPrompt = `אתה שף מומחה. העריך בקצרה האם ההחלפה תעבוד. החזר JSON בלבד:
 {
   "isValid": true/false,
   "confidence": "high"/"medium"/"low",
-  "explanation": "הסבר קצר בעברית למה ההחלפה תעבוד או לא",
-  "tips": "טיפ אופציונלי לשיפור ההחלפה (רק אם רלוונטי)"
+  "explanation": "הסבר קצר בעברית (משפט אחד)",
+  "tips": "טיפ קצר (אופציונלי)"
 }
+JSON בלבד.`;
 
-קריטריונים להערכה:
-- טעם: האם הטעם ישתנה באופן משמעותי?
-- מרקם: האם המרקם הסופי יושפע?
-- תפקוד: האם המצרך החדש ממלא את אותו תפקיד (קשירה, תפיחה, לחות וכו')?
-- בישול: האם נדרשים שינויים בזמן או טמפרטורת הבישול?
-
-החזר רק JSON, ללא טקסט נוסף.`;
-
-    const userPrompt = `מתכון: ${recipeTitle || "לא צוין"}
-${recipeContext ? `הקשר נוסף: ${recipeContext}` : ""}
-
-מצרך מקורי: ${originalIngredient}
-תחליף מוצע: ${suggestedReplacement}
-
-האם ההחלפה הזו תעבוד?`;
+    const userPrompt = `מצרך מקורי: ${originalIngredient}\nתחליף: ${suggestedReplacement}${recipeTitle ? `\nמתכון: ${recipeTitle}` : ""}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
@@ -75,43 +171,55 @@ ${recipeContext ? `הקשר נוסף: ${recipeContext}` : ""}
           { role: "user", content: userPrompt },
         ],
         temperature: 0.3,
-        max_tokens: 500,
+        max_tokens: 200,
       }),
     });
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "יותר מדי בקשות, נסה שוב בעוד כמה שניות" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "יותר מדי בקשות, נסה שוב" }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "נדרש תשלום לשימוש בשירות" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "נדרש תשלום" }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-      throw new Error(`AI response error: ${aiResponse.status}`);
+      throw new Error(`AI error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
     const content = aiData.choices?.[0]?.message?.content;
+    const jsonMatch = content?.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const jsonString = jsonMatch ? jsonMatch[1].trim() : content?.trim();
+    const result = JSON.parse(jsonString);
 
-    if (!content) {
-      throw new Error("No content in AI response");
+    // Save result to substitutions table for future lookups
+    await supabaseAdmin.from("ingredient_substitutions").upsert({
+      original_ingredient: originalIngredient,
+      alternative_ingredient: suggestedReplacement,
+      reason: result.explanation,
+      confidence: result.confidence,
+      is_valid: result.isValid,
+      tips: result.tips || null,
+    }, { onConflict: "original_ingredient,alternative_ingredient" });
+
+    // Log AI usage
+    if (userId) {
+      await supabaseAdmin.from("ai_usage_logs").insert({
+        user_id: userId,
+        action_type: "substitution_validation",
+        tokens_estimated: 200,
+        credits_used: 1,
+        source: "ai",
+      });
     }
 
-    // Parse JSON from response
-    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    const jsonString = jsonMatch ? jsonMatch[1].trim() : content.trim();
-    const result: ValidationResult = JSON.parse(jsonString);
-
     return new Response(
-      JSON.stringify({ success: true, result }),
+      JSON.stringify({ success: true, result, source: "ai" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error) {
     console.error("Validation error:", error);
     return new Response(
