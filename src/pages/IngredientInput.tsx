@@ -10,6 +10,7 @@ import { ingredients as mockIngredients } from "@/data/mockData";
 import { useCustomIngredients } from "@/hooks/useCustomIngredients";
 import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CreditCounter from "@/components/CreditCounter";
 
 interface Ingredient {
   id: number;
@@ -95,7 +96,8 @@ const IngredientInput = () => {
               <ArrowRight className="w-5 h-5" />
               חזרה
             </Button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <CreditCounter />
               <div className="bg-primary/15 p-2 rounded-full">
                 <ChefHat className="w-6 h-6 text-primary" />
               </div>
