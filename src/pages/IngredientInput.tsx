@@ -92,6 +92,16 @@ const IngredientInput = () => {
             <div className="flex items-center gap-2">
               <CreditCounter />
               <span className="font-bold text-foreground">מה שיש 🍳</span>
+              {/* Camera toggle moved into header */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowPhoto((v) => !v)}
+                className={showPhoto ? "text-primary" : "text-muted-foreground hover:text-primary"}
+                title={showPhoto ? "חזרה לבחירת מצרכים" : "העלאת תמונה מהמקרר"}
+              >
+                <Camera className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
@@ -107,25 +117,7 @@ const IngredientInput = () => {
         />
       )}
 
-      <main className="container mx-auto px-4 py-6 space-y-6 pb-8">
-        {/* Title */}
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-1">מה יש לכם במקרר?</h1>
-          <p className="text-sm text-muted-foreground">
-            חפשו, בחרו מהפופולריים, או עיינו לפי קטגוריה
-          </p>
-        </div>
-
-        {/* Photo toggle */}
-        <div className="flex justify-center">
-          <button
-            onClick={() => setShowPhoto((v) => !v)}
-            className="flex items-center gap-2 text-sm text-primary font-medium hover:underline"
-          >
-            <Camera className="w-4 h-4" />
-            {showPhoto ? "חזרה לבחירת מצרכים" : "העלאת תמונה מהמקרר"}
-          </button>
-        </div>
+      <main className="container mx-auto px-4 py-4 space-y-4 pb-8">
 
         {showPhoto ? (
           /* Photo mode */
