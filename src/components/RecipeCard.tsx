@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import SubstitutionSection from "@/components/SubstitutionSection";
 import ChefTip from "@/components/ChefTip";
 import ReliabilityScore from "@/components/ReliabilityScore";
+import DietFilter from "@/components/DietFilter";
 
 interface Substitution {
   original: string;
@@ -201,6 +202,11 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         {recipe.why_it_works && (
           <ChefTip tip={recipe.why_it_works} />
         )}
+      </div>
+
+      {/* Diet Filter */}
+      <div className="mb-6">
+        <DietFilter ingredients={recipe.ingredients} />
       </div>
 
       {/* Smart Substitutions Section */}
