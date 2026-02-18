@@ -22,11 +22,7 @@ const QuickPicksSection = ({ ingredients, selected, onToggle }: QuickPicksSectio
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-        <span>⭐</span>
-        מצרכים פופולריים
-      </h3>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {picks.map((ing) => {
           const isSelected = selected.some((s) => s.id === ing.id);
           return (
@@ -34,21 +30,16 @@ const QuickPicksSection = ({ ingredients, selected, onToggle }: QuickPicksSectio
               key={ing.id}
               onClick={() => onToggle(ing)}
               className={cn(
-                "flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl border-2 shrink-0",
-                "transition-all duration-200 min-w-[72px]",
-                "shadow-soft hover:shadow-elevated",
+                "inline-flex items-center gap-1.5 px-3 py-2 rounded-full border shrink-0",
+                "transition-all duration-200 text-sm whitespace-nowrap",
                 isSelected
-                  ? "bg-accent border-primary text-accent-foreground"
-                  : "bg-card border-border hover:border-primary/40"
+                  ? "bg-accent border-primary text-accent-foreground font-medium"
+                  : "bg-card border-border hover:border-primary/40 text-foreground"
               )}
             >
-              <span className="text-2xl">{ing.emoji}</span>
-              <span className="text-xs font-medium text-foreground leading-tight text-center">
-                {ing.name}
-              </span>
-              {isSelected && (
-                <span className="text-primary text-xs font-bold">✓</span>
-              )}
+              <span className="text-base leading-none">{ing.emoji}</span>
+              <span>{ing.name}</span>
+              {isSelected && <span className="text-primary text-xs">✓</span>}
             </button>
           );
         })}
