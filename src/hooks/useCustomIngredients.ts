@@ -5,6 +5,7 @@ interface Ingredient {
   name: string;
   emoji: string;
   category: string;
+  popularityScore: number;
 }
 
 const STORAGE_KEY = "custom_ingredients";
@@ -53,6 +54,7 @@ export const useCustomIngredients = () => {
       name: trimmedName,
       emoji: emoji,
       category: "מותאם אישית",
+      popularityScore: 50,
     };
 
     setCustomIngredients((prev) => {
