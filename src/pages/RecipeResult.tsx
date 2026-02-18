@@ -47,46 +47,46 @@ const RecipeResult = () => {
    *   - number of ingredients
    *   - presence of advanced cooking technique keywords
    */
-  const computedDifficulty = recipe
-    ? calculateDifficulty(
-        recipe.instructions.length,
-        recipe.ingredients.length,
-        recipe.instructions
-      )
-    : "בינוני";
+  const computedDifficulty = recipe ?
+  calculateDifficulty(
+    recipe.instructions.length,
+    recipe.ingredients.length,
+    recipe.instructions
+  ) :
+  "בינוני";
 
   // Transform DB recipe to display format
-  const displayRecipe: RecipeCardData = recipe
-    ? {
-        id: recipe.id,
-        title: recipe.title,
-        description: recipe.cooking_time
-          ? `מתכון מהיר ב-${recipe.cooking_time} דקות`
-          : "מתכון מותאם אישית",
-        time: recipe.cooking_time ? `${recipe.cooking_time} דקות` : "30 דקות",
-        // ← Locally calculated, no AI call
-        difficulty: computedDifficulty,
-        servings: 4,
-        image: "🍳",
-        // Pass structured ingredients directly — RecipeCard handles both formats
-        ingredients: recipe.ingredients,
-        substitutions: (recipe.substitutions as any) || [],
-        why_it_works: whyItWorks,
-        reliability_score: reliabilityScore,
-        spoonacular_verified: spoonacularVerified,
-      }
-    : {
-        // Fallback to mock data when no recipes exist
-        id: mockRecipe.id,
-        title: mockRecipe.title,
-        description: mockRecipe.description,
-        time: mockRecipe.time,
-        difficulty: mockRecipe.difficulty,
-        servings: mockRecipe.servings,
-        image: mockRecipe.image,
-        ingredients: mockRecipe.ingredients,
-        substitutions: mockRecipe.substitutions,
-      };
+  const displayRecipe: RecipeCardData = recipe ?
+  {
+    id: recipe.id,
+    title: recipe.title,
+    description: recipe.cooking_time ?
+    `מתכון מהיר ב-${recipe.cooking_time} דקות` :
+    "מתכון מותאם אישית",
+    time: recipe.cooking_time ? `${recipe.cooking_time} דקות` : "30 דקות",
+    // ← Locally calculated, no AI call
+    difficulty: computedDifficulty,
+    servings: 4,
+    image: "🍳",
+    // Pass structured ingredients directly — RecipeCard handles both formats
+    ingredients: recipe.ingredients,
+    substitutions: recipe.substitutions as any || [],
+    why_it_works: whyItWorks,
+    reliability_score: reliabilityScore,
+    spoonacular_verified: spoonacularVerified
+  } :
+  {
+    // Fallback to mock data when no recipes exist
+    id: mockRecipe.id,
+    title: mockRecipe.title,
+    description: mockRecipe.description,
+    time: mockRecipe.time,
+    difficulty: mockRecipe.difficulty,
+    servings: mockRecipe.servings,
+    image: mockRecipe.image,
+    ingredients: mockRecipe.ingredients,
+    substitutions: mockRecipe.substitutions
+  };
 
   const handleStartCooking = () => {
     const id = recipe?.id || "mock";
@@ -102,8 +102,8 @@ const RecipeResult = () => {
             <Button
               variant="ghost"
               onClick={() => navigate("/ingredients")}
-              className="flex items-center gap-2"
-            >
+              className="flex items-center gap-2">
+
               <ArrowRight className="w-5 h-5" />
               חזרה
             </Button>
@@ -116,13 +116,13 @@ const RecipeResult = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 pb-24">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
+        {isLoading ?
+        <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
             <p className="text-muted-foreground">טוען מתכון...</p>
-          </div>
-        ) : (
-          <>
+          </div> :
+
+        <>
             {/* Title */}
             <div className="text-center mb-8 animate-fade-in">
               <div className="inline-flex items-center gap-2 bg-sage-light text-sage-dark px-4 py-2 rounded-full mb-4">
@@ -131,25 +131,25 @@ const RecipeResult = () => {
                   {recipe ? "מצאנו מתכון מושלם!" : "מתכון לדוגמה"}
                 </span>
               </div>
-              {!user && (
-                <p className="text-sm text-muted-foreground mt-2">
+              {!user &&
+            <p className="text-sm text-muted-foreground mt-2">
                   התחברו כדי לשמור מתכונים משלכם
                 </p>
-              )}
+            }
             </div>
 
             {/* Difficulty badge — informational only, no regeneration */}
-            {recipe && (
-              <div className="max-w-2xl mx-auto mb-6 animate-fade-in">
-                <div className="card-warm flex items-center justify-between">
+            {recipe &&
+          <div className="max-w-2xl mx-auto mb-6 animate-fade-in">
+                <div className="card-warm flex items-center justify-between bg-orange-50">
                   <span className="text-sm font-medium text-foreground">רמת קושי</span>
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
-                    computedDifficulty === "קל"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                      : computedDifficulty === "מאתגר"
-                      ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                      : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                  }`}>
+              computedDifficulty === "קל" ?
+              "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
+              computedDifficulty === "מאתגר" ?
+              "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" :
+              "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"}`
+              }>
                     {computedDifficulty === "קל" && "⭐"}
                     {computedDifficulty === "בינוני" && "⭐⭐"}
                     {computedDifficulty === "מאתגר" && "⭐⭐⭐"}
@@ -157,15 +157,15 @@ const RecipeResult = () => {
                   </span>
                 </div>
               </div>
-            )}
+          }
 
             {/* Recipe Card */}
             <RecipeCard recipe={displayRecipe} onStartCooking={handleStartCooking} />
           </>
-        )}
+        }
       </main>
-    </div>
-  );
+    </div>);
+
 };
 
 export default RecipeResult;
