@@ -1,77 +1,120 @@
 
+## Redesign: Ingredient Selection Screen — Cleaner UI
 
-# דשבורד אנליטיקס למנהל - עם אפשרות השבתה מהירה
+### What's Wrong Today (Diagnosis)
 
-## סקירה
-בניית דשבורד אנליטיקס למנהל מערכת בלבד, עם כפתור "השבת דשבורד" בתוך הדף עצמו. לחיצה על הכפתור תציג דיאלוג אישור, ואם המנהל מאשר - הדשבורד יוסתר מכל המשתמשים (כולל מנהלים) עד שיופעל מחדש דרך הדאטאבייס.
+Looking at the current page, there are 6 distinct visual zones stacked vertically before the user can even interact:
 
-## איך ההשבתה עובדת
-- טבלת `app_settings` בדאטאבייס עם שורה `analytics_dashboard_enabled = true/false`
-- הדשבורד בודק את ההגדרה בעת טעינה - אם `false`, מציג הודעה "הדשבורד מושבת"
-- כפתור "השבת דשבורד" עם AlertDialog לאישור כפול
-- להפעלה מחדש: הרצת UPDATE פשוט ב-SQL Editor
+1. App header (logo + back button + credit counter)
+2. Sticky bar with placeholder text + full-width disabled CTA button (~130px)
+3. Page title + subtitle
+4. Photo upload toggle link
+5. Search input
+6. Quick Picks large card grid → Category Browser
 
-## שלבים
+**Root problems:**
+- The sticky bar wastes space when nothing is selected — it shows a disabled orange button taking the full width with a placeholder hint above it
+- The CTA button should appear/grow only when at least 1 ingredient is selected
+- Quick Picks cards are oversized (72px min-width, tall cards) making the row feel heavy
+- Too many section labels ("⭐ מצרכים פופולריים", "📂 עיון לפי קטגוריה") add noise
+- No breathing room between sections — everything uses `space-y-6` uniformly
 
-### 1. מיגרציית דאטאבייס
-- Enum `app_role` עם ערכים `admin`, `user`
-- טבלת `user_roles` (user_id, role) עם RLS
-- פונקציית `has_role()` - security definer
-- טבלת `app_settings` (key TEXT PRIMARY KEY, value JSONB) עם שורת ברירת מחדל `analytics_dashboard_enabled = true`
-- RLS: כולם קוראים, רק admin כותב
+---
 
-### 2. Edge Function - `get-analytics`
-- אימות JWT ובדיקת תפקיד admin
-- בדיקה ש-`analytics_dashboard_enabled = true` ב-`app_settings`
-- אם מושבת: מחזיר `{ disabled: true }`
-- אם פעיל: מחזיר סטטיסטיקות מצורפות (סיכום, יומי, לפי אירוע)
+### Proposed Changes
 
-### 3. Edge Function - `toggle-analytics-dashboard`
-- אימות admin
-- מקבלת `{ enabled: boolean }`
-- מעדכנת את `app_settings`
+#### 1. `SelectedIngredientsBar.tsx` — Collapse when empty
+- **When empty**: show only a slim single-line hint ("בחרו לפחות 2 מצרכים") with no CTA button — reduces height from ~130px to ~40px
+- **When ≥1 selected**: show chips row + CTA button (current behavior)
+- **When ≥2 selected**: CTA becomes fully active (no change to logic)
+- This removes the giant disabled button that dominates the top of the page
 
-### 4. Hook - `useIsAdmin`
-- בודק ב-`user_roles` אם למשתמש הנוכחי יש role=admin
-- משמש להגנה על הנתיב ולהצגת לינק ב-UserMenu
+#### 2. `IngredientInput.tsx` — Simplify page layout
+- Remove the standalone `<h1>` title block — the header already names the app and the search input is self-explanatory
+- Move the photo toggle into the header row (as a small icon button) instead of a centered link that breaks the visual flow
+- Tighten `space-y-4` instead of `space-y-6`
+- Remove extra vertical padding
 
-### 5. דף דשבורד - `/admin/analytics`
-- בדיקת הרשאות admin (אם לא admin -> הפניה לדף הבית)
-- בדיקה אם הדשבורד מושבת -> הודעה "הדשבורד מושבת כרגע"
-- כרטיסי סיכום: סה"כ אירועים, הורדות PDF, שיעור המרה
-- גרף עמודות (Recharts) - אירועים לפי יום
-- טבלת פירוט אירועים
-- **כפתור "השבת דשבורד"** בפינה העליונה עם AlertDialog:
-  - כותרת: "השבתת דשבורד אנליטיקס"
-  - הסבר: "הדשבורד יוסתר מכל המשתמשים. ניתן להפעיל מחדש דרך הדאטאבייס"
-  - כפתורי "ביטול" ו"השבת"
+#### 3. `QuickPicksSection.tsx` — Slimmer pill chips
+- Replace tall card buttons (72px wide, ~90px tall, with stacked emoji+name) with compact horizontal pill chips
+- New style: `emoji + name` on one line, `px-3 py-2 rounded-full`, similar to the selected ingredient chips
+- This reduces the Quick Picks row height from ~100px to ~40px — a massive space saving
 
-### 6. ניווט
-- Route חדש `/admin/analytics` ב-App.tsx
-- לינק בתפריט UserMenu רק למשתמשים עם תפקיד admin (אייקון BarChart3)
+#### 4. `CategoryBrowser.tsx` — Tighten category rows
+- Remove the large section label "📂 עיון לפי קטגוריה" (redundant — the accordion rows are self-explanatory)
+- Category rows: reduce padding from `py-3` to `py-2.5`, shrink emoji from `text-xl` to `text-base`
+- Ingredient chips inside categories: reduce from `px-3 py-2` to `px-2.5 py-1.5 text-sm`
 
-## מבנה קבצים
+---
+
+### Technical Implementation Plan
+
+**Files to modify:**
+
+1. **`src/components/ingredient-input/SelectedIngredientsBar.tsx`**
+   - Add conditional rendering: if `selected.length === 0`, render a single slim line (`py-2`, no button)
+   - If `selected.length >= 1`, render full bar with chips + button
+
+2. **`src/pages/IngredientInput.tsx`**
+   - Move camera icon button into the header's right-side div (next to credit counter and logo)
+   - Remove the `<div className="text-center">` title block
+   - Change `space-y-6` → `space-y-4` on `<main>`
+
+3. **`src/components/ingredient-input/QuickPicksSection.tsx`**
+   - Replace tall `flex-col` cards with single-line pill buttons
+   - New layout: `flex items-center gap-2 px-3 py-2 rounded-full border shrink-0`
+   - Emoji (text-lg) + name (text-sm) side by side
+
+4. **`src/components/ingredient-input/CategoryBrowser.tsx`**
+   - Remove `<h3>` section label at the top
+   - Reduce vertical padding on trigger rows
+   - Reduce chip size inside open categories
+
+---
+
+### Before / After Visual Summary
 
 ```text
-supabase/migrations/xxx.sql                    - טבלאות roles + settings
-supabase/functions/get-analytics/index.ts      - שליפת נתונים
-supabase/functions/toggle-analytics-dashboard/index.ts - הפעלה/השבתה
-src/hooks/useIsAdmin.ts                        - בדיקת תפקיד
-src/pages/AdminAnalytics.tsx                   - דף הדשבורד
-src/App.tsx                                    - הוספת route
-src/components/UserMenu.tsx                    - לינק לדשבורד
+BEFORE (approximate heights):
+┌─────────────────────────────────────┐
+│ Header                    ~52px     │
+├─────────────────────────────────────┤
+│ Sticky Bar (hint + disabled btn)   │
+│                           ~130px   │
+├─────────────────────────────────────┤
+│ Title + subtitle           ~56px   │
+├─────────────────────────────────────┤
+│ Photo toggle link          ~32px   │
+├─────────────────────────────────────┤
+│ Search input               ~56px   │
+├─────────────────────────────────────┤
+│ Quick Picks (tall cards)   ~116px  │
+├─────────────────────────────────────┤
+│ Section label              ~32px   │
+│ Category rows              ...     │
+└─────────────────────────────────────┘
+Content starts after ~474px of chrome
+
+AFTER (approximate heights):
+┌─────────────────────────────────────┐
+│ Header (incl. camera icon) ~52px   │
+├─────────────────────────────────────┤
+│ Sticky Bar (slim hint only) ~40px  │
+├─────────────────────────────────────┤
+│ Search input               ~56px   │
+├─────────────────────────────────────┤
+│ Quick Picks (slim pills)   ~48px   │
+├─────────────────────────────────────┤
+│ Category rows              ...     │
+└─────────────────────────────────────┘
+Content starts after ~196px of chrome
 ```
 
-## הפעלה מחדש לאחר השבתה
-הרצת שורה אחת ב-SQL Editor של Supabase:
-```text
-UPDATE app_settings SET value = 'true' WHERE key = 'analytics_dashboard_enabled';
-```
+This is a ~278px reduction in initial chrome, meaning users see nearly 3 more category rows before needing to scroll.
 
-## הסרה מלאה בעתיד
-אם תרצה להסיר לגמרי מהקוד:
-1. מחיקת AdminAnalytics.tsx, useIsAdmin.ts
-2. מחיקת Edge Functions
-3. הסרת Route מ-App.tsx והלינק מ-UserMenu
-4. טבלאות user_roles ו-app_settings אפשר להשאיר לשימוש עתידי
+---
 
+### No Logic Changes
+- Recipe generation, ingredient toggling, custom ingredient addition, and photo mode all remain unchanged
+- Mobile bottom sheet for categories remains unchanged
+- All existing props/interfaces stay the same
