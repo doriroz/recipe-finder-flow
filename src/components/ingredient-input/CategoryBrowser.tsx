@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface Ingredient {
@@ -29,87 +29,113 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserProps) => {
-  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   const categories = Array.from(new Set(ingredients.map((i) => i.category)));
 
   const toggleCategory = (cat: string) => {
-    setOpenCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat);
-      else next.add(cat);
-      return next;
-    });
+    setOpenCategory((prev) => (prev === cat ? null : cat));
   };
 
   return (
-    <div className="space-y-2">
-      {categories.map((cat) => {
-        const catIngredients = ingredients
-          .filter((i) => i.category === cat)
-          .sort((a, b) => b.popularityScore - a.popularityScore);
-        const isOpen = openCategories.has(cat);
-        const selectedCount = catIngredients.filter((i) =>
-          selected.some((s) => s.id === i.id)
-        ).length;
+    <div className="space-y-3">
+      {/* 2-column grid of category cards */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {categories.map((cat, idx) => {
+          const catIngredients = ingredients
+            .filter((i) => i.category === cat)
+            .sort((a, b) => b.popularityScore - a.popularityScore);
+          const isOpen = openCategory === cat;
+          const selectedCount = catIngredients.filter((i) =>
+            selected.some((s) => s.id === i.id)
+          ).length;
 
-        return (
-          <div
-            key={cat}
-            className="bg-card border border-border rounded-xl overflow-hidden shadow-soft"
-          >
-            {/* Trigger */}
-            <button
-              onClick={() => toggleCategory(cat)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-accent/50 transition-colors"
-            >
-              <span className="text-base">{CATEGORY_ICONS[cat] ?? "🍽️"}</span>
-              <span className="flex-1 text-right font-medium text-foreground text-sm">{cat}</span>
-              {selectedCount > 0 && (
-                <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold">
-                  {selectedCount}
-                </span>
+          return (
+            <motion.div
+              key={cat}
+              layout
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, delay: idx * 0.04, ease: "easeOut" }}
+              className={cn(
+                "rounded-2xl border overflow-hidden transition-colors duration-200",
+                isOpen
+                  ? "border-primary/40 bg-card shadow-md col-span-2"
+                  : "border-border bg-card hover:border-primary/30 hover:shadow-sm"
               )}
-              <span className="text-xs text-muted-foreground">
-                {catIngredients.length}
-              </span>
-              <ChevronDown
-                className={cn(
-                  "w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 shrink-0",
-                  isOpen && "rotate-180"
-                )}
-              />
-            </button>
-
-            {/* Content */}
-            {isOpen && (
-              <div className="px-3 pb-3 pt-1 border-t border-border">
-                <div className="flex flex-wrap gap-1.5">
-                  {catIngredients.map((ing) => {
-                    const isSelected = selected.some((s) => s.id === ing.id);
-                    return (
-                      <button
-                        key={ing.id}
-                        onClick={() => onToggle(ing)}
-                        className={cn(
-                          "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm border transition-all duration-200",
-                          isSelected
-                            ? "bg-accent border-primary text-accent-foreground font-medium"
-                            : "bg-background border-border hover:border-primary/40 text-foreground"
-                        )}
-                      >
-                        <span className="text-sm">{ing.emoji}</span>
-                        <span>{ing.name}</span>
-                        {isSelected && <span className="text-primary text-xs">✓</span>}
-                      </button>
-                    );
-                  })}
+            >
+              {/* Card header — always visible */}
+              <button
+                onClick={() => toggleCategory(cat)}
+                className="w-full flex items-center gap-2 px-4 py-3.5 transition-colors"
+              >
+                {/* Big emoji + name */}
+                <span className="text-2xl leading-none">{CATEGORY_ICONS[cat] ?? "🍽️"}</span>
+                <div className="flex-1 text-right min-w-0">
+                  <p className="font-semibold text-foreground text-sm leading-tight">{cat}</p>
+                  <p className="text-xs text-muted-foreground">{catIngredients.length} מצרכים</p>
                 </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+                {selectedCount > 0 && (
+                  <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
+                    {selectedCount}
+                  </span>
+                )}
+                <motion.span
+                  animate={{ rotate: isOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-muted-foreground text-xs shrink-0"
+                >
+                  ▾
+                </motion.span>
+              </button>
+
+              {/* Expandable ingredient grid */}
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    key="content"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 pt-1 border-t border-border/60">
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {catIngredients.map((ing) => {
+                          const isSelected = selected.some((s) => s.id === ing.id);
+                          return (
+                            <motion.button
+                              key={ing.id}
+                              layout
+                              initial={{ scale: 0.85, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ duration: 0.15 }}
+                              onClick={() => onToggle(ing)}
+                              className={cn(
+                                "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-sm border transition-all duration-200",
+                                isSelected
+                                  ? "bg-accent border-primary text-accent-foreground font-medium"
+                                  : "bg-muted/60 border-transparent hover:border-primary/30 text-foreground"
+                              )}
+                            >
+                              <span className="text-sm">{ing.emoji}</span>
+                              <span>{ing.name}</span>
+                              {isSelected && (
+                                <span className="text-primary text-xs font-bold">✓</span>
+                              )}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 };
