@@ -141,7 +141,7 @@ const RecipeResult = () => {
             {/* Difficulty badge — informational only, no regeneration */}
             {recipe &&
           <div className="max-w-2xl mx-auto mb-6 animate-fade-in">
-                <div className="card-warm flex items-center justify-between bg-orange-50">
+                <div className="card-warm flex items-center justify-between bg-cream-dark">
                   <span className="text-sm font-medium text-foreground">רמת קושי</span>
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
               computedDifficulty === "קל" ?
