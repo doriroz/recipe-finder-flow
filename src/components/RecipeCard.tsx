@@ -12,6 +12,13 @@ interface Substitution {
   reason: string;
 }
 
+/** Structured ingredient (preferred — stored as JSON in DB) */
+export interface StructuredIngredient {
+  name: string;
+  amount?: string | number;
+  unit?: string;
+}
+
 export interface RecipeCardData {
   id: number | string;
   title: string;
@@ -20,7 +27,8 @@ export interface RecipeCardData {
   difficulty: string;
   servings: number;
   image: string;
-  ingredients: string[];
+  /** Accepts either structured objects or legacy flat strings */
+  ingredients: (StructuredIngredient | string)[];
   substitutions: Substitution[];
   why_it_works?: string;
   reliability_score?: "high" | "medium" | "creative";
@@ -32,85 +40,120 @@ interface RecipeCardProps {
   onStartCooking: () => void;
 }
 
-// Parse ingredient string to extract amount and name
-const parseIngredient = (ingredient: string): { amount: number | null; unit: string; name: string } => {
-  // Hebrew number words mapping
+// ─── Ingredient Scaling (pure math, no AI) ────────────────────────────────────
+
+/**
+ * Parse a legacy flat string like "2 כוסות קמח" into structured parts.
+ * Used only when the ingredient is stored as a plain string (backwards-compat).
+ */
+const parseLegacyIngredient = (
+  ingredient: string
+): { amount: number | null; unit: string; name: string } => {
   const hebrewNumbers: Record<string, number> = {
-    'חצי': 0.5,
-    'רבע': 0.25,
-    'שליש': 0.333,
+    חצי: 0.5,
+    רבע: 0.25,
+    שליש: 0.333,
   };
 
-  // Match patterns like "1 כוס קמח" or "2 כפות סוכר"
+  const fractionMap: Record<string, number> = {
+    "½": 0.5,
+    "¼": 0.25,
+    "¾": 0.75,
+  };
+
   const match = ingredient.match(/^([\d.½¼¾]+|חצי|רבע|שליש)?\s*(.*)$/);
-  
-  if (!match) {
-    return { amount: null, unit: '', name: ingredient };
-  }
+  if (!match) return { amount: null, unit: "", name: ingredient };
 
   let amount: number | null = null;
-  let rest = match[2] || ingredient;
+  const rest = match[2] || ingredient;
 
   if (match[1]) {
-    // Check for Hebrew number words
-    if (hebrewNumbers[match[1]]) {
+    if (hebrewNumbers[match[1]] !== undefined) {
       amount = hebrewNumbers[match[1]];
+    } else if (fractionMap[match[1]] !== undefined) {
+      amount = fractionMap[match[1]];
     } else {
-      // Handle fractions
-      const fractionMap: Record<string, number> = { '½': 0.5, '¼': 0.25, '¾': 0.75 };
-      const numStr = match[1];
-      if (fractionMap[numStr]) {
-        amount = fractionMap[numStr];
-      } else {
-        amount = parseFloat(numStr);
-      }
+      amount = parseFloat(match[1]);
     }
   }
 
-  // Extract unit from the rest (first word is usually the unit)
-  const unitMatch = rest.match(/^(כוס|כוסות|כפית|כפיות|כף|כפות|גרם|ק"ג|מ"ל|ליטר|יחידה|יחידות|ביצה|ביצים)?\s*(.*)$/);
-  
+  const unitMatch = rest.match(
+    /^(כוס|כוסות|כפית|כפיות|כף|כפות|גרם|ק"ג|מ"ל|ליטר|יחידה|יחידות|ביצה|ביצים)?\s*(.*)$/
+  );
+
   if (unitMatch) {
-    return { amount, unit: unitMatch[1] || '', name: unitMatch[2] || rest };
+    return { amount, unit: unitMatch[1] || "", name: unitMatch[2] || rest };
   }
-
-  return { amount, unit: '', name: rest };
+  return { amount, unit: "", name: rest };
 };
 
-// Format scaled ingredient
-const formatScaledIngredient = (ingredient: string, scaleFactor: number): string => {
-  const { amount, unit, name } = parseIngredient(ingredient);
-  
-  if (amount === null) {
-    return ingredient;
-  }
-
-  const scaledAmount = amount * scaleFactor;
-  
-  // Format the number nicely
-  let formattedAmount: string;
-  if (scaledAmount === Math.floor(scaledAmount)) {
-    formattedAmount = scaledAmount.toString();
-  } else if (scaledAmount === 0.5) {
-    formattedAmount = '½';
-  } else if (scaledAmount === 0.25) {
-    formattedAmount = '¼';
-  } else if (scaledAmount === 0.75) {
-    formattedAmount = '¾';
-  } else {
-    formattedAmount = scaledAmount.toFixed(1).replace('.0', '');
-  }
-
-  return `${formattedAmount} ${unit} ${name}`.trim();
+/** Format a number nicely: integers as integers, known fractions as symbols */
+const formatNumber = (n: number): string => {
+  if (n === Math.floor(n)) return n.toString();
+  if (n === 0.5) return "½";
+  if (n === 0.25) return "¼";
+  if (n === 0.75) return "¾";
+  return n.toFixed(1).replace(".0", "");
 };
+
+/**
+ * Scale and format a single ingredient for display.
+ * Works with both structured JSON ingredients and legacy flat strings.
+ *
+ * @param ingredient  Either a StructuredIngredient or a legacy string
+ * @param scaleFactor multiplier = requestedServings / originalServings
+ */
+const scaleIngredient = (
+  ingredient: StructuredIngredient | string,
+  scaleFactor: number
+): string => {
+  // ── Structured path (preferred) ──────────────────────────────────────────
+  if (typeof ingredient === "object") {
+    const { name, amount, unit } = ingredient;
+
+    if (amount == null || amount === "" || amount === undefined) {
+      // No amount — just show name (e.g. "לפי הטעם")
+      return [unit, name].filter(Boolean).join(" ");
+    }
+
+    const numericAmount =
+      typeof amount === "number" ? amount : parseFloat(String(amount));
+
+    if (isNaN(numericAmount)) {
+      // Non-numeric amount like "לפי הטעם" — show as-is
+      return [amount, unit, name].filter(Boolean).join(" ");
+    }
+
+    const scaled = numericAmount * scaleFactor;
+    return [formatNumber(scaled), unit, name].filter(Boolean).join(" ");
+  }
+
+  // ── Legacy string path (backwards compatibility) ──────────────────────────
+  const { amount, unit, name } = parseLegacyIngredient(ingredient);
+  if (amount === null) return ingredient;
+
+  const scaled = amount * scaleFactor;
+  return [formatNumber(scaled), unit, name].filter(Boolean).join(" ");
+};
+
+/** Returns the plain display string for an ingredient (no scaling) */
+const ingredientToString = (ing: StructuredIngredient | string): string => {
+  if (typeof ing === "string") return ing;
+  return [ing.amount, ing.unit, ing.name].filter(Boolean).join(" ");
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
   const [servings, setServings] = useState(recipe.servings);
   const baseServings = recipe.servings;
   const scaleFactor = servings / baseServings;
 
-  const incrementServings = () => setServings(prev => Math.min(prev + 1, 20));
-  const decrementServings = () => setServings(prev => Math.max(prev - 1, 1));
+  const incrementServings = () => setServings((prev) => Math.min(prev + 1, 20));
+  const decrementServings = () => setServings((prev) => Math.max(prev - 1, 1));
+
+  // Flat string list for DietFilter / SubstitutionSection
+  const ingredientStrings = recipe.ingredients.map(ingredientToString);
 
   return (
     <div className="card-warm animate-slide-up max-w-2xl mx-auto">
@@ -143,7 +186,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg text-foreground">מצרכים</h3>
-          
+
           {/* Servings Adjuster */}
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground text-sm">מנות</span>
@@ -155,7 +198,9 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
               >
                 <Plus className="w-4 h-4" />
               </button>
-              <span className="w-8 text-center font-bold text-lg text-foreground">{servings}</span>
+              <span className="w-8 text-center font-bold text-lg text-foreground">
+                {servings}
+              </span>
               <button
                 onClick={decrementServings}
                 className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
@@ -169,15 +214,15 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
 
         <ul className="space-y-2">
           {recipe.ingredients.map((ingredient, index) => (
-            <li 
-              key={index} 
+            <li
+              key={index}
               className={`flex items-center gap-2 py-2 px-3 rounded-lg transition-colors ${
-                index % 2 === 0 ? 'bg-muted/30' : ''
+                index % 2 === 0 ? "bg-muted/30" : ""
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-primary shrink-0"></span>
               <span className="text-foreground">
-                {formatScaledIngredient(ingredient, scaleFactor)}
+                {scaleIngredient(ingredient, scaleFactor)}
               </span>
             </li>
           ))}
@@ -190,30 +235,34 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
           {recipe.reliability_score && (
             <ReliabilityScore score={recipe.reliability_score} />
           )}
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-            recipe.spoonacular_verified
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-              : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-          }`}>
-            <span>{recipe.spoonacular_verified ? '✅' : '🧪'}</span>
-            <span>{recipe.spoonacular_verified ? 'מאומת ע״י Spoonacular' : 'לא אומת – מבוסס AI בלבד'}</span>
+          <div
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+              recipe.spoonacular_verified
+                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+            }`}
+          >
+            <span>{recipe.spoonacular_verified ? "✅" : "🧪"}</span>
+            <span>
+              {recipe.spoonacular_verified
+                ? 'מאומת ע״י Spoonacular'
+                : "לא אומת – מבוסס AI בלבד"}
+            </span>
           </div>
         </div>
-        {recipe.why_it_works && (
-          <ChefTip tip={recipe.why_it_works} />
-        )}
+        {recipe.why_it_works && <ChefTip tip={recipe.why_it_works} />}
       </div>
 
       {/* Diet Filter */}
       <div className="mb-6">
-        <DietFilter ingredients={recipe.ingredients} />
+        <DietFilter ingredients={ingredientStrings} />
       </div>
 
       {/* Smart Substitutions Section */}
       <div className="mb-6">
         <SubstitutionSection
           substitutions={recipe.substitutions || []}
-          ingredients={recipe.ingredients}
+          ingredients={ingredientStrings}
           recipeTitle={recipe.title}
         />
       </div>
@@ -224,9 +273,9 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
       </p>
 
       {/* Start Cooking Button */}
-      <Button 
-        variant="hero" 
-        size="xl" 
+      <Button
+        variant="hero"
+        size="xl"
         className="w-full"
         onClick={onStartCooking}
       >

@@ -3,153 +3,93 @@ import { ArrowRight, ChefHat, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import RecipeCard, { RecipeCardData } from "@/components/RecipeCard";
-import DifficultyTuning, { DifficultyLevel } from "@/components/DifficultyTuning";
 import { useRecipe, useUserRecipes } from "@/hooks/useRecipes";
 import { useAuth } from "@/hooks/useAuth";
 import { mockRecipe } from "@/data/mockData";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { calculateDifficulty } from "@/lib/calculateDifficulty";
 
 const RecipeResult = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const recipeId = searchParams.get("id");
   const { user, loading: authLoading } = useAuth();
-  
-  const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>("medium");
-  const [pendingDifficulty, setPendingDifficulty] = useState<DifficultyLevel>("medium");
-  const [isRegenerating, setIsRegenerating] = useState(false);
+
   const [whyItWorks, setWhyItWorks] = useState<string | undefined>();
   const [reliabilityScore, setReliabilityScore] = useState<"high" | "medium" | "creative">("medium");
   const [spoonacularVerified, setSpoonacularVerified] = useState(false);
 
   // Pick up why_it_works, reliability_score, and spoonacular_verified from navigation state
   useEffect(() => {
-    const state = location.state as { why_it_works?: string; reliability_score?: string; spoonacular_verified?: boolean } | null;
+    const state = location.state as {
+      why_it_works?: string;
+      reliability_score?: string;
+      spoonacular_verified?: boolean;
+    } | null;
     if (state?.why_it_works) setWhyItWorks(state.why_it_works);
     if (state?.reliability_score) setReliabilityScore(state.reliability_score as any);
     if (state?.spoonacular_verified !== undefined) setSpoonacularVerified(state.spoonacular_verified);
   }, [location.state]);
+
   // Fetch specific recipe if ID provided, otherwise get latest user recipe
-  const { data: specificRecipe, isLoading: loadingSpecific, refetch: refetchRecipe } = useRecipe(recipeId);
-  const { data: userRecipes, isLoading: loadingRecipes, refetch: refetchUserRecipes } = useUserRecipes();
-  
+  const { data: specificRecipe, isLoading: loadingSpecific } = useRecipe(recipeId);
+  const { data: userRecipes, isLoading: loadingRecipes } = useUserRecipes();
+
   const isLoading = authLoading || loadingSpecific || loadingRecipes;
-  
+
   // Use specific recipe, or first user recipe, or fall back to mock
   const latestRecipe = userRecipes?.[0];
   const recipe = specificRecipe || latestRecipe;
-  
-  // Extract ingredients from current recipe for regeneration
-  const getIngredientsFromRecipe = () => {
-    if (!recipe) return [];
-    return recipe.ingredients.map((ing: any) => 
-      typeof ing === 'string' ? ing : ing.name
-    );
-  };
-  
-  const handleDifficultyChange = async (difficulty: DifficultyLevel) => {
-    if (difficulty === pendingDifficulty || !user) {
-      if (!user) {
-        toast.error("יש להתחבר כדי לשנות רמת קושי");
-        return;
-      }
-      return;
-    }
 
-    const previousDifficulty = pendingDifficulty;
-    setIsRegenerating(true);
-    setPendingDifficulty(difficulty);
+  /**
+   * Compute difficulty locally from the recipe's own data:
+   *   - number of instruction steps
+   *   - number of ingredients
+   *   - presence of advanced cooking technique keywords
+   */
+  const computedDifficulty = recipe
+    ? calculateDifficulty(
+        recipe.instructions.length,
+        recipe.ingredients.length,
+        recipe.instructions
+      )
+    : "בינוני";
 
-    try {
-      const ingredients = getIngredientsFromRecipe();
-
-      if (ingredients.length === 0) {
-        toast.error("לא נמצאו מצרכים במתכון");
-        setPendingDifficulty(previousDifficulty);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke("generate-and-save-recipe", {
-        body: {
-          ingredients,
-          difficulty,
-        },
-      });
-
-      if (error) {
-        console.error("Regeneration error:", error);
-        toast.error("שגיאה ביצירת המתכון. נסו שוב.");
-        setPendingDifficulty(previousDifficulty);
-        return;
-      }
-
-      if (data?.success && data?.recipe) {
-        toast.success(
-          `המתכון הותאם לרמת קושי ${
-            difficulty === "low" ? "קלה" : difficulty === "high" ? "מאתגרת" : "בינונית"
-          }!`
-        );
-        setSearchParams({ id: data.recipe.id });
-        setCurrentDifficulty(difficulty);
-        setWhyItWorks(data.why_it_works || undefined);
-        setReliabilityScore(data.reliability_score || "medium");
-        setSpoonacularVerified(data.spoonacular_verified ?? false);
-        refetchRecipe();
-        refetchUserRecipes();
-      }
-    } catch (err) {
-      console.error("Difficulty change error:", err);
-      toast.error("שגיאה בלתי צפויה. נסו שוב.");
-      setPendingDifficulty(previousDifficulty);
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
-  
-  // Map difficulty to Hebrew display text
-  const getDifficultyLabel = (difficulty: DifficultyLevel): string => {
-    switch (difficulty) {
-      case "low": return "קל";
-      case "high": return "מאתגר";
-      default: return "בינוני";
-    }
-  };
-  
   // Transform DB recipe to display format
-  const displayRecipe = recipe ? {
-    id: recipe.id,
-    title: recipe.title,
-    description: recipe.cooking_time 
-      ? `מתכון מהיר ב-${recipe.cooking_time} דקות` 
-      : "מתכון מותאם אישית",
-    time: recipe.cooking_time ? `${recipe.cooking_time} דקות` : "30 דקות",
-    difficulty: getDifficultyLabel(currentDifficulty),
-    servings: 4,
-    image: "🍳",
-    ingredients: recipe.ingredients.map(ing => 
-      typeof ing === 'string' ? ing : `${ing.amount || ''} ${ing.unit || ''} ${ing.name}`.trim()
-    ),
-    substitutions: recipe.substitutions || [],
-    why_it_works: whyItWorks,
-    reliability_score: reliabilityScore,
-    spoonacular_verified: spoonacularVerified,
-  } : {
-    // Fallback to mock data when no recipes exist
-    id: mockRecipe.id,
-    title: mockRecipe.title,
-    description: mockRecipe.description,
-    time: mockRecipe.time,
-    difficulty: mockRecipe.difficulty,
-    servings: mockRecipe.servings,
-    image: mockRecipe.image,
-    ingredients: mockRecipe.ingredients,
-    substitutions: mockRecipe.substitutions,
-  };
+  const displayRecipe: RecipeCardData = recipe
+    ? {
+        id: recipe.id,
+        title: recipe.title,
+        description: recipe.cooking_time
+          ? `מתכון מהיר ב-${recipe.cooking_time} דקות`
+          : "מתכון מותאם אישית",
+        time: recipe.cooking_time ? `${recipe.cooking_time} דקות` : "30 דקות",
+        // ← Locally calculated, no AI call
+        difficulty: computedDifficulty,
+        servings: 4,
+        image: "🍳",
+        // Pass structured ingredients directly — RecipeCard handles both formats
+        ingredients: recipe.ingredients,
+        substitutions: (recipe.substitutions as any) || [],
+        why_it_works: whyItWorks,
+        reliability_score: reliabilityScore,
+        spoonacular_verified: spoonacularVerified,
+      }
+    : {
+        // Fallback to mock data when no recipes exist
+        id: mockRecipe.id,
+        title: mockRecipe.title,
+        description: mockRecipe.description,
+        time: mockRecipe.time,
+        difficulty: mockRecipe.difficulty,
+        servings: mockRecipe.servings,
+        image: mockRecipe.image,
+        ingredients: mockRecipe.ingredients,
+        substitutions: mockRecipe.substitutions,
+      };
 
   const handleStartCooking = () => {
-    const id = recipe?.id || 'mock';
+    const id = recipe?.id || "mock";
     navigate(`/cooking?id=${id}`);
   };
 
@@ -159,8 +99,8 @@ const RecipeResult = () => {
       <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => navigate("/ingredients")}
               className="flex items-center gap-2"
             >
@@ -198,22 +138,29 @@ const RecipeResult = () => {
               )}
             </div>
 
-            {/* Difficulty Tuning - Only show for logged in users with a real recipe */}
-            {user && recipe && (
-              <div className="max-w-2xl mx-auto mb-6 card-warm animate-fade-in">
-                <DifficultyTuning
-                  currentDifficulty={pendingDifficulty}
-                  onDifficultyChange={handleDifficultyChange}
-                  isRegenerating={isRegenerating}
-                />
+            {/* Difficulty badge — informational only, no regeneration */}
+            {recipe && (
+              <div className="max-w-2xl mx-auto mb-6 animate-fade-in">
+                <div className="card-warm flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">רמת קושי</span>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+                    computedDifficulty === "קל"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                      : computedDifficulty === "מאתגר"
+                      ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                  }`}>
+                    {computedDifficulty === "קל" && "⭐"}
+                    {computedDifficulty === "בינוני" && "⭐⭐"}
+                    {computedDifficulty === "מאתגר" && "⭐⭐⭐"}
+                    {" "}{computedDifficulty}
+                  </span>
+                </div>
               </div>
             )}
 
             {/* Recipe Card */}
-            <RecipeCard 
-              recipe={displayRecipe} 
-              onStartCooking={handleStartCooking}
-            />
+            <RecipeCard recipe={displayRecipe} onStartCooking={handleStartCooking} />
           </>
         )}
       </main>
