@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { 
   CookbookSettings, 
   CookbookRecipe, 
@@ -8,6 +8,16 @@ import type {
 import { cookbookThemes } from "@/types/cookbook";
 import type { UserGalleryItem } from "@/types/recipe";
 
+interface CookbookDraft {
+  userId: string;
+  step: CookbookBuilderStep;
+  selectedItems: string[];
+  recipeOrder: string[];
+  personalNotes: Record<string, string>;
+  settings: CookbookSettings;
+  savedAt: string;
+}
+
 const defaultSettings: CookbookSettings = {
   title: "ספר המתכונים שלי",
   subtitle: "",
@@ -16,11 +26,49 @@ const defaultSettings: CookbookSettings = {
   includePersonalNotes: true,
 };
 
-export const useCookbook = () => {
+const loadDraft = (userId: string): CookbookDraft | null => {
+  try {
+    const raw = localStorage.getItem(`cookbook_draft_${userId}`);
+    if (!raw) return null;
+    return JSON.parse(raw) as CookbookDraft;
+  } catch {
+    return null;
+  }
+};
+
+export const useCookbook = (userId?: string) => {
   const [step, setStep] = useState<CookbookBuilderStep>("select");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [recipes, setRecipes] = useState<CookbookRecipe[]>([]);
   const [settings, setSettings] = useState<CookbookSettings>(defaultSettings);
+
+  // Derived draft state
+  const draft = userId ? loadDraft(userId) : null;
+  const hasDraft = !!draft;
+  const draftSavedAt = draft?.savedAt ?? null;
+
+  // Auto-save effect (debounced 500ms)
+  useEffect(() => {
+    if (!userId) return;
+    // Only save if something meaningful has been done (at least one item selected or not on the default step)
+    if (selectedItems.length === 0 && step === "select") return;
+
+    const draftData: CookbookDraft = {
+      userId,
+      step,
+      selectedItems,
+      recipeOrder: recipes.map((r) => r.galleryItem.id),
+      personalNotes: Object.fromEntries(
+        recipes.map((r) => [r.galleryItem.id, r.personalNote || ""])
+      ),
+      settings,
+      savedAt: new Date().toISOString(),
+    };
+    const timer = setTimeout(() => {
+      localStorage.setItem(`cookbook_draft_${userId}`, JSON.stringify(draftData));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [step, selectedItems, recipes, settings, userId]);
 
   const toggleSelection = useCallback((itemId: string) => {
     setSelectedItems((prev) =>
@@ -55,7 +103,6 @@ export const useCookbook = () => {
       const updated = [...prev];
       const [removed] = updated.splice(fromIndex, 1);
       updated.splice(toIndex, 0, removed);
-      // Update page numbers
       return updated.map((recipe, index) => ({
         ...recipe,
         pageNumber: index + 1,
@@ -106,11 +153,43 @@ export const useCookbook = () => {
     setSettings(defaultSettings);
   }, []);
 
+  const clearDraft = useCallback(() => {
+    if (userId) localStorage.removeItem(`cookbook_draft_${userId}`);
+    reset();
+  }, [userId, reset]);
+
+  const resumeDraft = useCallback((galleryItems: UserGalleryItem[]) => {
+    if (!userId) return;
+    const saved = loadDraft(userId);
+    if (!saved) return;
+
+    setSelectedItems(saved.selectedItems);
+    setSettings(saved.settings);
+
+    // Re-hydrate full recipe objects from gallery + restore notes and order
+    const orderedRecipes = saved.recipeOrder
+      .map((id, index) => {
+        const item = galleryItems.find((g) => g.id === id);
+        if (!item) return null;
+        return {
+          galleryItem: item,
+          pageNumber: index + 1,
+          personalNote: saved.personalNotes[id] || "",
+        };
+      })
+      .filter(Boolean) as CookbookRecipe[];
+
+    setRecipes(orderedRecipes);
+    setStep(saved.step);
+  }, [userId]);
+
   return {
     step,
     selectedItems,
     recipes,
     settings,
+    hasDraft,
+    draftSavedAt,
     toggleSelection,
     selectAll,
     clearSelection,
@@ -123,5 +202,7 @@ export const useCookbook = () => {
     nextStep,
     prevStep,
     reset,
+    clearDraft,
+    resumeDraft,
   };
 };
