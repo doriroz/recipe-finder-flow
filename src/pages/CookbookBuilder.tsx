@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChefHat, Search, BookOpen, Loader2, BookMarked } from "lucide-react";
+import { ArrowRight, Search, BookOpen, Loader2, BookMarked, BookText, Clock, RotateCcw } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { he } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +22,7 @@ const CookbookBuilder = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
-  const cookbook = useCookbook();
+  const cookbook = useCookbook(user?.id);
   const { track } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeRecipeIndex, setActiveRecipeIndex] = useState(0);
@@ -166,6 +168,56 @@ const CookbookBuilder = () => {
                 </div>
               ) : (
                 <>
+                  {/* Draft Resume Banner */}
+                  <AnimatePresence>
+                    {cookbook.hasDraft && (
+                      <motion.div
+                        key="draft-banner"
+                        initial={{ opacity: 0, y: -12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -12 }}
+                        transition={{ duration: 0.25 }}
+                        className="shrink-0 bg-primary/8 border-b border-primary/20 px-4 py-3"
+                      >
+                        <div className="container mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
+                          <div className="flex items-center gap-3">
+                            <BookText className="w-5 h-5 text-primary shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">
+                                יש לך טיוטה שמורה — {cookbook.selectedItems.length || "מספר"} מתכונים
+                              </p>
+                              {cookbook.draftSavedAt && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                  <Clock className="w-3 h-3" />
+                                  נשמרה {formatDistanceToNow(new Date(cookbook.draftSavedAt), { locale: he, addSuffix: true })}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-muted-foreground"
+                              onClick={cookbook.clearDraft}
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              התחל מחדש
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => cookbook.resumeDraft(galleryItems || [])}
+                              className="gap-1.5"
+                            >
+                              <BookOpen className="w-3.5 h-3.5" />
+                              המשך מהמקום שעצרת
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {/* Search & Actions Bar */}
                   <div className="p-4 border-b border-border bg-card shrink-0">
                     <div className="container mx-auto flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -331,7 +383,10 @@ const CookbookBuilder = () => {
         settings={cookbook.settings}
         recipes={cookbook.recipes}
         isOpen={showCheckout}
-        onClose={() => setShowCheckout(false)}
+        onClose={(completed?: boolean) => {
+          setShowCheckout(false);
+          if (completed) cookbook.clearDraft();
+        }}
       />
     </div>
   );
