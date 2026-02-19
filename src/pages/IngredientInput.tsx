@@ -13,18 +13,9 @@ import SelectedIngredientsBar from "@/components/ingredient-input/SelectedIngred
 import IngredientSearchInput from "@/components/ingredient-input/IngredientSearchInput";
 import QuickPicksSection from "@/components/ingredient-input/QuickPicksSection";
 import CategoryBrowser from "@/components/ingredient-input/CategoryBrowser";
-import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 const IngredientInput = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const [selected, setSelected] = useState<Ingredient[]>([]);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [showPhoto, setShowPhoto] = useState(false);
@@ -151,32 +142,12 @@ const IngredientInput = () => {
               onToggle={toggle}
             />
 
-            {/* Category browser — full on desktop, bottom-sheet on mobile */}
-            {isMobile ? (
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    📂 עיון בכל המצרכים לפי קטגוריה
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[80vh] overflow-y-auto rounded-t-2xl">
-                  <SheetHeader className="text-right mb-4">
-                    <SheetTitle>עיון לפי קטגוריה</SheetTitle>
-                  </SheetHeader>
-                  <CategoryBrowser
-                    ingredients={allIngredients}
-                    selected={selected}
-                    onToggle={toggle}
-                  />
-                </SheetContent>
-              </Sheet>
-            ) : (
-              <CategoryBrowser
-                ingredients={allIngredients}
-                selected={selected}
-                onToggle={toggle}
-              />
-            )}
+            {/* Category browser — modal handles both mobile & desktop */}
+            <CategoryBrowser
+              ingredients={allIngredients}
+              selected={selected}
+              onToggle={toggle}
+            />
           </>
         )}
       </main>
