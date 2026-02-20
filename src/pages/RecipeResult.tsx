@@ -18,17 +18,20 @@ const RecipeResult = () => {
   const [whyItWorks, setWhyItWorks] = useState<string | undefined>();
   const [reliabilityScore, setReliabilityScore] = useState<"high" | "medium" | "creative">("medium");
   const [spoonacularVerified, setSpoonacularVerified] = useState(false);
+  const [recipeSource, setRecipeSource] = useState<"local" | "ai" | undefined>();
 
-  // Pick up why_it_works, reliability_score, and spoonacular_verified from navigation state
+  // Pick up why_it_works, reliability_score, spoonacular_verified, and source from navigation state
   useEffect(() => {
     const state = location.state as {
       why_it_works?: string;
       reliability_score?: string;
       spoonacular_verified?: boolean;
+      source?: "local" | "ai";
     } | null;
     if (state?.why_it_works) setWhyItWorks(state.why_it_works);
     if (state?.reliability_score) setReliabilityScore(state.reliability_score as any);
     if (state?.spoonacular_verified !== undefined) setSpoonacularVerified(state.spoonacular_verified);
+    if (state?.source) setRecipeSource(state.source);
   }, [location.state]);
 
   // Fetch specific recipe if ID provided, otherwise get latest user recipe
@@ -73,7 +76,8 @@ const RecipeResult = () => {
     substitutions: recipe.substitutions as any || [],
     why_it_works: whyItWorks,
     reliability_score: reliabilityScore,
-    spoonacular_verified: spoonacularVerified
+    spoonacular_verified: spoonacularVerified,
+    source: recipeSource
   } :
   {
     // Fallback to mock data when no recipes exist
