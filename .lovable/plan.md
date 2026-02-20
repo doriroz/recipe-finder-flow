@@ -1,63 +1,92 @@
 
-
-## Fix Credit Error Handling and Improve User Experience
+## Fix Credit Error Crash and Add Credit Renewal
 
 ### Problem
-Two issues are happening when you try to generate a recipe:
-
-1. **You have 1 credit remaining, but recipe generation needs 2 credits** -- this is the actual cause of the error
-2. **The app shows a generic error message** ("שגיאה ביצירת המתכון. נסו שוב") instead of the real one ("אין מספיק קרדיטים") because the edge function returns a 403 status, which the Supabase client treats as a thrown error -- the response body with the actual message is never read
+Two issues:
+1. **App crashes (error boundary)** when credits are insufficient -- the toast shows the right message ("אין מספיק קרדיטים") but the app also triggers an error boundary crash. The `error.context.json()` call may be failing because the Supabase client's `FunctionsHttpError.context` is a Response object that could already be consumed, causing an uncaught error.
+2. **No way to renew credits** -- when credits run out, there's no option for the user to get more.
 
 ### Solution
 
-**1. Fix `useGenerateRecipe.ts` to extract the real error message from non-2xx responses**
+**1. Fix error handling in `useGenerateRecipe.ts` to prevent crash**
 
-Currently the code does:
-```
-if (error) {
-  toast.error("שגיאה ביצירת המתכון. נסו שוב.");
-  return;
-}
-```
+The current code calls `error.context?.json?.()` which can throw if the Response body was already consumed. We need to make this more defensive. Additionally, check `data` first -- Supabase `functions.invoke` may return the error body in `data` even on non-2xx responses.
 
-The Supabase `functions.invoke` wraps non-2xx responses as a `FunctionsHttpError` object. The actual response body (with the credit message) can be read from `error.context.json()`. We will update the error handler to:
-- Check if the error is a `FunctionsHttpError`
-- Extract the JSON body from the response context
-- Show the real error message (e.g., "אין מספיק קרדיטים") to the user via toast
-
-**2. Add credits to your account via a database update**
-
-Run a SQL update to give you more credits so you can continue testing:
-```sql
-UPDATE user_credits
-SET credits_remaining = 10
-WHERE user_id = '6fdb9b43-2072-4274-a177-cd98d48088fa';
-```
-
-### Technical Details
-
-**File: `src/hooks/useGenerateRecipe.ts`** (lines 31-35)
-
-Replace the generic error handling:
+Updated error handling:
 ```typescript
 if (error) {
   console.error("Edge function error:", error);
-  // Try to extract the real error message from the response
   let errorMessage = "שגיאה ביצירת המתכון. נסו שוב.";
   try {
-    const errorBody = await error.context?.json?.();
-    if (errorBody?.error) {
-      errorMessage = errorBody.error;
+    // Try reading from error.context (Response object)
+    if (error.context && typeof error.context.json === 'function') {
+      const errorBody = await error.context.json();
+      if (errorBody?.error) errorMessage = errorBody.error;
     }
-  } catch {}
-  toast.error(errorMessage);
+  } catch (e) {
+    // Response may already be consumed, try message
+    if (error.message && error.message !== "Edge Function returned a non-2xx status code") {
+      errorMessage = error.message;
+    }
+  }
+
+  // Check if it's a credit error -- show special toast with renewal option
+  if (errorMessage.includes("קרדיטים")) {
+    toast.error(errorMessage, {
+      action: {
+        label: "חידוש קרדיטים",
+        onClick: () => navigate("/profile"),
+      },
+      duration: 8000,
+    });
+  } else {
+    toast.error(errorMessage);
+  }
   return;
 }
 ```
 
-This way, when the edge function returns "אין מספיק קרדיטים (נדרשים 2, נותרו 1)", users will see exactly that message instead of a confusing generic error.
+Also wrap `data` check to handle credit errors:
+```typescript
+if (data?.error) {
+  if (data.error.includes?.("קרדיטים")) {
+    toast.error(data.error, {
+      action: { label: "חידוש קרדיטים", onClick: () => navigate("/profile") },
+      duration: 8000,
+    });
+  } else {
+    toast.error(data.error);
+  }
+  return;
+}
+```
 
-**Database: Reset credits for your account**
+**2. Add credit renewal section to User Profile page**
 
-A one-time SQL update to restore your credits to 10.
+Add a "Credit Management" section to the existing UserProfile page with:
+- Current credit balance display
+- A "Reset credits" button that calls a new edge function
+- Info text explaining daily usage limits
 
+**3. Create `reset-credits` edge function**
+
+A simple edge function that resets the user's credits to 10 (the default). This gives users a self-service way to get more credits.
+- Validates authentication
+- Updates `credits_remaining` to 10 in `user_credits`
+- Returns the updated balance
+
+**4. Enhance `CreditCounter` component**
+
+When credits are 0, show the counter in red with a clickable link to the profile page for renewal.
+
+### Technical Details
+
+**Files to modify:**
+- `src/hooks/useGenerateRecipe.ts` -- defensive error handling + credit-specific toast with action button
+- `src/components/CreditCounter.tsx` -- red styling at 0 credits, clickable to navigate to profile
+- `src/pages/UserProfile.tsx` -- add credit management section with reset button
+
+**Files to create:**
+- `supabase/functions/reset-credits/index.ts` -- edge function to reset user credits to 10
+
+**`supabase/config.toml`** -- add `reset-credits` function entry with `verify_jwt = false`
