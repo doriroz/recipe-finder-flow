@@ -48,7 +48,14 @@ export const useGenerateRecipe = () => {
 
       if (error) {
         console.error("Edge function error:", error);
-        toast.error("שגיאה ביצירת המתכון. נסו שוב.");
+        let errorMessage = "שגיאה ביצירת המתכון. נסו שוב.";
+        try {
+          const errorBody = await error.context?.json?.();
+          if (errorBody?.error) {
+            errorMessage = errorBody.error;
+          }
+        } catch {}
+        toast.error(errorMessage);
         return;
       }
 
