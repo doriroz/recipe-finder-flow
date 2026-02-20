@@ -1,18 +1,43 @@
-import { ArrowRight, ChefHat, BookOpen, Award, Settings, Loader2 } from "lucide-react";
+import { ArrowRight, ChefHat, BookOpen, Award, Settings, Loader2, Zap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DishCard, { Dish } from "@/components/DishCard";
 import { useUserGallery } from "@/hooks/useUserGallery";
 import { useUserRecipes } from "@/hooks/useRecipes";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserCredits } from "@/hooks/useUserCredits";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const UserProfile = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
   const { data: recipes, isLoading: loadingRecipes } = useUserRecipes();
+  const { credits, loading: loadingCredits, refetch: refetchCredits } = useUserCredits();
+  const [resettingCredits, setResettingCredits] = useState(false);
 
   const isLoading = authLoading || loadingGallery || loadingRecipes;
+
+  const handleResetCredits = async () => {
+    setResettingCredits(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("reset-credits");
+      if (error) {
+        toast.error("שגיאה באיפוס הקרדיטים");
+        return;
+      }
+      if (data?.success) {
+        toast.success(`הקרדיטים אופסו! יש לכם ${data.credits_remaining} קרדיטים`);
+        refetchCredits();
+      }
+    } catch {
+      toast.error("שגיאה בלתי צפויה");
+    } finally {
+      setResettingCredits(false);
+    }
+  };
 
   // Transform gallery items to dish format
   const userDishes = (galleryItems || []).map((item) => ({
@@ -145,7 +170,40 @@ const UserProfile = () => {
               </div>
             )}
 
-            {/* Cookbook Section */}
+            {/* Credit Management */}
+            <div className="card-warm p-6 mb-8 animate-slide-up" style={{ animationDelay: "0.25s" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-primary" />
+                  קרדיטים
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className={`text-2xl font-bold ${(credits?.credits_remaining ?? 0) <= 0 ? "text-destructive" : "text-primary"}`}>
+                    {credits?.credits_remaining ?? 0}
+                  </span>
+                  <span className="text-sm text-muted-foreground">נותרו</span>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                כל יצירת מתכון עם AI צורכת 2 קרדיטים. ניתן לאפס את הקרדיטים ל-10 בכל עת.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetCredits}
+                disabled={resettingCredits}
+                className="w-full"
+              >
+                {resettingCredits ? (
+                  <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 ml-2" />
+                )}
+                איפוס קרדיטים (10 קרדיטים)
+              </Button>
+            </div>
+
+
             <div className="animate-slide-up" style={{ animationDelay: "0.3s" }}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-foreground flex items-center gap-2">

@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.toggle-analytics-dashboard]
 verify_jwt = false
+
+[functions.reset-credits]
+verify_jwt = false

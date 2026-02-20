@@ -19,6 +19,16 @@ export const useGenerateRecipe = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
 
+  const showCreditError = (message: string) => {
+    toast.error(message, {
+      action: {
+        label: "חידוש קרדיטים",
+        onClick: () => navigate("/profile"),
+      },
+      duration: 8000,
+    });
+  };
+
   const generateRecipe = async ({ ingredients, imageBase64 }: GenerateRecipeOptions) => {
     setIsGenerating(true);
 
@@ -50,17 +60,31 @@ export const useGenerateRecipe = () => {
         console.error("Edge function error:", error);
         let errorMessage = "שגיאה ביצירת המתכון. נסו שוב.";
         try {
-          const errorBody = await error.context?.json?.();
-          if (errorBody?.error) {
-            errorMessage = errorBody.error;
+          if (error.context && typeof error.context.json === "function") {
+            const errorBody = await error.context.json();
+            if (errorBody?.error) errorMessage = errorBody.error;
           }
-        } catch {}
-        toast.error(errorMessage);
+        } catch (e) {
+          // Response body may already be consumed
+          if (error.message && error.message !== "Edge Function returned a non-2xx status code") {
+            errorMessage = error.message;
+          }
+        }
+
+        if (errorMessage.includes("קרדיטים")) {
+          showCreditError(errorMessage);
+        } else {
+          toast.error(errorMessage);
+        }
         return;
       }
 
       if (data?.error) {
-        toast.error(data.error);
+        if (typeof data.error === "string" && data.error.includes("קרדיטים")) {
+          showCreditError(data.error);
+        } else {
+          toast.error(data.error);
+        }
         return;
       }
 
