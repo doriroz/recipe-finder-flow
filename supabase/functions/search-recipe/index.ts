@@ -35,6 +35,28 @@ function getDifficultyOrder(difficulty: string): number {
   }
 }
 
+// Translate text via MyMemory API (free, no key needed)
+// Falls back to original text on any failure
+async function translateText(text: string, langpair: string): Promise<string> {
+  try {
+    const url = new URL("https://api.mymemory.translated.net/get");
+    // MyMemory has a ~500 char limit per call; truncate if needed
+    const truncated = text.length > 490 ? text.substring(0, 490) : text;
+    url.searchParams.set("q", truncated);
+    url.searchParams.set("langpair", langpair);
+    const res = await fetch(url.toString());
+    if (res.ok) {
+      const data = await res.json();
+      if (data.responseStatus === 200 && data.responseData?.translatedText) {
+        return data.responseData.translatedText;
+      }
+    }
+    return text; // fallback to original
+  } catch {
+    return text; // fallback to original
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -104,70 +126,70 @@ serve(async (req) => {
       }
     }
 
-    // Step 2: If we have less than 3 results, generate with AI
+    // Step 2: If we have less than 3 results, fetch from Spoonacular + translate
     if (results.length < 3) {
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) {
-        console.warn("LOVABLE_API_KEY not configured, skipping AI generation");
+      const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
+      if (!SPOONACULAR_API_KEY) {
+        console.warn("SPOONACULAR_API_KEY not configured, skipping external search");
       } else {
-        const systemPrompt = `אתה שף מקצועי. בהתבסס על החיפוש, הצע ${3 - results.length} מתכונים ברמות קושי שונות.
-החזר מערך JSON בלבד בפורמט הבא:
-[{
-  "title": "שם המתכון",
-  "ingredients": [{"name": "מצרך", "amount": "כמות", "unit": "יחידה"}],
-  "instructions": ["שלב 1", "שלב 2"],
-  "substitutions": [{"original": "מצרך", "alternative": "תחליף", "reason": "סיבה"}],
-  "cooking_time": 30,
-  "difficulty": "קל/בינוני/מאתגר"
-}]
-השפה חייבת להיות עברית. החזר רק JSON ללא טקסט נוסף.`;
-
         try {
-          const aiResponse = await fetch(
-            "https://ai.gateway.lovable.dev/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: systemPrompt },
-                  { role: "user", content: `חפש מתכונים עבור: ${searchTerm}` },
-                ],
-                temperature: 0.8,
-                max_tokens: 3000,
-              }),
+          // Translate Hebrew search term to English for Spoonacular
+          const englishQuery = await translateText(searchTerm, "he|en");
+
+          const needed = 3 - results.length;
+          const spoonUrl = new URL("https://api.spoonacular.com/recipes/complexSearch");
+          spoonUrl.searchParams.set("query", englishQuery);
+          spoonUrl.searchParams.set("number", String(needed));
+          spoonUrl.searchParams.set("addRecipeInformation", "true");
+          spoonUrl.searchParams.set("fillIngredients", "true");
+          spoonUrl.searchParams.set("instructionsRequired", "true");
+          spoonUrl.searchParams.set("apiKey", SPOONACULAR_API_KEY);
+
+          const spoonRes = await fetch(spoonUrl.toString());
+          if (spoonRes.ok) {
+            const spoonData = await spoonRes.json();
+            const spoonRecipes = spoonData.results || [];
+
+            for (const sr of spoonRecipes) {
+              // Gather all translatable strings into one batch
+              const ingredientNames: string[] = (sr.extendedIngredients || []).map((i: any) => i.name || i.originalName || "");
+              const steps: string[] = (sr.analyzedInstructions?.[0]?.steps || []).map((s: any) => s.step || "");
+              const allTexts = [sr.title, ...ingredientNames, ...steps];
+              const batchText = allTexts.join("\n");
+
+              // Batch translate
+              const translated = await translateText(batchText, "en|he");
+              const parts = translated.split("\n");
+
+              const translatedTitle = parts[0] || sr.title;
+              const translatedIngredients = ingredientNames.map((_, idx) => parts[1 + idx] || ingredientNames[idx]);
+              const translatedSteps = steps.map((_, idx) => parts[1 + ingredientNames.length + idx] || steps[idx]);
+
+              const ingredients = (sr.extendedIngredients || []).map((ing: any, idx: number) => ({
+                name: translatedIngredients[idx] || ing.name,
+                amount: ing.amount ? String(ing.amount) : undefined,
+                unit: ing.unit || undefined,
+              }));
+
+              const cookingTime = sr.readyInMinutes || null;
+              const difficulty = estimateDifficulty(cookingTime, translatedSteps.length);
+
+              results.push({
+                id: `generated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                title: translatedTitle,
+                ingredients,
+                instructions: translatedSteps.length > 0 ? translatedSteps : ["No instructions available"],
+                substitutions: null,
+                cooking_time: cookingTime,
+                difficulty,
+                source: "generated",
+              });
             }
-          );
-
-          if (aiResponse.ok) {
-            const aiData = await aiResponse.json();
-            const content = aiData.choices?.[0]?.message?.content;
-
-            if (content) {
-              const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-              const jsonString = jsonMatch ? jsonMatch[1].trim() : content.trim();
-              const generatedRecipes = JSON.parse(jsonString);
-
-              for (const recipe of generatedRecipes) {
-                results.push({
-                  id: `generated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                  title: recipe.title,
-                  ingredients: recipe.ingredients,
-                  instructions: recipe.instructions,
-                  substitutions: recipe.substitutions || null,
-                  cooking_time: recipe.cooking_time,
-                  difficulty: recipe.difficulty || estimateDifficulty(recipe.cooking_time, recipe.instructions?.length || 5),
-                  source: "generated",
-                });
-              }
-            }
+          } else {
+            console.error("Spoonacular error:", spoonRes.status, await spoonRes.text());
           }
-        } catch (aiError) {
-          console.error("AI generation error:", aiError);
+        } catch (spoonError) {
+          console.error("Spoonacular/translation error:", spoonError);
         }
       }
     }
