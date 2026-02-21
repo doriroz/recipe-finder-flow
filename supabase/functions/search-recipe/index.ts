@@ -18,7 +18,6 @@ interface RecipeResult {
   source: "existing" | "generated";
 }
 
-// Estimate difficulty based on cooking time and instruction count
 function estimateDifficulty(cookingTime: number | null, instructionCount: number): string {
   const time = cookingTime || 30;
   if (time <= 15 && instructionCount <= 5) return "קל";
@@ -35,13 +34,11 @@ function getDifficultyOrder(difficulty: string): number {
   }
 }
 
-// Translate text via MyMemory API (free, no key needed)
-// Falls back to original text on any failure
+// MyMemory for Hebrew→English only (short search terms)
 async function translateText(text: string, langpair: string): Promise<string> {
   try {
-    const url = new URL("https://api.mymemory.translated.net/get");
-    // MyMemory has a ~500 char limit per call; truncate if needed
     const truncated = text.length > 490 ? text.substring(0, 490) : text;
+    const url = new URL("https://api.mymemory.translated.net/get");
     url.searchParams.set("q", truncated);
     url.searchParams.set("langpair", langpair);
     const res = await fetch(url.toString());
@@ -51,10 +48,130 @@ async function translateText(text: string, langpair: string): Promise<string> {
         return data.responseData.translatedText;
       }
     }
-    return text; // fallback to original
+    return text;
   } catch {
-    return text; // fallback to original
+    return text;
   }
+}
+
+// ============ AI TRANSLATION WITH DB CACHE (English→Hebrew) ============
+
+async function translateRecipeWithAI(
+  apiKey: string,
+  supabaseAdmin: any,
+  title: string,
+  ingredients: { name: string; unit: string }[],
+  steps: string[]
+): Promise<{
+  title: string;
+  ingredientNames: string[];
+  units: string[];
+  steps: string[];
+}> {
+  const allTexts: string[] = [
+    title,
+    ...ingredients.map(i => i.name),
+    ...ingredients.map(i => i.unit).filter(u => u && u.trim() !== ""),
+    ...steps,
+  ];
+
+  const textsToLookup = allTexts.filter(t => t && t.trim() !== "");
+  const uniqueTexts = [...new Set(textsToLookup)];
+
+  const translationMap = new Map<string, string>();
+
+  if (uniqueTexts.length > 0) {
+    const { data: cached } = await supabaseAdmin
+      .from("translation_cache")
+      .select("source_text, translated_text")
+      .eq("lang_pair", "en|he")
+      .in("source_text", uniqueTexts);
+
+    if (cached) {
+      for (const row of cached) {
+        translationMap.set(row.source_text, row.translated_text);
+      }
+    }
+  }
+
+  const misses = uniqueTexts.filter(t => !translationMap.has(t));
+  console.log(`Translation cache: ${uniqueTexts.length - misses.length} hits, ${misses.length} misses`);
+
+  if (misses.length > 0) {
+    try {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            {
+              role: "system",
+              content: `You are a professional cooking/food translator. Translate from English to Hebrew.
+Return ONLY a JSON object with a "translations" array containing the Hebrew translations in the same order as the input texts.
+Do not add any explanation or extra text.`,
+            },
+            {
+              role: "user",
+              content: JSON.stringify({ texts: misses }),
+            },
+          ],
+          temperature: 0.2,
+          max_tokens: 2048,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(`AI translation error: ${response.status}`);
+      } else {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content?.trim();
+        try {
+          const jsonMatch = content?.match(/\{[\s\S]*\}/);
+          const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+          const translations: string[] = parsed.translations || [];
+
+          const cacheInserts: { source_text: string; translated_text: string; lang_pair: string }[] = [];
+          for (let i = 0; i < misses.length && i < translations.length; i++) {
+            if (translations[i] && translations[i].trim()) {
+              translationMap.set(misses[i], translations[i]);
+              cacheInserts.push({
+                source_text: misses[i],
+                translated_text: translations[i],
+                lang_pair: "en|he",
+              });
+            }
+          }
+
+          if (cacheInserts.length > 0) {
+            supabaseAdmin
+              .from("translation_cache")
+              .upsert(cacheInserts, { onConflict: "source_text,lang_pair" })
+              .then(({ error }: any) => {
+                if (error) console.error("Cache save error:", error);
+                else console.log(`Saved ${cacheInserts.length} translations to cache`);
+              });
+          }
+        } catch (parseErr) {
+          console.error("Failed to parse AI translation response:", parseErr, content);
+        }
+      }
+    } catch (err) {
+      console.error("AI translation call failed:", err);
+    }
+  }
+
+  const getTranslation = (text: string) => translationMap.get(text) || text;
+
+  return {
+    title: getTranslation(title),
+    ingredientNames: ingredients.map(i => getTranslation(i.name)),
+    units: ingredients.map(i => (i.unit && i.unit.trim()) ? getTranslation(i.unit) : ""),
+    steps: steps.map(s => getTranslation(s)),
+  };
 }
 
 serve(async (req) => {
@@ -63,7 +180,6 @@ serve(async (req) => {
   }
 
   try {
-    // Validate auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -72,13 +188,20 @@ serve(async (req) => {
       });
     }
 
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    // Validate user
+    // Service role client for translation cache
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -126,14 +249,16 @@ serve(async (req) => {
       }
     }
 
-    // Step 2: If we have less than 3 results, fetch from Spoonacular + translate
+    // Step 2: If less than 3 results, fetch from Spoonacular + AI translate
     if (results.length < 3) {
       const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
       if (!SPOONACULAR_API_KEY) {
         console.warn("SPOONACULAR_API_KEY not configured, skipping external search");
+      } else if (!LOVABLE_API_KEY) {
+        console.warn("LOVABLE_API_KEY not configured, skipping translation");
       } else {
         try {
-          // Translate Hebrew search term to English for Spoonacular
+          // Translate Hebrew search term to English (MyMemory, fine for short terms)
           const englishQuery = await translateText(searchTerm, "he|en");
 
           const needed = 3 - results.length;
@@ -151,28 +276,29 @@ serve(async (req) => {
             const spoonRecipes = spoonData.results || [];
 
             for (const sr of spoonRecipes) {
-              // Gather all translatable strings into one batch
-              const ingredientNames: string[] = (sr.extendedIngredients || []).map((i: any) => i.name || i.originalName || "");
+              const ingredientData = (sr.extendedIngredients || []).map((i: any) => ({
+                name: i.name || i.originalName || "",
+                unit: i.unit || "",
+              }));
               const steps: string[] = (sr.analyzedInstructions?.[0]?.steps || []).map((s: any) => s.step || "");
-              // Translate each string individually for reliability
-              const allTexts = [sr.title, ...ingredientNames, ...steps];
-              const translatedAll: string[] = [];
-              for (const t of allTexts) {
-                translatedAll.push(await translateText(t, "en|he"));
-              }
 
-              const translatedTitle = translatedAll[0] || sr.title;
-              const translatedIngredients = ingredientNames.map((orig, idx) => translatedAll[1 + idx] || orig);
-              const translatedSteps = steps.map((orig, idx) => translatedAll[1 + ingredientNames.length + idx] || orig);
+              // AI translate with DB cache
+              const translated = await translateRecipeWithAI(
+                LOVABLE_API_KEY,
+                supabaseAdmin,
+                sr.title,
+                ingredientData,
+                steps
+              );
 
               const ingredients = (sr.extendedIngredients || []).map((ing: any, idx: number) => ({
-                name: translatedIngredients[idx] || ing.name,
+                name: translated.ingredientNames[idx] || ing.name,
                 amount: ing.amount ? String(ing.amount) : undefined,
-                unit: ing.unit || undefined,
+                unit: translated.units[idx] || undefined,
               }));
 
               const cookingTime = sr.readyInMinutes || null;
-              const difficulty = estimateDifficulty(cookingTime, translatedSteps.length);
+              const difficulty = estimateDifficulty(cookingTime, translated.steps.length);
 
               // Look up substitutions from DB
               const hebrewIngNames = ingredients.map((i: any) => i.name);
@@ -200,9 +326,9 @@ serve(async (req) => {
 
               results.push({
                 id: `generated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                title: translatedTitle,
+                title: translated.title,
                 ingredients,
-                instructions: translatedSteps.length > 0 ? translatedSteps : ["No instructions available"],
+                instructions: translated.steps.length > 0 ? translated.steps : ["No instructions available"],
                 substitutions: searchSubstitutions,
                 cooking_time: cookingTime,
                 difficulty,
