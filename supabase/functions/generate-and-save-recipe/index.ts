@@ -20,7 +20,7 @@ interface RecipeResponse {
 
 type DifficultyLevel = "low" | "medium" | "high";
 
-// ============ MYMEMORY TRANSLATION ============
+// ============ MYMEMORY TRANSLATION (Hebrew→English only) ============
 
 async function translateText(text: string, langpair: string): Promise<string> {
   try {
@@ -38,13 +38,144 @@ async function translateText(text: string, langpair: string): Promise<string> {
   }
 }
 
-async function translateEach(texts: string[], langpair: string): Promise<string[]> {
+async function translateEachHeToEn(texts: string[]): Promise<string[]> {
   const results: string[] = [];
   for (const text of texts) {
-    const translated = await translateText(text, langpair);
+    const translated = await translateText(text, "he|en");
     results.push(translated);
   }
   return results;
+}
+
+// ============ AI TRANSLATION WITH DB CACHE (English→Hebrew) ============
+
+async function translateRecipeWithAI(
+  apiKey: string,
+  supabaseAdmin: any,
+  title: string,
+  ingredients: { name: string; unit: string }[],
+  steps: string[]
+): Promise<{
+  title: string;
+  ingredientNames: string[];
+  units: string[];
+  steps: string[];
+}> {
+  // Collect all unique texts to translate
+  const allTexts: string[] = [
+    title,
+    ...ingredients.map(i => i.name),
+    ...ingredients.map(i => i.unit).filter(u => u && u.trim() !== ""),
+    ...steps,
+  ];
+
+  // Remove empty strings
+  const textsToLookup = allTexts.filter(t => t && t.trim() !== "");
+  const uniqueTexts = [...new Set(textsToLookup)];
+
+  // Step 1: Check cache for all texts
+  const translationMap = new Map<string, string>();
+
+  if (uniqueTexts.length > 0) {
+    const { data: cached } = await supabaseAdmin
+      .from("translation_cache")
+      .select("source_text, translated_text")
+      .eq("lang_pair", "en|he")
+      .in("source_text", uniqueTexts);
+
+    if (cached) {
+      for (const row of cached) {
+        translationMap.set(row.source_text, row.translated_text);
+      }
+    }
+  }
+
+  // Step 2: Find cache misses
+  const misses = uniqueTexts.filter(t => !translationMap.has(t));
+  console.log(`Translation cache: ${uniqueTexts.length - misses.length} hits, ${misses.length} misses`);
+
+  // Step 3: AI translate misses in one call
+  if (misses.length > 0) {
+    try {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            {
+              role: "system",
+              content: `You are a professional cooking/food translator. Translate from English to Hebrew.
+Return ONLY a JSON object with a "translations" array containing the Hebrew translations in the same order as the input texts.
+Do not add any explanation or extra text.`,
+            },
+            {
+              role: "user",
+              content: JSON.stringify({ texts: misses }),
+            },
+          ],
+          temperature: 0.2,
+          max_tokens: 2048,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(`AI translation error: ${response.status}`);
+        if (response.status === 429) console.warn("AI translation rate limited");
+        if (response.status === 402) console.warn("AI translation payment required");
+        // Fall back to English for misses
+      } else {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content?.trim();
+        try {
+          const jsonMatch = content?.match(/\{[\s\S]*\}/);
+          const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+          const translations: string[] = parsed.translations || [];
+
+          // Map translations and save to cache
+          const cacheInserts: { source_text: string; translated_text: string; lang_pair: string }[] = [];
+          for (let i = 0; i < misses.length && i < translations.length; i++) {
+            if (translations[i] && translations[i].trim()) {
+              translationMap.set(misses[i], translations[i]);
+              cacheInserts.push({
+                source_text: misses[i],
+                translated_text: translations[i],
+                lang_pair: "en|he",
+              });
+            }
+          }
+
+          // Save to DB cache (fire and forget, don't block)
+          if (cacheInserts.length > 0) {
+            supabaseAdmin
+              .from("translation_cache")
+              .upsert(cacheInserts, { onConflict: "source_text,lang_pair" })
+              .then(({ error }: any) => {
+                if (error) console.error("Cache save error:", error);
+                else console.log(`Saved ${cacheInserts.length} translations to cache`);
+              });
+          }
+        } catch (parseErr) {
+          console.error("Failed to parse AI translation response:", parseErr, content);
+        }
+      }
+    } catch (err) {
+      console.error("AI translation call failed:", err);
+    }
+  }
+
+  // Step 4: Build result using translation map (fallback to original English)
+  const getTranslation = (text: string) => translationMap.get(text) || text;
+
+  return {
+    title: getTranslation(title),
+    ingredientNames: ingredients.map(i => getTranslation(i.name)),
+    units: ingredients.map(i => (i.unit && i.unit.trim()) ? getTranslation(i.unit) : ""),
+    steps: steps.map(s => getTranslation(s)),
+  };
 }
 
 // ============ DB-BASED SUBSTITUTIONS ============
@@ -76,7 +207,6 @@ async function findSubstitutionsFromDB(
         }
       }
     }
-    // Deduplicate and limit to 4
     const unique = matched.filter(
       (m, i, arr) => arr.findIndex(x => x.original === m.original && x.alternative === m.alternative) === i
     );
@@ -102,7 +232,6 @@ interface LibraryRecipe {
 
 function computeMatchScore(userIngredients: string[], recipeIngredients: string[]): number {
   if (recipeIngredients.length === 0) return 0;
-  // Ignore common pantry items for scoring
   const pantryItems = new Set(['מלח', 'פלפל שחור', 'שמן', 'שמן זית', 'מים']);
   const significantRecipeIngs = recipeIngredients.filter(i => !pantryItems.has(i));
   if (significantRecipeIngs.length === 0) return 0;
@@ -110,7 +239,6 @@ function computeMatchScore(userIngredients: string[], recipeIngredients: string[
   const userSet = new Set(userIngredients.map(i => i.trim()));
   let matched = 0;
   for (const ing of significantRecipeIngs) {
-    // Check exact or partial match
     if (userSet.has(ing)) {
       matched++;
     } else {
@@ -163,7 +291,6 @@ async function checkAndDeductCredits(
   creditsNeeded: number,
   actionType: string
 ): Promise<{ allowed: boolean; reason?: string }> {
-  // Check global daily cap
   const { data: globalCap } = await supabaseAdmin
     .from("app_settings")
     .select("value")
@@ -185,7 +312,6 @@ async function checkAndDeductCredits(
     return { allowed: false, reason: "המערכת עמוסה כרגע, נסו שוב מאוחר יותר" };
   }
 
-  // Check per-user daily cap
   const { data: userCap } = await supabaseAdmin
     .from("app_settings")
     .select("value")
@@ -205,7 +331,6 @@ async function checkAndDeductCredits(
     return { allowed: false, reason: "הגעתם למגבלת השימוש היומית. נסו שוב מחר" };
   }
 
-  // Check user credits
   let { data: userCredits } = await supabaseAdmin
     .from("user_credits")
     .select("*")
@@ -213,7 +338,6 @@ async function checkAndDeductCredits(
     .single();
 
   if (!userCredits) {
-    // Create credits record for new user
     const { data: newCredits } = await supabaseAdmin
       .from("user_credits")
       .insert({ user_id: userId, credits_remaining: 10 })
@@ -222,7 +346,6 @@ async function checkAndDeductCredits(
     userCredits = newCredits;
   }
 
-  // Reset daily counter if new day
   if (userCredits) {
     const resetAt = new Date(userCredits.daily_reset_at);
     if (resetAt < today) {
@@ -238,7 +361,6 @@ async function checkAndDeductCredits(
     return { allowed: false, reason: `אין מספיק קרדיטים (נדרשים ${creditsNeeded}, נותרו ${userCredits.credits_remaining})` };
   }
 
-  // Deduct credits and increment counters
   if (userCredits) {
     await supabaseAdmin
       .from("user_credits")
@@ -332,7 +454,9 @@ async function extractIngredientsFromImage(imageBase64: string, apiKey: string):
 // ============ SPOONACULAR RECIPE FETCHING ============
 
 async function fetchRecipeFromSpoonacular(
-  hebrewIngredients: string[]
+  hebrewIngredients: string[],
+  apiKey: string,
+  supabaseAdmin: any
 ): Promise<RecipeResponse | null> {
   const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
   if (!SPOONACULAR_API_KEY) {
@@ -341,8 +465,8 @@ async function fetchRecipeFromSpoonacular(
   }
 
   try {
-    // Translate ingredients to English
-    const englishIngredients = await translateEach(hebrewIngredients, "he|en");
+    // Translate ingredients to English (Hebrew→English via MyMemory, works fine for short terms)
+    const englishIngredients = await translateEachHeToEn(hebrewIngredients);
     console.log("Translated ingredients for Spoonacular:", englishIngredients);
 
     // Find recipes by ingredients
@@ -380,31 +504,32 @@ async function fetchRecipeFromSpoonacular(
 
     if (steps.length === 0) return null;
 
-    // Batch translate: title + ingredient names + steps
-    const textsToTranslate = [title, ...extIngredients.map(i => i.name), ...steps];
-    const translated = await translateEach(textsToTranslate, "en|he");
-
-    const translatedTitle = translated[0];
-    const translatedIngNames = translated.slice(1, 1 + extIngredients.length);
-    const translatedSteps = translated.slice(1 + extIngredients.length);
+    // AI translate with DB cache: title + ingredient names + units + steps
+    const translated = await translateRecipeWithAI(
+      apiKey,
+      supabaseAdmin,
+      title,
+      extIngredients.map(i => ({ name: i.name, unit: i.unit })),
+      steps
+    );
 
     const ingredients = extIngredients.map((ing, idx) => ({
-      name: translatedIngNames[idx] || ing.name,
+      name: translated.ingredientNames[idx] || ing.name,
       amount: ing.amount ? String(ing.amount) : undefined,
-      unit: ing.unit || undefined,
+      unit: translated.units[idx] || undefined,
     }));
 
     // Estimate difficulty
-    const stepCount = translatedSteps.length;
+    const stepCount = translated.steps.length;
     const ingCount = ingredients.length;
     let difficulty = "medium";
     if (stepCount <= 4 && ingCount <= 6) difficulty = "low";
     else if (stepCount >= 8 || ingCount >= 12) difficulty = "high";
 
     return {
-      title: translatedTitle,
+      title: translated.title,
       ingredients,
-      instructions: translatedSteps,
+      instructions: translated.steps,
       substitutions: [],
       cooking_time: cookingTime,
       difficulty,
@@ -433,7 +558,6 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    // LOVABLE_API_KEY only needed for image analysis now
 
     // User-scoped client
     const supabase = createClient(
@@ -442,7 +566,7 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    // Service role client for credits/logging (bypasses RLS)
+    // Service role client for credits/logging/translation cache (bypasses RLS)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -471,7 +595,6 @@ serve(async (req) => {
     let usedImageAnalysis = false;
 
     if (imageBase64) {
-      // Check credits for image analysis (3 credits)
       const creditCheck = await checkAndDeductCredits(supabaseAdmin, userId, 3, "image_analysis");
       if (!creditCheck.allowed) {
         return new Response(JSON.stringify({ error: creditCheck.reason }), {
@@ -501,7 +624,6 @@ serve(async (req) => {
     const localMatch = await findLocalMatch(supabaseAdmin, ingredientNames, difficulty as DifficultyLevel);
 
     if (localMatch && localMatch.score >= 70) {
-      // Serve from local library — no AI cost!
       console.log(`Serving local recipe: "${localMatch.recipe.title}" (score: ${localMatch.score}%)`);
 
       const recipe = localMatch.recipe;
@@ -536,8 +658,16 @@ serve(async (req) => {
       );
     }
 
-    // ---- STEP 3: Spoonacular recipe (no AI, no credits) ----
-    const spoonacularRecipe = await fetchRecipeFromSpoonacular(ingredientNames);
+    // ---- STEP 3: Spoonacular recipe (AI translation, 0 user credits) ----
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY not configured for translation");
+      return new Response(
+        JSON.stringify({ error: "שגיאת תצורה פנימית" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const spoonacularRecipe = await fetchRecipeFromSpoonacular(ingredientNames, LOVABLE_API_KEY, supabaseAdmin);
 
     if (!spoonacularRecipe) {
       return new Response(
@@ -546,7 +676,10 @@ serve(async (req) => {
       );
     }
 
-    // Look up substitutions from DB based on translated ingredient names
+    // Log translation usage (0 credits to user)
+    await logAiUsage(supabaseAdmin, userId, "translation", 400, 0, "ai");
+
+    // Look up substitutions from DB
     const hebrewIngNames = spoonacularRecipe.ingredients.map((i: any) => i.name);
     const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, hebrewIngNames);
     if (dbSubstitutions.length > 0) {
