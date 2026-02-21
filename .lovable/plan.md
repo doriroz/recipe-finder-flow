@@ -1,92 +1,74 @@
 
-## Fix Credit Error Crash and Add Credit Renewal
 
-### Problem
-Two issues:
-1. **App crashes (error boundary)** when credits are insufficient -- the toast shows the right message ("אין מספיק קרדיטים") but the app also triggers an error boundary crash. The `error.context.json()` call may be failing because the Supabase client's `FunctionsHttpError.context` is a Response object that could already be consumed, causing an uncaught error.
-2. **No way to renew credits** -- when credits run out, there's no option for the user to get more.
+## Replace AI with Spoonacular + MyMemory Translation in Recipe Search
 
-### Solution
+### What Changes
+The "Find a Recipe" search function currently uses Gemini AI (costs credits) to generate recipe suggestions when fewer than 3 results are found in your saved recipes. We will replace this with:
+- **Spoonacular API** to find real, verified recipes (already configured)
+- **MyMemory Translation API** (free, no key needed) to translate results from English to Hebrew
 
-**1. Fix error handling in `useGenerateRecipe.ts` to prevent crash**
+### Why MyMemory over LibreTranslate
+- Completely free, no API key required
+- 5,000 characters per day (anonymous) -- enough for roughly 10 recipe searches daily
+- More stable than LibreTranslate's public instance
+- If the daily limit is reached, recipes will display in English as a fallback (the app won't break)
 
-The current code calls `error.context?.json?.()` which can throw if the Response body was already consumed. We need to make this more defensive. Additionally, check `data` first -- Supabase `functions.invoke` may return the error body in `data` even on non-2xx responses.
+### How It Works
 
-Updated error handling:
-```typescript
-if (error) {
-  console.error("Edge function error:", error);
-  let errorMessage = "שגיאה ביצירת המתכון. נסו שוב.";
-  try {
-    // Try reading from error.context (Response object)
-    if (error.context && typeof error.context.json === 'function') {
-      const errorBody = await error.context.json();
-      if (errorBody?.error) errorMessage = errorBody.error;
-    }
-  } catch (e) {
-    // Response may already be consumed, try message
-    if (error.message && error.message !== "Edge Function returned a non-2xx status code") {
-      errorMessage = error.message;
-    }
-  }
-
-  // Check if it's a credit error -- show special toast with renewal option
-  if (errorMessage.includes("קרדיטים")) {
-    toast.error(errorMessage, {
-      action: {
-        label: "חידוש קרדיטים",
-        onClick: () => navigate("/profile"),
-      },
-      duration: 8000,
-    });
-  } else {
-    toast.error(errorMessage);
-  }
-  return;
-}
+```text
+User searches "pasta" 
+    |
+    v
+Search saved recipes in DB (unchanged)
+    |
+    v
+Fewer than 3 results?
+    |--- No --> Return results (done)
+    |--- Yes --> Call Spoonacular complexSearch API
+                    |
+                    v
+                Translate titles, ingredients, instructions
+                via MyMemory (free, no key)
+                    |
+                    v
+                Return combined results sorted by difficulty
 ```
 
-Also wrap `data` check to handle credit errors:
-```typescript
-if (data?.error) {
-  if (data.error.includes?.("קרדיטים")) {
-    toast.error(data.error, {
-      action: { label: "חידוש קרדיטים", onClick: () => navigate("/profile") },
-      duration: 8000,
-    });
-  } else {
-    toast.error(data.error);
-  }
-  return;
-}
-```
-
-**2. Add credit renewal section to User Profile page**
-
-Add a "Credit Management" section to the existing UserProfile page with:
-- Current credit balance display
-- A "Reset credits" button that calls a new edge function
-- Info text explaining daily usage limits
-
-**3. Create `reset-credits` edge function**
-
-A simple edge function that resets the user's credits to 10 (the default). This gives users a self-service way to get more credits.
-- Validates authentication
-- Updates `credits_remaining` to 10 in `user_credits`
-- Returns the updated balance
-
-**4. Enhance `CreditCounter` component**
-
-When credits are 0, show the counter in red with a clickable link to the profile page for renewal.
+### Fallback Behavior (When Translation Limit Reached)
+- Spoonacular results will still appear, just in English
+- The app continues to work normally -- no errors, no crashes
+- A small note could indicate the recipe is from an external source
 
 ### Technical Details
 
-**Files to modify:**
-- `src/hooks/useGenerateRecipe.ts` -- defensive error handling + credit-specific toast with action button
-- `src/components/CreditCounter.tsx` -- red styling at 0 credits, clickable to navigate to profile
-- `src/pages/UserProfile.tsx` -- add credit management section with reset button
+**File modified: `supabase/functions/search-recipe/index.ts`**
 
-**Files to create:**
-- `supabase/functions/reset-credits/index.ts` -- edge function to reset user credits to 10
+Replace lines 107-173 (the AI generation block) with:
 
-**`supabase/config.toml`** -- add `reset-credits` function entry with `verify_jwt = false`
+1. **`translateText` helper function** -- calls `https://api.mymemory.translated.net/get?q=TEXT&langpair=en|he`
+   - Returns translated text on success
+   - Returns original English text on failure (graceful fallback)
+
+2. **Spoonacular search logic:**
+   - Call `https://api.spoonacular.com/recipes/complexSearch` with:
+     - `query` = search term (translated to English first via MyMemory)
+     - `number` = 3 minus existing results count
+     - `addRecipeInformation=true`
+     - `fillIngredients=true`
+     - `instructionsRequired=true`
+   - Uses existing `SPOONACULAR_API_KEY` secret
+
+3. **Batch translation** -- combine title + ingredient names + instruction steps into one MyMemory call (newline-separated) to minimize API usage
+
+4. **Map Spoonacular fields to existing `RecipeResult` interface:**
+   - `title` -- translated to Hebrew
+   - `extendedIngredients` mapped to `ingredients` array (names translated)
+   - `analyzedInstructions[0].steps` mapped to `instructions` (translated)
+   - `readyInMinutes` mapped to `cooking_time`
+   - `difficulty` -- estimated from cooking time + step count
+   - `source` -- set to `"generated"` (to distinguish from user's saved recipes)
+
+5. **Remove `LOVABLE_API_KEY` dependency** from this function entirely -- no AI credits consumed
+
+**No other files need to change** -- the frontend (`RecipeSearchOverlay`, `useRecipeSearch`) already handles the `RecipeResult` interface as-is.
+
