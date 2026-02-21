@@ -33,7 +33,7 @@ export interface RecipeCardData {
   why_it_works?: string;
   reliability_score?: "high" | "medium" | "creative";
   spoonacular_verified?: boolean;
-  source?: "local" | "ai";
+  source?: "local" | "ai" | "spoonacular";
 }
 
 interface RecipeCardProps {
@@ -238,16 +238,20 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
           )}
           <div
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-              recipe.spoonacular_verified
+              recipe.source === "spoonacular"
+                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                : recipe.spoonacular_verified
                 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
                 : recipe.source === "local"
-                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
                 : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
             }`}
           >
-            <span>{recipe.spoonacular_verified ? "✅" : recipe.source === "local" ? "📚" : "🧪"}</span>
+            <span>{recipe.source === "spoonacular" ? "🔍" : recipe.spoonacular_verified ? "✅" : recipe.source === "local" ? "📚" : "🧪"}</span>
             <span>
-              {recipe.spoonacular_verified
+              {recipe.source === "spoonacular"
+                ? "מתכון מ-Spoonacular"
+                : recipe.spoonacular_verified
                 ? 'מאומת ע״י Spoonacular'
                 : recipe.source === "local"
                 ? "מתכון מהמאגר המקומי"

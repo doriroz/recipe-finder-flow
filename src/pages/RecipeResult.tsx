@@ -18,7 +18,7 @@ const RecipeResult = () => {
   const [whyItWorks, setWhyItWorks] = useState<string | undefined>();
   const [reliabilityScore, setReliabilityScore] = useState<"high" | "medium" | "creative">("medium");
   const [spoonacularVerified, setSpoonacularVerified] = useState(false);
-  const [recipeSource, setRecipeSource] = useState<"local" | "ai" | undefined>();
+  const [recipeSource, setRecipeSource] = useState<"local" | "ai" | "spoonacular" | undefined>();
 
   // Pick up why_it_works, reliability_score, spoonacular_verified, and source from navigation state
   useEffect(() => {
@@ -26,7 +26,7 @@ const RecipeResult = () => {
       why_it_works?: string;
       reliability_score?: string;
       spoonacular_verified?: boolean;
-      source?: "local" | "ai";
+      source?: "local" | "ai" | "spoonacular";
     } | null;
     if (state?.why_it_works) setWhyItWorks(state.why_it_works);
     if (state?.reliability_score) setReliabilityScore(state.reliability_score as any);
