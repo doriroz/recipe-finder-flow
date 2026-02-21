@@ -1,100 +1,57 @@
 
 
-## Replace AI with Spoonacular in "Let's Start Cooking" + Build AI Usage Monitor
+## Fix Translation + Restore Smart Substitutions
 
-### Part 1: Replace AI in `generate-and-save-recipe`
+### What's broken and why
 
-**What changes**: When the local recipe library match is below 70%, instead of calling Gemini AI (2 credits), we'll use Spoonacular's `findByIngredients` API + `recipe information` endpoint to get a real recipe, then translate it to Hebrew using MyMemory (same approach as the search function).
+**Translation**: The `translateBatch` function joins all text with newlines into one string. A typical recipe has title + 5-10 ingredients + 5-8 steps = 15+ strings. This easily exceeds MyMemory's 490-char limit, the count doesn't match after splitting, and everything stays in English. Evidence from DB: "Simple Garlic Pasta", "chili pepper", "Penne Arrabiata".
 
-**What you need from me**: Nothing! The `SPOONACULAR_API_KEY` secret is already configured. No new keys or services needed.
-
-**File: `supabase/functions/generate-and-save-recipe/index.ts`**
-
-Current flow (Step 3, lines 501-577):
-1. Check/deduct 2 credits
-2. Call Spoonacular to verify (uses AI for translation)
-3. Call Gemini AI to generate recipe
-4. Save to DB
-
-New flow (Step 3):
-1. No credits deducted (free!)
-2. Translate Hebrew ingredients to English via MyMemory (free)
-3. Call Spoonacular `findByIngredients` to find best matching recipe
-4. Fetch full recipe details from Spoonacular `recipes/{id}/information`
-5. Translate title, ingredients, instructions back to Hebrew via MyMemory
-6. Save to DB
-7. Log usage with `source: "spoonacular"` and `credits_used: 0`
-
-**Functions removed:**
-- `getDifficultyPrompt` (no longer needed)
-- `generateRecipeWithAI` (replaced by Spoonacular)
-- `translateIngredients` (replaced by MyMemory)
-- `verifyWithSpoonacular` (no longer separate -- Spoonacular IS the source now)
-
-**Functions added:**
-- `translateText` (MyMemory, same as in search-recipe)
-- `fetchRecipeFromSpoonacular` (findByIngredients + get recipe info)
-
-**Fallback**: If Spoonacular returns no results for the given ingredients, return a friendly error message instead of crashing.
-
-**Image analysis** (camera upload) still uses AI -- this is the only remaining AI usage. It requires vision capabilities that Spoonacular doesn't have.
-
-**Source badge**: Recipes from Spoonacular will have `source: "spoonacular"` so the UI can show a distinct badge.
+**Substitutions**: `fetchRecipeFromSpoonacular` returns `substitutions: []` because Spoonacular doesn't provide them. Your DB has 55+ Hebrew substitution mappings that aren't being used.
 
 ---
 
-### Part 2: AI Usage Monitor
+### Fix 1: Individual Translation (replace `translateBatch`)
 
-Build a monitor section in the admin analytics page that shows exactly which actions used AI and which didn't.
+In both `generate-and-save-recipe/index.ts` and `search-recipe/index.ts`:
 
-**File: `src/pages/AdminAnalytics.tsx`**
+- Remove the `translateBatch` function
+- Replace with `translateEach`: loops through each string and calls `translateText` individually
+- Each ingredient name ("garlic", "olive oil") is well under 490 chars, so every call succeeds
+- If one fails, only that one stays in English -- the rest still translate
 
-Add a new "AI Usage Monitor" section with:
-- Summary cards: Total AI calls, Total Local matches, Total Spoonacular calls
-- Table showing recent `ai_usage_logs` entries with columns: Date, Action, Source (AI/Local/Spoonacular), Credits Used, Tokens Estimated
-- Color-coded source badges: Red for AI, Green for Local, Blue for Spoonacular
+### Fix 2: DB-Based Substitutions
 
-**File: `supabase/functions/get-analytics/index.ts`**
+In `generate-and-save-recipe/index.ts`, after building the Spoonacular recipe:
 
-Add a new section to the analytics response that queries `ai_usage_logs`:
-- Count by source (ai, local, spoonacular)
-- Count by action_type
-- Recent entries (last 50)
-- Total credits consumed
+- Query the `ingredient_substitutions` table for each translated Hebrew ingredient name
+- Use partial matching (e.g. if ingredient contains "חמאה", find all substitutions for "חמאה")
+- Attach up to 4 matching substitutions to the recipe before saving
+- Same logic added in `search-recipe/index.ts` for search results
 
----
+### Fix 3: Update disclaimer text
 
-### Part 3: UI Updates
-
-**File: `src/components/RecipeCard.tsx`**
-
-Add a new "spoonacular" source badge (blue) alongside existing "local" (turquoise) and "ai" (orange) badges.
-
-**File: `src/pages/RecipeResult.tsx`**
-
-Update the `source` type to include `"spoonacular"` in the navigation state.
+In `src/components/RecipeCard.tsx`:
+- Change the AI disclaimer to reflect that recipes come from verified external sources, not AI
 
 ---
-
-### What still uses AI after this change
-
-| Feature | Uses AI? | Credits |
-|---------|----------|---------|
-| Recipe from ingredients (Let's Start Cooking) | No -- Spoonacular | 0 |
-| Find a Recipe (search) | No -- Spoonacular | 0 |
-| Camera/image ingredient extraction | Yes -- Gemini Vision | 3 |
-| Substitution validation (fallback only) | Yes -- Gemini (if not in local DB) | 1 |
 
 ### Technical Details
 
-**Edge function changes:**
-- `generate-and-save-recipe/index.ts`: Major rewrite of Step 3 (lines 501-577) to use Spoonacular + MyMemory instead of Gemini
-- `get-analytics/index.ts`: Add AI usage summary query
+**`supabase/functions/generate-and-save-recipe/index.ts`**:
+- Remove `translateBatch` (lines 41-48)
+- Add `translateEach(texts, langpair)` that calls `translateText` per item in a loop
+- In `fetchRecipeFromSpoonacular` (line 345): replace `translateBatch(textsToTranslate, "en|he")` with `translateEach(textsToTranslate, "en|he")`
+- After line 500 (after getting `spoonacularRecipe`): query `ingredient_substitutions` table to find matching substitutions for the recipe's ingredient names, and set them on the recipe before saving
 
-**Frontend changes:**
-- `AdminAnalytics.tsx`: Add AI usage monitor section with table and summary cards
-- `RecipeCard.tsx`: Add "spoonacular" source badge
-- `RecipeResult.tsx`: Extend source type
+**`supabase/functions/search-recipe/index.ts`**:
+- Same `translateBatch` replacement with individual calls (line 158 area)
+- Add substitution lookup from `ingredient_substitutions` table for each search result
 
-**No database changes needed** -- `ai_usage_logs` table already has the `source` column that can store "spoonacular".
+**`src/components/RecipeCard.tsx`**:
+- Update disclaimer text (line 281) from "AI" to "external verified sources"
+
+### What this fixes
+- Every ingredient and instruction step will be translated to Hebrew individually (reliable)
+- Recipes will have real substitutions from your 55+ entry DB (e.g. butter to olive oil, eggs to tofu)
+- No AI cost, no new dependencies
 
