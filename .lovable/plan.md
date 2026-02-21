@@ -1,57 +1,103 @@
 
 
-## Fix Translation + Restore Smart Substitutions
+## Replace MyMemory with AI Translation + DB Cache
 
-### What's broken and why
+### Overview
 
-**Translation**: The `translateBatch` function joins all text with newlines into one string. A typical recipe has title + 5-10 ingredients + 5-8 steps = 15+ strings. This easily exceeds MyMemory's 490-char limit, the count doesn't match after splitting, and everything stays in English. Evidence from DB: "Simple Garlic Pasta", "chili pepper", "Penne Arrabiata".
+Replace unreliable MyMemory translation with AI translation via the Lovable Gateway, and cache every translation in a new `translation_cache` DB table. On subsequent requests, cached translations are served instantly (no AI call, no cost). Over time, nearly all translations come from cache for free.
 
-**Substitutions**: `fetchRecipeFromSpoonacular` returns `substitutions: []` because Spoonacular doesn't provide them. Your DB has 55+ Hebrew substitution mappings that aren't being used.
+### Step 1: Create `translation_cache` table
 
----
+New table with columns:
+- `id` (uuid, primary key)
+- `source_text` (text, not null) -- the English text
+- `translated_text` (text, not null) -- the Hebrew result
+- `lang_pair` (text, not null, default `'en|he'`)
+- `created_at` (timestamptz, default now())
 
-### Fix 1: Individual Translation (replace `translateBatch`)
+Add a unique index on `(source_text, lang_pair)` for fast lookups and to prevent duplicates.
 
-In both `generate-and-save-recipe/index.ts` and `search-recipe/index.ts`:
+RLS: Allow SELECT for everyone (public cache), INSERT/UPDATE only via service role (edge functions use `supabaseAdmin`).
 
-- Remove the `translateBatch` function
-- Replace with `translateEach`: loops through each string and calls `translateText` individually
-- Each ingredient name ("garlic", "olive oil") is well under 490 chars, so every call succeeds
-- If one fails, only that one stays in English -- the rest still translate
+### Step 2: Update `generate-and-save-recipe/index.ts`
 
-### Fix 2: DB-Based Substitutions
+1. **Remove** `translateEach` function (lines 41-48)
+2. **Keep** `translateText` (MyMemory) only for Hebrew-to-English direction (ingredient input to Spoonacular, line 345)
+3. **Add** `translateRecipeWithAI` function:
+   - Takes `apiKey`, `supabaseAdmin`, `title`, `ingredients` (name + unit), `steps`
+   - First, checks `translation_cache` for each text. Any cache hits are used directly
+   - For cache misses: sends one AI call to `ai.gateway.lovable.dev` with all untranslated texts
+   - Saves all new translations back to `translation_cache`
+   - Returns fully translated recipe data (title, ingredient names, units, steps)
+4. **Update** `fetchRecipeFromSpoonacular` (line 334):
+   - Accept `apiKey` and `supabaseAdmin` parameters
+   - Replace `translateEach(textsToTranslate, "en|he")` (line 385) with `translateRecipeWithAI`
+   - Units (`ing.unit`, line 394) will now also be translated (currently passed through in English)
+5. **In main handler** (line 540): pass `LOVABLE_API_KEY` and `supabaseAdmin` to `fetchRecipeFromSpoonacular`
+6. **Log** translation usage: `logAiUsage(supabaseAdmin, userId, "translation", tokensUsed, 0, "ai")` -- 0 credits to user
 
-In `generate-and-save-recipe/index.ts`, after building the Spoonacular recipe:
+### Step 3: Update `search-recipe/index.ts`
 
-- Query the `ingredient_substitutions` table for each translated Hebrew ingredient name
-- Use partial matching (e.g. if ingredient contains "חמאה", find all substitutions for "חמאה")
-- Attach up to 4 matching substitutions to the recipe before saving
-- Same logic added in `search-recipe/index.ts` for search results
+1. **Keep** `translateText` (MyMemory) for Hebrew-to-English search query (line 137) -- works fine for short Hebrew terms
+2. **Add** same `translateRecipeWithAI` function with DB cache logic
+3. **Replace** the per-string MyMemory loop (lines 158-162) with `translateRecipeWithAI`
+4. **Units** in search results (line 171) will also be translated
+5. Requires reading `LOVABLE_API_KEY` from `Deno.env.get("LOVABLE_API_KEY")`
 
-### Fix 3: Update disclaimer text
+### How the Cache Works
 
-In `src/components/RecipeCard.tsx`:
-- Change the AI disclaimer to reflect that recipes come from verified external sources, not AI
+```text
+Recipe comes from Spoonacular (English)
+          |
+          v
+Check translation_cache for each text
+          |
+     +----+----+
+     |         |
+  Cache HIT  Cache MISS
+  (use it)    (collect)
+     |         |
+     |         v
+     |    One AI call for all misses
+     |         |
+     |         v
+     |    Save to translation_cache
+     |         |
+     +----+----+
+          |
+          v
+    Return Hebrew recipe
+```
 
----
+- First time "olive oil" appears: AI translates, saved to cache
+- Every future recipe with "olive oil": instant from DB, no AI cost
+- Common ingredients/units get cached quickly (first few days)
+- After ~50-100 recipes, most translations come from cache
 
-### Technical Details
+### AI Translation Prompt
 
-**`supabase/functions/generate-and-save-recipe/index.ts`**:
-- Remove `translateBatch` (lines 41-48)
-- Add `translateEach(texts, langpair)` that calls `translateText` per item in a loop
-- In `fetchRecipeFromSpoonacular` (line 345): replace `translateBatch(textsToTranslate, "en|he")` with `translateEach(textsToTranslate, "en|he")`
-- After line 500 (after getting `spoonacularRecipe`): query `ingredient_substitutions` table to find matching substitutions for the recipe's ingredient names, and set them on the recipe before saving
+```text
+System: You are a cooking/food translator. Translate from English to Hebrew.
+Return a JSON object with a "translations" array matching the input order.
 
-**`supabase/functions/search-recipe/index.ts`**:
-- Same `translateBatch` replacement with individual calls (line 158 area)
-- Add substitution lookup from `ingredient_substitutions` table for each search result
+User: {"texts": ["Penne Arrabiata", "penne pasta", "cups", "parsley", "sprigs", "Boil the pasta until al dente."]}
+```
 
-**`src/components/RecipeCard.tsx`**:
-- Update disclaimer text (line 281) from "AI" to "external verified sources"
+Response:
+```json
+{"translations": ["פנה אראביאטה", "פסטה פנה", "כוסות", "פטרוזיליה", "ענפים", "הרתיחו את הפסטה עד שתהיה אל דנטה."]}
+```
 
-### What this fixes
-- Every ingredient and instruction step will be translated to Hebrew individually (reliable)
-- Recipes will have real substitutions from your 55+ entry DB (e.g. butter to olive oil, eggs to tofu)
-- No AI cost, no new dependencies
+### Cost
+
+- Only cache misses trigger AI calls (~300-500 tokens each)
+- After initial ramp-up, most requests are 100% cached (zero cost)
+- For 100 users/day: estimated $0.10-$0.50/month (much less than before due to caching)
+- User credits: 0 deducted for translation
+
+### Files Changed
+
+- **Migration**: Create `translation_cache` table with unique index
+- **`supabase/functions/generate-and-save-recipe/index.ts`**: Replace MyMemory with AI + cache for en-to-he
+- **`supabase/functions/search-recipe/index.ts`**: Same replacement
 
