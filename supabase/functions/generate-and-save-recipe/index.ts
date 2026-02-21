@@ -38,13 +38,53 @@ async function translateText(text: string, langpair: string): Promise<string> {
   }
 }
 
-async function translateBatch(texts: string[], langpair: string): Promise<string[]> {
-  const joined = texts.join("\n");
-  const translated = await translateText(joined, langpair);
-  const parts = translated.split("\n");
-  // If split count doesn't match, return originals
-  if (parts.length !== texts.length) return texts;
-  return parts;
+async function translateEach(texts: string[], langpair: string): Promise<string[]> {
+  const results: string[] = [];
+  for (const text of texts) {
+    const translated = await translateText(text, langpair);
+    results.push(translated);
+  }
+  return results;
+}
+
+// ============ DB-BASED SUBSTITUTIONS ============
+
+async function findSubstitutionsFromDB(
+  supabaseAdmin: any,
+  ingredientNames: string[]
+): Promise<{ original: string; alternative: string; reason: string }[]> {
+  try {
+    const { data: allSubs, error } = await supabaseAdmin
+      .from("ingredient_substitutions")
+      .select("original_ingredient, alternative_ingredient, reason")
+      .eq("is_valid", true);
+
+    if (error || !allSubs || allSubs.length === 0) return [];
+
+    const matched: { original: string; alternative: string; reason: string }[] = [];
+    for (const ingName of ingredientNames) {
+      for (const sub of allSubs) {
+        if (
+          ingName.includes(sub.original_ingredient) ||
+          sub.original_ingredient.includes(ingName)
+        ) {
+          matched.push({
+            original: sub.original_ingredient,
+            alternative: sub.alternative_ingredient,
+            reason: sub.reason,
+          });
+        }
+      }
+    }
+    // Deduplicate and limit to 4
+    const unique = matched.filter(
+      (m, i, arr) => arr.findIndex(x => x.original === m.original && x.alternative === m.alternative) === i
+    );
+    return unique.slice(0, 4);
+  } catch (err) {
+    console.error("Substitution lookup error:", err);
+    return [];
+  }
 }
 
 // ============ HYBRID MATCHING LOGIC ============
@@ -302,7 +342,7 @@ async function fetchRecipeFromSpoonacular(
 
   try {
     // Translate ingredients to English
-    const englishIngredients = await translateBatch(hebrewIngredients, "he|en");
+    const englishIngredients = await translateEach(hebrewIngredients, "he|en");
     console.log("Translated ingredients for Spoonacular:", englishIngredients);
 
     // Find recipes by ingredients
@@ -342,7 +382,7 @@ async function fetchRecipeFromSpoonacular(
 
     // Batch translate: title + ingredient names + steps
     const textsToTranslate = [title, ...extIngredients.map(i => i.name), ...steps];
-    const translated = await translateBatch(textsToTranslate, "en|he");
+    const translated = await translateEach(textsToTranslate, "en|he");
 
     const translatedTitle = translated[0];
     const translatedIngNames = translated.slice(1, 1 + extIngredients.length);
@@ -504,6 +544,14 @@ serve(async (req) => {
         JSON.stringify({ error: "לא מצאנו מתכון מתאים למצרכים שבחרתם. נסו לשנות או להוסיף מצרכים" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Look up substitutions from DB based on translated ingredient names
+    const hebrewIngNames = spoonacularRecipe.ingredients.map((i: any) => i.name);
+    const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, hebrewIngNames);
+    if (dbSubstitutions.length > 0) {
+      spoonacularRecipe.substitutions = dbSubstitutions;
+      console.log(`Found ${dbSubstitutions.length} substitutions from DB`);
     }
 
     const { data: insertedRecipe, error: insertError } = await supabase

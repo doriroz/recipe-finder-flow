@@ -154,16 +154,16 @@ serve(async (req) => {
               // Gather all translatable strings into one batch
               const ingredientNames: string[] = (sr.extendedIngredients || []).map((i: any) => i.name || i.originalName || "");
               const steps: string[] = (sr.analyzedInstructions?.[0]?.steps || []).map((s: any) => s.step || "");
+              // Translate each string individually for reliability
               const allTexts = [sr.title, ...ingredientNames, ...steps];
-              const batchText = allTexts.join("\n");
+              const translatedAll: string[] = [];
+              for (const t of allTexts) {
+                translatedAll.push(await translateText(t, "en|he"));
+              }
 
-              // Batch translate
-              const translated = await translateText(batchText, "en|he");
-              const parts = translated.split("\n");
-
-              const translatedTitle = parts[0] || sr.title;
-              const translatedIngredients = ingredientNames.map((_, idx) => parts[1 + idx] || ingredientNames[idx]);
-              const translatedSteps = steps.map((_, idx) => parts[1 + ingredientNames.length + idx] || steps[idx]);
+              const translatedTitle = translatedAll[0] || sr.title;
+              const translatedIngredients = ingredientNames.map((orig, idx) => translatedAll[1 + idx] || orig);
+              const translatedSteps = steps.map((orig, idx) => translatedAll[1 + ingredientNames.length + idx] || orig);
 
               const ingredients = (sr.extendedIngredients || []).map((ing: any, idx: number) => ({
                 name: translatedIngredients[idx] || ing.name,
@@ -174,12 +174,36 @@ serve(async (req) => {
               const cookingTime = sr.readyInMinutes || null;
               const difficulty = estimateDifficulty(cookingTime, translatedSteps.length);
 
+              // Look up substitutions from DB
+              const hebrewIngNames = ingredients.map((i: any) => i.name);
+              let searchSubstitutions: any[] | null = null;
+              try {
+                const { data: allSubs } = await supabase
+                  .from("ingredient_substitutions")
+                  .select("original_ingredient, alternative_ingredient, reason")
+                  .eq("is_valid", true);
+                if (allSubs && allSubs.length > 0) {
+                  const matched: any[] = [];
+                  for (const ingName of hebrewIngNames) {
+                    for (const sub of allSubs) {
+                      if (ingName.includes(sub.original_ingredient) || sub.original_ingredient.includes(ingName)) {
+                        matched.push({ original: sub.original_ingredient, alternative: sub.alternative_ingredient, reason: sub.reason });
+                      }
+                    }
+                  }
+                  const unique = matched.filter((m, i, arr) => arr.findIndex(x => x.original === m.original && x.alternative === m.alternative) === i);
+                  if (unique.length > 0) searchSubstitutions = unique.slice(0, 4);
+                }
+              } catch (subErr) {
+                console.error("Substitution lookup error:", subErr);
+              }
+
               results.push({
                 id: `generated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 title: translatedTitle,
                 ingredients,
                 instructions: translatedSteps.length > 0 ? translatedSteps : ["No instructions available"],
-                substitutions: null,
+                substitutions: searchSubstitutions,
                 cooking_time: cookingTime,
                 difficulty,
                 source: "generated",

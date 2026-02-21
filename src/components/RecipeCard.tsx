@@ -278,7 +278,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
 
       {/* AI Disclaimer */}
       <p className="text-xs text-muted-foreground text-center mb-4 leading-relaxed">
-        המתכון נוצר על ידי בינה מלאכותית ומבוסס על עקרונות בישול קלאסיים. תמיד כדאי להפעיל שיקול דעת במטבח!
+        המתכון מבוסס על מקורות חיצוניים מאומתים ועקרונות בישול קלאסיים. תמיד כדאי להפעיל שיקול דעת במטבח!
       </p>
 
       {/* Start Cooking Button */}
