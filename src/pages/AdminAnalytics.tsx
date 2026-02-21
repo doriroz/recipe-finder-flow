@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BarChart3, Users, Download, TrendingUp, ShieldOff, Loader2, ArrowRight } from "lucide-react";
+import { BarChart3, Users, Download, TrendingUp, ShieldOff, Loader2, ArrowRight, Cpu, Leaf, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,15 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+interface AiLogEntry {
+  id: string;
+  created_at: string;
+  action_type: string;
+  source: string;
+  credits_used: number;
+  tokens_estimated: number;
+}
+
 interface AnalyticsData {
   disabled: boolean;
   summary: {
@@ -37,6 +46,12 @@ interface AnalyticsData {
   };
   byEvent: Record<string, number>;
   daily: { date: string; count: number }[];
+  aiUsage?: {
+    bySource: Record<string, number>;
+    byAction: Record<string, number>;
+    totalCreditsConsumed: number;
+    recentLogs: AiLogEntry[];
+  };
 }
 
 const AdminAnalytics = () => {
@@ -283,6 +298,97 @@ const AdminAnalytics = () => {
               </Table>
             </CardContent>
           </Card>
+        )}
+
+        {/* AI Usage Monitor */}
+        {data?.aiUsage && (
+          <>
+            <div className="flex items-center gap-3 mt-8">
+              <Cpu className="h-6 w-6 text-primary" />
+              <h2 className="text-xl font-bold text-foreground">מוניטור שימוש AI</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">קריאות AI</CardTitle>
+                  <Cpu className="h-4 w-4 text-destructive" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-destructive">{data.aiUsage.bySource["ai"] || 0}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">התאמות מקומיות</CardTitle>
+                  <Leaf className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-green-600">{data.aiUsage.bySource["local"] || 0}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Spoonacular</CardTitle>
+                  <Search className="h-4 w-4 text-blue-600" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-blue-600">{data.aiUsage.bySource["spoonacular"] || 0}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">קרדיטים שנצרכו</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-foreground">{data.aiUsage.totalCreditsConsumed}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {data.aiUsage.recentLogs.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-foreground">פעולות אחרונות</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">תאריך</TableHead>
+                        <TableHead className="text-right">פעולה</TableHead>
+                        <TableHead className="text-right">מקור</TableHead>
+                        <TableHead className="text-right">קרדיטים</TableHead>
+                        <TableHead className="text-right">טוקנים (הערכה)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.aiUsage.recentLogs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-sm">{new Date(log.created_at).toLocaleDateString("he-IL")}</TableCell>
+                          <TableCell className="font-mono text-sm" dir="ltr">{log.action_type}</TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              log.source === "ai"
+                                ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                : log.source === "spoonacular"
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                            }`}>
+                              {log.source === "ai" ? "🤖 AI" : log.source === "spoonacular" ? "🔍 Spoonacular" : "📚 מקומי"}
+                            </span>
+                          </TableCell>
+                          <TableCell>{log.credits_used}</TableCell>
+                          <TableCell>{log.tokens_estimated || "-"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
 
         <div className="text-center">

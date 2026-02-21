@@ -99,12 +99,40 @@ Deno.serve(async (req) => {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, count]) => ({ date, count }));
 
+    // ---- AI Usage Monitor ----
+    const { data: aiLogs } = await adminClient
+      .from("ai_usage_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    const allAiLogs = aiLogs || [];
+
+    const aiBySource: Record<string, number> = {};
+    let totalCreditsConsumed = 0;
+    allAiLogs.forEach((log: any) => {
+      const src = log.source || "ai";
+      aiBySource[src] = (aiBySource[src] || 0) + 1;
+      totalCreditsConsumed += log.credits_used || 0;
+    });
+
+    const aiByAction: Record<string, number> = {};
+    allAiLogs.forEach((log: any) => {
+      aiByAction[log.action_type] = (aiByAction[log.action_type] || 0) + 1;
+    });
+
     return new Response(
       JSON.stringify({
         disabled: false,
         summary: { totalEvents, uniqueUsers, pdfDownloads, conversionRate },
         byEvent,
         daily,
+        aiUsage: {
+          bySource: aiBySource,
+          byAction: aiByAction,
+          totalCreditsConsumed,
+          recentLogs: allAiLogs,
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

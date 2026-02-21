@@ -20,16 +20,32 @@ interface RecipeResponse {
 
 type DifficultyLevel = "low" | "medium" | "high";
 
-const getDifficultyPrompt = (difficulty: DifficultyLevel): string => {
-  switch (difficulty) {
-    case "low":
-      return `רמת קושי: קל - מקסימום 5 שלבים פשוטים, הימנע מטכניקות מורכבות, פחות מצרכים (עד 8)`;
-    case "high":
-      return `רמת קושי: מאתגר - 8-12 שלבים מפורטים, טכניקות מתקדמות, יותר מצרכים ותבלינים`;
-    default:
-      return `רמת קושי: בינונית - 5-8 שלבים, שילוב טכניקות פשוטות ובינוניות`;
+// ============ MYMEMORY TRANSLATION ============
+
+async function translateText(text: string, langpair: string): Promise<string> {
+  try {
+    const truncated = text.length > 490 ? text.substring(0, 490) : text;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(truncated)}&langpair=${encodeURIComponent(langpair)}`;
+    const res = await fetch(url);
+    if (!res.ok) return text;
+    const data = await res.json();
+    if (data.responseStatus === 200 && data.responseData?.translatedText) {
+      return data.responseData.translatedText;
+    }
+    return text;
+  } catch {
+    return text;
   }
-};
+}
+
+async function translateBatch(texts: string[], langpair: string): Promise<string[]> {
+  const joined = texts.join("\n");
+  const translated = await translateText(joined, langpair);
+  const parts = translated.split("\n");
+  // If split count doesn't match, return originals
+  if (parts.length !== texts.length) return texts;
+  return parts;
+}
 
 // ============ HYBRID MATCHING LOGIC ============
 
@@ -273,111 +289,92 @@ async function extractIngredientsFromImage(imageBase64: string, apiKey: string):
   return Array.isArray(parsed) ? parsed : [];
 }
 
-// ============ SPOONACULAR VERIFICATION ============
+// ============ SPOONACULAR RECIPE FETCHING ============
 
-async function translateIngredients(hebrewIngredients: string[], apiKey: string): Promise<string[]> {
-  try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "Translate the following Hebrew ingredient names to English. Return ONLY a JSON array of strings." },
-          { role: "user", content: JSON.stringify(hebrewIngredients) },
-        ],
-        temperature: 0,
-        max_tokens: 256,
-      }),
-    });
-    if (!response.ok) return hebrewIngredients;
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content?.trim();
-    const jsonMatch = content?.match(/\[[\s\S]*\]/);
-    const translated = JSON.parse(jsonMatch ? jsonMatch[0] : content);
-    return Array.isArray(translated) ? translated : hebrewIngredients;
-  } catch {
-    return hebrewIngredients;
-  }
-}
-
-async function verifyWithSpoonacular(ingredients: string[], apiKey: string): Promise<{ verified: boolean; similarRecipe?: string }> {
+async function fetchRecipeFromSpoonacular(
+  hebrewIngredients: string[]
+): Promise<RecipeResponse | null> {
   const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
-  if (!SPOONACULAR_API_KEY) return { verified: false };
+  if (!SPOONACULAR_API_KEY) {
+    console.error("SPOONACULAR_API_KEY not configured");
+    return null;
+  }
 
   try {
-    const englishIngredients = await translateIngredients(ingredients, apiKey);
-    const url = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=1&ranking=2&apiKey=${SPOONACULAR_API_KEY}`;
-    const response = await fetch(url);
-    if (!response.ok) return { verified: false };
-    const data = await response.json();
-    if (data?.length > 0) return { verified: true, similarRecipe: data[0].title };
-    return { verified: false };
-  } catch {
-    return { verified: false };
+    // Translate ingredients to English
+    const englishIngredients = await translateBatch(hebrewIngredients, "he|en");
+    console.log("Translated ingredients for Spoonacular:", englishIngredients);
+
+    // Find recipes by ingredients
+    const findUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=1&ranking=2&apiKey=${SPOONACULAR_API_KEY}`;
+    const findRes = await fetch(findUrl);
+    if (!findRes.ok) {
+      console.error("Spoonacular findByIngredients error:", findRes.status);
+      return null;
+    }
+    const findData = await findRes.json();
+    if (!findData || findData.length === 0) return null;
+
+    const recipeId = findData[0].id;
+
+    // Get full recipe info
+    const infoUrl = `https://api.spoonacular.com/recipes/${recipeId}/information?apiKey=${SPOONACULAR_API_KEY}`;
+    const infoRes = await fetch(infoUrl);
+    if (!infoRes.ok) return null;
+    const info = await infoRes.json();
+
+    // Extract data
+    const title = info.title || "Recipe";
+    const cookingTime = info.readyInMinutes || 30;
+    const extIngredients: { name: string; amount: number; unit: string }[] = (info.extendedIngredients || []).map((ing: any) => ({
+      name: ing.name || ing.original || "",
+      amount: ing.amount || 0,
+      unit: ing.unit || "",
+    }));
+    const steps: string[] = (info.analyzedInstructions?.[0]?.steps || []).map((s: any) => s.step || "");
+
+    if (steps.length === 0 && info.instructions) {
+      const cleanInstructions = info.instructions.replace(/<[^>]*>/g, "").trim();
+      if (cleanInstructions) steps.push(cleanInstructions);
+    }
+
+    if (steps.length === 0) return null;
+
+    // Batch translate: title + ingredient names + steps
+    const textsToTranslate = [title, ...extIngredients.map(i => i.name), ...steps];
+    const translated = await translateBatch(textsToTranslate, "en|he");
+
+    const translatedTitle = translated[0];
+    const translatedIngNames = translated.slice(1, 1 + extIngredients.length);
+    const translatedSteps = translated.slice(1 + extIngredients.length);
+
+    const ingredients = extIngredients.map((ing, idx) => ({
+      name: translatedIngNames[idx] || ing.name,
+      amount: ing.amount ? String(ing.amount) : undefined,
+      unit: ing.unit || undefined,
+    }));
+
+    // Estimate difficulty
+    const stepCount = translatedSteps.length;
+    const ingCount = ingredients.length;
+    let difficulty = "medium";
+    if (stepCount <= 4 && ingCount <= 6) difficulty = "low";
+    else if (stepCount >= 8 || ingCount >= 12) difficulty = "high";
+
+    return {
+      title: translatedTitle,
+      ingredients,
+      instructions: translatedSteps,
+      substitutions: [],
+      cooking_time: cookingTime,
+      difficulty,
+      why_it_works: `מתכון מאומת מ-Spoonacular עם ${ingCount} מצרכים ו-${stepCount} שלבי הכנה`,
+      reliability_score: "high",
+    };
+  } catch (err) {
+    console.error("Spoonacular fetch error:", err);
+    return null;
   }
-}
-
-// ============ AI RECIPE GENERATION (FALLBACK) ============
-
-async function generateRecipeWithAI(
-  apiKey: string,
-  ingredientsList: string,
-  difficulty: DifficultyLevel,
-  spoonacularHint?: string,
-  baseRecipeHint?: string
-): Promise<RecipeResponse> {
-  const difficultyInstructions = getDifficultyPrompt(difficulty);
-
-  const systemPrompt = `You are a culinary expert. Provide a recipe based on provided ingredients. Only suggest established flavor combinations.
-
-${difficultyInstructions}
-
-${spoonacularHint ? `הערה: נמצא מתכון דומה: "${spoonacularHint}". השתמש כהשראה.` : ""}
-${baseRecipeHint ? `בסיס מתכון מהמאגר המקומי: ${baseRecipeHint}. התאם ושפר אותו.` : ""}
-
-הפורמט:
-{
-  "title": "שם המתכון בעברית",
-  "ingredients": [{"name": "שם", "amount": "כמות", "unit": "יחידה"}],
-  "instructions": ["שלב 1", "שלב 2"],
-  "substitutions": [{"original": "מצרך", "alternative": "תחליף", "reason": "הסבר"}],
-  "cooking_time": 30,
-  "difficulty": "${difficulty}",
-  "why_it_works": "הסבר קצר (2-3 משפטים)",
-  "reliability_score": "high | medium | creative"
-}
-
-עברית בלבד. JSON בלבד.`;
-
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `המצרכים הזמינים: ${ingredientsList}` },
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    }),
-  });
-
-  if (!response.ok) {
-    const status = response.status;
-    if (status === 429) throw new Error("RATE_LIMIT");
-    if (status === 402) throw new Error("PAYMENT_REQUIRED");
-    throw new Error(`AI Gateway error: ${status}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("No content from AI");
-
-  const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const jsonString = jsonMatch ? jsonMatch[1].trim() : content.trim();
-  return JSON.parse(jsonString);
 }
 
 // ============ MAIN HANDLER ============
@@ -396,7 +393,7 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    // LOVABLE_API_KEY only needed for image analysis now
 
     // User-scoped client
     const supabase = createClient(
@@ -442,6 +439,7 @@ serve(async (req) => {
         });
       }
 
+      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is required for image analysis");
       ingredientNames = await extractIngredientsFromImage(imageBase64, LOVABLE_API_KEY);
       usedImageAnalysis = true;
 
@@ -498,83 +496,44 @@ serve(async (req) => {
       );
     }
 
-    // ---- STEP 3: AI generation (fallback) ----
-    const creditsNeeded = usedImageAnalysis ? 0 : 2; // Image already charged 3
-    if (creditsNeeded > 0) {
-      const creditCheck = await checkAndDeductCredits(supabaseAdmin, userId, creditsNeeded, "recipe_generation");
-      if (!creditCheck.allowed) {
-        return new Response(JSON.stringify({ error: creditCheck.reason }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
+    // ---- STEP 3: Spoonacular recipe (no AI, no credits) ----
+    const spoonacularRecipe = await fetchRecipeFromSpoonacular(ingredientNames);
 
-    // Spoonacular verification
-    let spoonacularResult = { verified: false, similarRecipe: undefined as string | undefined };
-    if (ingredientNames.length > 0) {
-      spoonacularResult = await verifyWithSpoonacular(ingredientNames, LOVABLE_API_KEY);
-    }
-
-    // If we had a partial local match, use it as a base hint
-    const baseHint = localMatch ? JSON.stringify({ title: localMatch.recipe.title, score: localMatch.score }) : undefined;
-
-    try {
-      const recipeJson = await generateRecipeWithAI(
-        LOVABLE_API_KEY,
-        ingredientNames.join(", "),
-        difficulty as DifficultyLevel,
-        spoonacularResult.similarRecipe,
-        baseHint
-      );
-
-      if (!recipeJson.title || !recipeJson.ingredients || !recipeJson.instructions) {
-        throw new Error("Invalid recipe structure from AI");
-      }
-
-      const { data: insertedRecipe, error: insertError } = await supabase
-        .from("recipes")
-        .insert({
-          title: recipeJson.title,
-          ingredients: recipeJson.ingredients,
-          instructions: recipeJson.instructions,
-          substitutions: recipeJson.substitutions || [],
-          cooking_time: recipeJson.cooking_time || null,
-          user_id: userId,
-        })
-        .select()
-        .single();
-
-      if (insertError) throw new Error(`Failed to save recipe: ${insertError.message}`);
-
-      await logAiUsage(supabaseAdmin, userId, "recipe_generation", 1500, creditsNeeded, "ai");
-
+    if (!spoonacularRecipe) {
       return new Response(
-        JSON.stringify({
-          success: true,
-          recipe: insertedRecipe,
-          why_it_works: recipeJson.why_it_works || null,
-          reliability_score: recipeJson.reliability_score || "medium",
-          spoonacular_verified: spoonacularResult.verified,
-          source: "ai",
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "לא מצאנו מתכון מתאים למצרכים שבחרתם. נסו לשנות או להוסיף מצרכים" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-    } catch (aiError) {
-      const msg = aiError instanceof Error ? aiError.message : "";
-      if (msg === "RATE_LIMIT") {
-        return new Response(
-          JSON.stringify({ error: "יותר מדי בקשות, נסו שוב בעוד מספר שניות" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (msg === "PAYMENT_REQUIRED") {
-        return new Response(
-          JSON.stringify({ error: "נדרש חיוב נוסף עבור שירות AI" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw aiError;
     }
+
+    const { data: insertedRecipe, error: insertError } = await supabase
+      .from("recipes")
+      .insert({
+        title: spoonacularRecipe.title,
+        ingredients: spoonacularRecipe.ingredients,
+        instructions: spoonacularRecipe.instructions,
+        substitutions: spoonacularRecipe.substitutions || [],
+        cooking_time: spoonacularRecipe.cooking_time || null,
+        user_id: userId,
+      })
+      .select()
+      .single();
+
+    if (insertError) throw new Error(`Failed to save recipe: ${insertError.message}`);
+
+    await logAiUsage(supabaseAdmin, userId, "recipe_generation", 0, 0, "spoonacular");
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        recipe: insertedRecipe,
+        why_it_works: spoonacularRecipe.why_it_works || null,
+        reliability_score: spoonacularRecipe.reliability_score || "high",
+        spoonacular_verified: true,
+        source: "spoonacular",
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("Edge function error:", error);
     return new Response(
