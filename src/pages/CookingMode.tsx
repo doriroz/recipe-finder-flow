@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CookingStep from "@/components/CookingStep";
 import StepProgress from "@/components/StepProgress";
-import MiseEnPlace from "@/components/MiseEnPlace";
+import IngredientReadinessCard from "@/components/IngredientReadinessCard";
 import { useRecipe } from "@/hooks/useRecipes";
 import { mockRecipe } from "@/data/mockData";
 import type { RecipeIngredient } from "@/types/recipe";
@@ -13,7 +13,7 @@ const CookingMode = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const recipeId = searchParams.get("id");
-  const [currentStep, setCurrentStep] = useState(0); // 0 = mise en place
+  const [currentStep, setCurrentStep] = useState(1);
   
   const { data: recipe, isLoading } = useRecipe(recipeId !== 'mock' ? recipeId : null);
   
@@ -34,7 +34,6 @@ const CookingMode = () => {
   
   const displayTitle = recipe?.title || mockRecipe.title;
   const totalSteps = steps.length;
-  const isMiseEnPlace = currentStep === 0;
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -87,65 +86,58 @@ const CookingMode = () => {
         </div>
       </header>
 
-      {/* Progress - only show during cooking steps */}
-      {!isMiseEnPlace && (
-        <div className="bg-card border-b border-border py-4">
-          <div className="container mx-auto px-4">
-            <StepProgress currentStep={currentStep} totalSteps={totalSteps} />
-          </div>
+      {/* Progress */}
+      <div className="bg-card border-b border-border py-4">
+        <div className="container mx-auto px-4">
+          <StepProgress currentStep={currentStep} totalSteps={totalSteps} />
         </div>
-      )}
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-8">
-        {isMiseEnPlace ? (
-          <MiseEnPlace
-            ingredients={ingredients}
-            onReady={() => setCurrentStep(1)}
-          />
-        ) : (
-          <CookingStep 
-            step={steps[currentStep - 1]} 
-            totalSteps={totalSteps}
-          />
+        {currentStep === 1 && (
+          <IngredientReadinessCard ingredients={ingredients} />
         )}
+
+        <CookingStep 
+          step={steps[currentStep - 1]} 
+          totalSteps={totalSteps}
+        />
       </main>
 
-      {/* Navigation Buttons - only during cooking steps */}
-      {!isMiseEnPlace && (
-        <footer className="bg-card border-t border-border p-4">
-          <div className="container mx-auto flex gap-4">
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex-1"
-              onClick={handlePrev}
-              disabled={currentStep <= 1}
-            >
-              <ArrowRight className="w-5 h-5" />
-              הקודם
-            </Button>
-            <Button
-              variant="hero"
-              size="lg"
-              className="flex-1"
-              onClick={handleNext}
-            >
-              {currentStep === totalSteps ? (
-                <>
-                  סיימתי!
-                  <span>🎉</span>
-                </>
-              ) : (
-                <>
-                  הבא
-                  <ArrowLeft className="w-5 h-5" />
-                </>
-              )}
-            </Button>
-          </div>
-        </footer>
-      )}
+      {/* Navigation Buttons */}
+      <footer className="bg-card border-t border-border p-4">
+        <div className="container mx-auto flex gap-4">
+          <Button
+            variant="outline"
+            size="lg"
+            className="flex-1"
+            onClick={handlePrev}
+            disabled={currentStep <= 1}
+          >
+            <ArrowRight className="w-5 h-5" />
+            הקודם
+          </Button>
+          <Button
+            variant="hero"
+            size="lg"
+            className="flex-1"
+            onClick={handleNext}
+          >
+            {currentStep === totalSteps ? (
+              <>
+                סיימתי!
+                <span>🎉</span>
+              </>
+            ) : (
+              <>
+                הבא
+                <ArrowLeft className="w-5 h-5" />
+              </>
+            )}
+          </Button>
+        </div>
+      </footer>
     </div>
   );
 };
