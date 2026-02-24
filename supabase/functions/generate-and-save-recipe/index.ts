@@ -470,7 +470,7 @@ async function fetchRecipeFromSpoonacular(
     console.log("Translated ingredients for Spoonacular:", englishIngredients);
 
     // Find recipes by ingredients
-    const findUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=1&ranking=2&apiKey=${SPOONACULAR_API_KEY}`;
+    const findUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=5&ranking=1&apiKey=${SPOONACULAR_API_KEY}`;
     const findRes = await fetch(findUrl);
     if (!findRes.ok) {
       console.error("Spoonacular findByIngredients error:", findRes.status);
@@ -479,7 +479,22 @@ async function fetchRecipeFromSpoonacular(
     const findData = await findRes.json();
     if (!findData || findData.length === 0) return null;
 
-    const recipeId = findData[0].id;
+    // Pick the candidate that uses the most of the user's ingredients
+    const sorted = [...findData].sort((a: any, b: any) => (b.usedIngredientCount || 0) - (a.usedIngredientCount || 0));
+    const best = sorted[0];
+    const usedCount = best.usedIngredientCount || 0;
+    const userCount = hebrewIngredients.length;
+    const minRequired = Math.max(2, Math.ceil(userCount * 0.3));
+
+    console.log(`Selected recipe "${best.title}": uses ${usedCount}/${userCount} user ingredients (min required: ${minRequired})`);
+    sorted.slice(0, 3).forEach((c: any) => console.log(`  Candidate: "${c.title}" used=${c.usedIngredientCount} missed=${c.missedIngredientCount}`));
+
+    if (usedCount < minRequired) {
+      console.log("Best candidate doesn't use enough user ingredients, rejecting");
+      return null;
+    }
+
+    const recipeId = best.id;
 
     // Get full recipe info
     const infoUrl = `https://api.spoonacular.com/recipes/${recipeId}/information?apiKey=${SPOONACULAR_API_KEY}`;
