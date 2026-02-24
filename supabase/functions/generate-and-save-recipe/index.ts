@@ -465,12 +465,18 @@ async function fetchRecipeFromSpoonacular(
   }
 
   try {
-    // Translate ingredients to English (Hebrew→English via MyMemory, works fine for short terms)
-    const englishIngredients = await translateEachHeToEn(hebrewIngredients);
-    console.log("Translated ingredients for Spoonacular:", englishIngredients);
+    // Translate ingredients to English (Hebrew→English via MyMemory)
+    const rawTranslated = await translateEachHeToEn(hebrewIngredients);
+    // Normalize: trim, remove trailing punctuation, collapse spaces
+    const englishIngredients = rawTranslated.map(t =>
+      t.trim().replace(/[.,;:!?]+$/, '').replace(/\s{2,}/g, ' ').trim()
+    );
+    console.log("Translated & normalized ingredients for Spoonacular:", englishIngredients);
 
-    // Find recipes by ingredients
-    const findUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=5&ranking=1&apiKey=${SPOONACULAR_API_KEY}`;
+    const userCount = hebrewIngredients.length;
+
+    // Find recipes by ingredients — ignorePantry=true, fetch 8 candidates
+    const findUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=8&ranking=1&ignorePantry=true&apiKey=${SPOONACULAR_API_KEY}`;
     const findRes = await fetch(findUrl);
     if (!findRes.ok) {
       console.error("Spoonacular findByIngredients error:", findRes.status);
@@ -479,20 +485,57 @@ async function fetchRecipeFromSpoonacular(
     const findData = await findRes.json();
     if (!findData || findData.length === 0) return null;
 
-    // Pick the candidate that uses the most of the user's ingredients
-    const sorted = [...findData].sort((a: any, b: any) => (b.usedIngredientCount || 0) - (a.usedIngredientCount || 0));
-    const best = sorted[0];
-    const usedCount = best.usedIngredientCount || 0;
-    const userCount = hebrewIngredients.length;
-    const minRequired = Math.max(2, Math.ceil(userCount * 0.3));
+    // Composite scoring: coverage * 0.7 + precision * 0.3
+    const scored = findData.map((c: any) => {
+      const used = c.usedIngredientCount || 0;
+      const missed = c.missedIngredientCount || 0;
+      const coverage = userCount > 0 ? used / userCount : 0;
+      const precision = (used + missed) > 0 ? used / (used + missed) : 0;
+      const score = coverage * 0.7 + precision * 0.3;
+      return { ...c, used, missed, coverage, precision, score };
+    });
 
-    console.log(`Selected recipe "${best.title}": uses ${usedCount}/${userCount} user ingredients (min required: ${minRequired})`);
-    sorted.slice(0, 3).forEach((c: any) => console.log(`  Candidate: "${c.title}" used=${c.usedIngredientCount} missed=${c.missedIngredientCount}`));
+    // Sort: score desc, used desc, missed asc
+    scored.sort((a: any, b: any) =>
+      b.score - a.score || b.used - a.used || a.missed - b.missed
+    );
 
-    if (usedCount < minRequired) {
-      console.log("Best candidate doesn't use enough user ingredients, rejecting");
+    // Log all candidates for diagnostics
+    console.log("=== Spoonacular candidates (scored) ===");
+    scored.forEach((c: any, i: number) =>
+      console.log(`  #${i + 1} "${c.title}" score=${c.score.toFixed(3)} coverage=${c.coverage.toFixed(2)} precision=${c.precision.toFixed(2)} used=${c.used} missed=${c.missed}`)
+    );
+
+    // Hard rejection thresholds
+    const minCoverage = 0.6;
+    const minPrecision = 0.35;
+    const maxMissed = userCount + 3;
+
+    // Find first candidate passing all guards
+    let best: any = null;
+    for (const c of scored) {
+      if (c.coverage < minCoverage) {
+        console.log(`  REJECTED "${c.title}": coverage ${c.coverage.toFixed(2)} < ${minCoverage}`);
+        continue;
+      }
+      if (c.precision < minPrecision) {
+        console.log(`  REJECTED "${c.title}": precision ${c.precision.toFixed(2)} < ${minPrecision}`);
+        continue;
+      }
+      if (c.missed > maxMissed) {
+        console.log(`  REJECTED "${c.title}": missed ${c.missed} > max ${maxMissed}`);
+        continue;
+      }
+      best = c;
+      break;
+    }
+
+    if (!best) {
+      console.log("No candidate passed quality guards (coverage/precision/missed). Rejecting all.");
       return null;
     }
+
+    console.log(`SELECTED "${best.title}" score=${best.score.toFixed(3)} coverage=${best.coverage.toFixed(2)} precision=${best.precision.toFixed(2)} used=${best.used} missed=${best.missed}`);
 
     const recipeId = best.id;
 
