@@ -1,103 +1,64 @@
 
 
-## Replace MyMemory with AI Translation + DB Cache
+## Fix: Recipe-Ingredient Correlation Problem
 
-### Overview
+### The Problem
 
-Replace unreliable MyMemory translation with AI translation via the Lovable Gateway, and cache every translation in a new `translation_cache` DB table. On subsequent requests, cached translations are served instantly (no AI call, no cost). Over time, nearly all translations come from cache for free.
+When a user selects ingredients (tomato, potato, chicken, rice, pasta), the system returns "Baked Agnolotti" which uses none of those ingredients. The smart substitutions then show egg and bread replacements -- which relate to the Agnolotti recipe, not to what the user selected. Everything feels disconnected.
 
-### Step 1: Create `translation_cache` table
+### Root Cause
 
-New table with columns:
-- `id` (uuid, primary key)
-- `source_text` (text, not null) -- the English text
-- `translated_text` (text, not null) -- the Hebrew result
-- `lang_pair` (text, not null, default `'en|he'`)
-- `created_at` (timestamptz, default now())
+Two issues in `supabase/functions/generate-and-save-recipe/index.ts`:
 
-Add a unique index on `(source_text, lang_pair)` for fast lookups and to prevent duplicates.
+1. **Wrong Spoonacular ranking mode**: The API call uses `ranking=2` (minimize missing ingredients) instead of `ranking=1` (maximize used ingredients). With `ranking=2`, Spoonacular returns recipes that need the fewest extra ingredients -- but may ignore the user's ingredients entirely.
 
-RLS: Allow SELECT for everyone (public cache), INSERT/UPDATE only via service role (edge functions use `supabaseAdmin`).
+2. **Only 1 result fetched, no validation**: `number=1` fetches a single recipe with no check that it actually uses the selected ingredients. Even with `ranking=1`, we should fetch multiple results and pick the best match.
 
-### Step 2: Update `generate-and-save-recipe/index.ts`
+### The Fix
 
-1. **Remove** `translateEach` function (lines 41-48)
-2. **Keep** `translateText` (MyMemory) only for Hebrew-to-English direction (ingredient input to Spoonacular, line 345)
-3. **Add** `translateRecipeWithAI` function:
-   - Takes `apiKey`, `supabaseAdmin`, `title`, `ingredients` (name + unit), `steps`
-   - First, checks `translation_cache` for each text. Any cache hits are used directly
-   - For cache misses: sends one AI call to `ai.gateway.lovable.dev` with all untranslated texts
-   - Saves all new translations back to `translation_cache`
-   - Returns fully translated recipe data (title, ingredient names, units, steps)
-4. **Update** `fetchRecipeFromSpoonacular` (line 334):
-   - Accept `apiKey` and `supabaseAdmin` parameters
-   - Replace `translateEach(textsToTranslate, "en|he")` (line 385) with `translateRecipeWithAI`
-   - Units (`ing.unit`, line 394) will now also be translated (currently passed through in English)
-5. **In main handler** (line 540): pass `LOVABLE_API_KEY` and `supabaseAdmin` to `fetchRecipeFromSpoonacular`
-6. **Log** translation usage: `logAiUsage(supabaseAdmin, userId, "translation", tokensUsed, 0, "ai")` -- 0 credits to user
+**File: `supabase/functions/generate-and-save-recipe/index.ts`**
 
-### Step 3: Update `search-recipe/index.ts`
+1. **Change Spoonacular API parameters** (line 473):
+   - Change `ranking=2` to `ranking=1` (maximize used ingredients)
+   - Change `number=1` to `number=5` (fetch 5 candidates)
 
-1. **Keep** `translateText` (MyMemory) for Hebrew-to-English search query (line 137) -- works fine for short Hebrew terms
-2. **Add** same `translateRecipeWithAI` function with DB cache logic
-3. **Replace** the per-string MyMemory loop (lines 158-162) with `translateRecipeWithAI`
-4. **Units** in search results (line 171) will also be translated
-5. Requires reading `LOVABLE_API_KEY` from `Deno.env.get("LOVABLE_API_KEY")`
+2. **Add best-match selection logic** after fetching Spoonacular results:
+   - For each candidate recipe returned by `findByIngredients`, count how many of the user's ingredients are actually used (Spoonacular returns `usedIngredients` and `missedIngredients` arrays in the response)
+   - Pick the recipe with the highest number of `usedIngredients`
+   - If the best candidate uses fewer than 2 of the user's ingredients (or less than 30% of them), reject it and return the "no matching recipe" error instead of serving an irrelevant recipe
 
-### How the Cache Works
+3. **Add logging** to show which recipe was selected and why:
+   - Log: "Selected recipe X: uses Y/Z user ingredients"
 
-```text
-Recipe comes from Spoonacular (English)
-          |
-          v
-Check translation_cache for each text
-          |
-     +----+----+
-     |         |
-  Cache HIT  Cache MISS
-  (use it)    (collect)
-     |         |
-     |         v
-     |    One AI call for all misses
-     |         |
-     |         v
-     |    Save to translation_cache
-     |         |
-     +----+----+
-          |
-          v
-    Return Hebrew recipe
-```
+### Technical Detail
 
-- First time "olive oil" appears: AI translates, saved to cache
-- Every future recipe with "olive oil": instant from DB, no AI cost
-- Common ingredients/units get cached quickly (first few days)
-- After ~50-100 recipes, most translations come from cache
-
-### AI Translation Prompt
-
-```text
-System: You are a cooking/food translator. Translate from English to Hebrew.
-Return a JSON object with a "translations" array matching the input order.
-
-User: {"texts": ["Penne Arrabiata", "penne pasta", "cups", "parsley", "sprigs", "Boil the pasta until al dente."]}
-```
-
-Response:
+The Spoonacular `findByIngredients` response already includes:
 ```json
-{"translations": ["פנה אראביאטה", "פסטה פנה", "כוסות", "פטרוזיליה", "ענפים", "הרתיחו את הפסטה עד שתהיה אל דנטה."]}
+{
+  "id": 123,
+  "title": "Chicken Rice Bowl",
+  "usedIngredientCount": 3,
+  "missedIngredientCount": 2,
+  "usedIngredients": [...],
+  "missedIngredients": [...]
+}
 ```
 
-### Cost
+We will use `usedIngredientCount` to rank results and set a minimum threshold.
 
-- Only cache misses trigger AI calls (~300-500 tokens each)
-- After initial ramp-up, most requests are 100% cached (zero cost)
-- For 100 users/day: estimated $0.10-$0.50/month (much less than before due to caching)
-- User credits: 0 deducted for translation
+### What About Substitutions?
+
+The substitutions currently look up the **recipe's ingredients** in the DB (line 683). This is actually correct behavior -- they show what you can swap IN the recipe you're about to cook. The real problem was the recipe itself being irrelevant. Once the recipe properly matches the user's ingredients, the substitutions will make sense too (e.g., suggesting alternatives for chicken or pasta).
 
 ### Files Changed
 
-- **Migration**: Create `translation_cache` table with unique index
-- **`supabase/functions/generate-and-save-recipe/index.ts`**: Replace MyMemory with AI + cache for en-to-he
-- **`supabase/functions/search-recipe/index.ts`**: Same replacement
+- `supabase/functions/generate-and-save-recipe/index.ts` -- fix Spoonacular query parameters and add best-match selection
+
+### Summary
+
+- `ranking=2` changed to `ranking=1` (prioritize using what the user has)
+- Fetch 5 candidates instead of 1
+- Pick the one that uses the most user ingredients
+- Reject recipes that use fewer than 2 of the user's ingredients
+- No changes needed to substitution logic (it was correct, just fed a bad recipe)
 
