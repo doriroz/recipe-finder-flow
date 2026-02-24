@@ -207,10 +207,16 @@ async function findSubstitutionsFromDB(
         }
       }
     }
-    const unique = matched.filter(
-      (m, i, arr) => arr.findIndex(x => x.original === m.original && x.alternative === m.alternative) === i
-    );
-    return unique.slice(0, 4);
+    // Deduplicate: keep only 1 substitution per original ingredient
+    const seenOriginals = new Set<string>();
+    const deduped: typeof matched = [];
+    for (const m of matched) {
+      if (!seenOriginals.has(m.original)) {
+        seenOriginals.add(m.original);
+        deduped.push(m);
+      }
+    }
+    return deduped.slice(0, 4);
   } catch (err) {
     console.error("Substitution lookup error:", err);
     return [];
@@ -451,6 +457,108 @@ async function extractIngredientsFromImage(imageBase64: string, apiKey: string):
   return Array.isArray(parsed) ? parsed : [];
 }
 
+// ============ IMPERIAL → METRIC CONVERSION ============
+
+const UNIT_DIRECT_HEBREW: Record<string, string> = {
+  "tablespoon": "כף",
+  "tablespoons": "כפות",
+  "Tablespoon": "כף",
+  "Tablespoons": "כפות",
+  "Tbsp": "כף",
+  "Tbsps": "כפות",
+  "tbsp": "כף",
+  "tbsps": "כפות",
+  "teaspoon": "כפית",
+  "teaspoons": "כפיות",
+  "Teaspoon": "כפית",
+  "Teaspoons": "כפיות",
+  "tsp": "כפית",
+  "tsps": "כפיות",
+  "cup": "כוס",
+  "cups": "כוסות",
+  "clove": "שן",
+  "cloves": "שיניים",
+  "pinch": "קמצוץ",
+  "pinches": "קמצוצים",
+  "slice": "פרוסה",
+  "slices": "פרוסות",
+  "piece": "חתיכה",
+  "pieces": "חתיכות",
+  "bunch": "צרור",
+  "bunches": "צרורות",
+  "handful": "חופן",
+  "large": "גדול",
+  "medium": "בינוני",
+  "small": "קטן",
+};
+
+interface MetricResult {
+  amount: number;
+  unit: string;
+  skipTranslation: boolean; // true if unit is already in Hebrew
+}
+
+function convertToMetric(amount: number, unit: string): MetricResult {
+  const u = unit.toLowerCase().trim();
+
+  // Direct Hebrew mapping (no conversion needed, just translate unit)
+  if (UNIT_DIRECT_HEBREW[unit]) {
+    return { amount, unit: UNIT_DIRECT_HEBREW[unit], skipTranslation: true };
+  }
+
+  // Imperial weight → grams
+  if (u === "pound" || u === "pounds" || u === "lb" || u === "lbs") {
+    const grams = amount * 454;
+    return { amount: Math.round(grams / 10) * 10, unit: "גרם", skipTranslation: true };
+  }
+  if (u === "ounce" || u === "ounces" || u === "oz") {
+    const grams = amount * 28;
+    return { amount: Math.round(grams / 5) * 5, unit: "גרם", skipTranslation: true };
+  }
+
+  // Imperial volume → ml
+  if (u === "fluid ounce" || u === "fluid ounces" || u === "fl oz" || u === "fl. oz.") {
+    const ml = amount * 30;
+    return { amount: Math.round(ml), unit: 'מ"ל', skipTranslation: true };
+  }
+  if (u === "quart" || u === "quarts" || u === "qt") {
+    const ml = amount * 946;
+    return { amount: Math.round(ml / 10) * 10, unit: 'מ"ל', skipTranslation: true };
+  }
+  if (u === "pint" || u === "pints" || u === "pt") {
+    const ml = amount * 473;
+    return { amount: Math.round(ml / 10) * 10, unit: 'מ"ל', skipTranslation: true };
+  }
+  if (u === "gallon" || u === "gallons") {
+    const ml = amount * 3785;
+    const liters = ml / 1000;
+    return { amount: Math.round(liters * 10) / 10, unit: "ליטר", skipTranslation: true };
+  }
+
+  // Fahrenheit → Celsius
+  if (u === "°f" || u === "fahrenheit" || u === "f") {
+    const celsius = Math.round((amount - 32) * 5 / 9 / 5) * 5;
+    return { amount: celsius, unit: "°C", skipTranslation: true };
+  }
+
+  // Already metric or unknown — pass through for AI translation
+  if (u === "g" || u === "gram" || u === "grams") {
+    return { amount, unit: "גרם", skipTranslation: true };
+  }
+  if (u === "kg" || u === "kilogram" || u === "kilograms") {
+    return { amount, unit: 'ק"ג', skipTranslation: true };
+  }
+  if (u === "ml" || u === "milliliter" || u === "milliliters") {
+    return { amount, unit: 'מ"ל', skipTranslation: true };
+  }
+  if (u === "l" || u === "liter" || u === "liters" || u === "litre" || u === "litres") {
+    return { amount, unit: "ליטר", skipTranslation: true };
+  }
+
+  // No conversion — let AI translate the unit
+  return { amount, unit, skipTranslation: false };
+}
+
 // ============ SPOONACULAR RECIPE FETCHING ============
 
 async function fetchRecipeFromSpoonacular(
@@ -548,11 +656,23 @@ async function fetchRecipeFromSpoonacular(
     // Extract data
     const title = info.title || "Recipe";
     const cookingTime = info.readyInMinutes || 30;
-    const extIngredients: { name: string; amount: number; unit: string }[] = (info.extendedIngredients || []).map((ing: any) => ({
+    const rawIngredients: { name: string; amount: number; unit: string }[] = (info.extendedIngredients || []).map((ing: any) => ({
       name: ing.name || ing.original || "",
       amount: ing.amount || 0,
       unit: ing.unit || "",
     }));
+
+    // Convert imperial → metric before translation
+    const extIngredients = rawIngredients.map(ing => {
+      const converted = convertToMetric(ing.amount, ing.unit);
+      return {
+        name: ing.name,
+        amount: converted.amount,
+        unit: converted.unit,
+        skipUnitTranslation: converted.skipTranslation,
+      };
+    });
+
     const steps: string[] = (info.analyzedInstructions?.[0]?.steps || []).map((s: any) => s.step || "");
 
     if (steps.length === 0 && info.instructions) {
@@ -562,19 +682,25 @@ async function fetchRecipeFromSpoonacular(
 
     if (steps.length === 0) return null;
 
-    // AI translate with DB cache: title + ingredient names + units + steps
+    // Only send units that need AI translation (non-Hebrew ones)
+    const unitsForTranslation = extIngredients.map(i =>
+      i.skipUnitTranslation ? "" : i.unit
+    );
+
+    // AI translate with DB cache: title + ingredient names + non-Hebrew units + steps
     const translated = await translateRecipeWithAI(
       apiKey,
       supabaseAdmin,
       title,
-      extIngredients.map(i => ({ name: i.name, unit: i.unit })),
+      extIngredients.map((i, idx) => ({ name: i.name, unit: unitsForTranslation[idx] })),
       steps
     );
 
     const ingredients = extIngredients.map((ing, idx) => ({
       name: translated.ingredientNames[idx] || ing.name,
       amount: ing.amount ? String(ing.amount) : undefined,
-      unit: translated.units[idx] || undefined,
+      // Use already-Hebrew unit if skipTranslation, otherwise use AI-translated unit
+      unit: ing.skipUnitTranslation ? ing.unit : (translated.units[idx] || undefined),
     }));
 
     // Estimate difficulty
