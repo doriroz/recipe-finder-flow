@@ -57,7 +57,6 @@ export const ingredients: Ingredient[] = [
   { id: 42, name: "שעועית לבנה", emoji: "🫘", category: "חלבונים", popularityScore: 64 },
   { id: 43, name: "טופו", emoji: "🧊", category: "חלבונים", popularityScore: 52 },
   // חלבי
-  { id: 2, name: "ביצה", emoji: "🥚", category: "חלבי", popularityScore: 96 },
   { id: 6, name: "גבינה צהובה", emoji: "🧀", category: "חלבי", popularityScore: 89 },
   { id: 8, name: "חלב", emoji: "🥛", category: "חלבי", popularityScore: 87 },
   { id: 44, name: "גבינת קוטג'", emoji: "🧀", category: "חלבי", popularityScore: 72 },
