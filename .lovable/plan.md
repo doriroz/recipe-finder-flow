@@ -1,24 +1,62 @@
 
 
-## Fix: Remove Duplicate Egg from Ingredients Data
+## Add "Ingredient Match" Indicator to Recipe Page
 
-### The Problem
+### Problem
+The backend computes how many of the user's selected ingredients were used in the recipe (`used`, `missed`, `coverage`, `precision`), but throws this data away. The user has no idea which of their ingredients made it into the recipe.
 
-"ביצה" (egg) appears **twice** in `src/data/mockData.ts`:
-- `id: 2` — category "חלבי" (dairy), score 96
-- `id: 39` — category "חלבונים" (proteins), score 96
+### Solution
+Pass the match stats from the backend all the way to the recipe page, and display a small, informative badge.
 
-Both score high enough to land in the Quick Picks top 12, so the user sees egg listed twice.
+---
 
-### The Fix
+### Changes
 
-**`src/data/mockData.ts`** — Remove the duplicate entry:
-- **Keep** `id: 39` in "חלבונים" (proteins) — egg is more naturally a protein
-- **Remove** `id: 2` from "חלבי" (dairy)
+**1. Edge Function (`supabase/functions/generate-and-save-recipe/index.ts`)**
 
-This is a one-line deletion. No other files need to change since all components reference ingredients by `id`, and no code hardcodes `id: 2`.
+- In `fetchRecipeFromSpoonacular`, include `used` and `missed` counts in the returned object (alongside `title`, `ingredients`, etc.)
+- In the main handler's Spoonacular response (lines 891-900), add `used_count` and `missed_count` to the JSON response:
+  ```
+  used_count: spoonacularRecipe.used,
+  missed_count: spoonacularRecipe.missed,
+  ```
 
-### Alternative (if egg should appear in both categories)
+**2. Hook (`src/hooks/useGenerateRecipe.ts`)**
 
-If you want egg to stay in both categories (e.g., for the Category Browser), instead of removing the duplicate, we could add **name-based deduplication** in `QuickPicksSection.tsx` — filter out items with the same `name` before slicing the top 12. But the simpler fix is just removing the duplicate entry.
+- Pass `used_count` and `missed_count` through `navigate` state (lines 93-100):
+  ```
+  used_count: data.used_count,
+  missed_count: data.missed_count,
+  ```
+
+**3. Recipe Result Page (`src/pages/RecipeResult.tsx`)**
+
+- Read `used_count` and `missed_count` from `location.state`
+- Pass them to `RecipeCard` as new props
+
+**4. Recipe Card (`src/components/RecipeCard.tsx`)**
+
+- Accept optional `used_count` and `missed_count` props
+- Display a small badge in the "Quick Info" bar, e.g.:
+  ```
+  "4 מתוך 6 מרכיבים שלך נמצאים במתכון"
+  (4 out of 6 of your ingredients are in the recipe)
+  ```
+- Style: green tint if coverage is high (80%+), amber if medium, subtle muted if low
+- Only show the badge when the values are present (not for mock/old recipes)
+
+### Visual
+
+```text
++---------------------------------------------+
+| Clock 30 min | ChefHat Medium | Users 4     |
++---------------------------------------------+
+| CheckCircle  4/6 מהמרכיבים שבחרת במתכון    |
++---------------------------------------------+
+```
+
+### What stays the same
+- No changes to the recipe database schema
+- No changes to the ingredient input flow
+- Mock recipes won't show this badge (no match data)
 
