@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, Users, ChefHat, Plus, Minus } from "lucide-react";
+import { Clock, Users, ChefHat, Plus, Minus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SubstitutionSection from "@/components/SubstitutionSection";
 import ChefTip from "@/components/ChefTip";
@@ -34,6 +34,8 @@ export interface RecipeCardData {
   reliability_score?: "high" | "medium" | "creative";
   spoonacular_verified?: boolean;
   source?: "local" | "ai" | "spoonacular";
+  used_count?: number;
+  missed_count?: number;
 }
 
 interface RecipeCardProps {
@@ -182,6 +184,27 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
           <span>{servings} מנות</span>
         </div>
       </div>
+
+      {/* Ingredient Match Badge */}
+      {recipe.used_count != null && recipe.missed_count != null && (
+        (() => {
+          const total = recipe.used_count + recipe.missed_count;
+          const coverage = total > 0 ? recipe.used_count / total : 0;
+          const colorClass = coverage >= 0.8
+            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+            : coverage >= 0.5
+            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+            : "bg-muted text-muted-foreground";
+          return (
+            <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl mb-6 ${colorClass}`}>
+              <CheckCircle className="w-5 h-5 shrink-0" />
+              <span className="text-sm font-medium">
+                {recipe.used_count} מתוך {total} מהמרכיבים שבחרת נמצאים במתכון
+              </span>
+            </div>
+          );
+        })()
+      )}
 
       {/* Ingredients List with Servings Adjuster */}
       <div className="mb-6">

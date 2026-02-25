@@ -96,6 +96,8 @@ export const useGenerateRecipe = () => {
             reliability_score: data.reliability_score,
             spoonacular_verified: data.spoonacular_verified ?? false,
             source: data.source,
+            used_count: data.used_count,
+            missed_count: data.missed_count,
           },
         });
       }

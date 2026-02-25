@@ -16,6 +16,8 @@ interface RecipeResponse {
   difficulty: string;
   why_it_works: string;
   reliability_score: "high" | "medium" | "creative";
+  used_count?: number;
+  missed_count?: number;
 }
 
 type DifficultyLevel = "low" | "medium" | "high";
@@ -719,6 +721,8 @@ async function fetchRecipeFromSpoonacular(
       difficulty,
       why_it_works: `מתכון מאומת מ-Spoonacular עם ${ingCount} מצרכים ו-${stepCount} שלבי הכנה`,
       reliability_score: "high",
+      used_count: best.used,
+      missed_count: best.missed,
     };
   } catch (err) {
     console.error("Spoonacular fetch error:", err);
@@ -896,6 +900,8 @@ serve(async (req) => {
         reliability_score: spoonacularRecipe.reliability_score || "high",
         spoonacular_verified: true,
         source: "spoonacular",
+        used_count: spoonacularRecipe.used_count,
+        missed_count: spoonacularRecipe.missed_count,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
