@@ -36,6 +36,7 @@ export interface RecipeCardData {
   source?: "local" | "ai" | "spoonacular";
   used_count?: number;
   missed_count?: number;
+  used_ingredient_names?: string[];
 }
 
 interface RecipeCardProps {
@@ -196,11 +197,25 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
             ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
             : "bg-muted text-muted-foreground";
           return (
-            <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl mb-6 ${colorClass}`}>
-              <CheckCircle className="w-5 h-5 shrink-0" />
-              <span className="text-sm font-medium">
-                {recipe.used_count} מתוך {total} מהמרכיבים שבחרת נמצאים במתכון
-              </span>
+            <div className={`px-4 py-3 rounded-xl mb-6 ${colorClass}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-5 h-5 shrink-0" />
+                <span className="text-sm font-medium">
+                  {recipe.used_count} מתוך {total} מהמרכיבים שבחרת נמצאים במתכון
+                </span>
+              </div>
+              {recipe.used_ingredient_names && recipe.used_ingredient_names.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {recipe.used_ingredient_names.map((name, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-white/60 dark:bg-white/10"
+                    >
+                      ✓ {name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })()

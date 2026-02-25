@@ -18,6 +18,7 @@ interface RecipeResponse {
   reliability_score: "high" | "medium" | "creative";
   used_count?: number;
   missed_count?: number;
+  used_ingredient_names?: string[];
 }
 
 type DifficultyLevel = "low" | "medium" | "high";
@@ -712,6 +713,29 @@ async function fetchRecipeFromSpoonacular(
     if (stepCount <= 4 && ingCount <= 6) difficulty = "low";
     else if (stepCount >= 8 || ingCount >= 12) difficulty = "high";
 
+    // Map Spoonacular's used English ingredient names back to the user's original Hebrew names
+    const enToHeLookup = new Map<string, string>();
+    for (let i = 0; i < englishIngredients.length; i++) {
+      enToHeLookup.set(englishIngredients[i].toLowerCase().trim(), hebrewIngredients[i]);
+    }
+    const usedIngNames: string[] = [];
+    for (const ui of (best.usedIngredients || [])) {
+      const enName = (ui.name || "").toLowerCase().trim();
+      // Try exact match first, then partial
+      const heMatch = enToHeLookup.get(enName);
+      if (heMatch) {
+        usedIngNames.push(heMatch);
+      } else {
+        // Partial match
+        for (const [en, he] of enToHeLookup.entries()) {
+          if (enName.includes(en) || en.includes(enName)) {
+            usedIngNames.push(he);
+            break;
+          }
+        }
+      }
+    }
+
     return {
       title: translated.title,
       ingredients,
@@ -723,6 +747,7 @@ async function fetchRecipeFromSpoonacular(
       reliability_score: "high",
       used_count: best.used,
       missed_count: best.missed,
+      used_ingredient_names: usedIngNames,
     };
   } catch (err) {
     console.error("Spoonacular fetch error:", err);
@@ -902,6 +927,7 @@ serve(async (req) => {
         source: "spoonacular",
         used_count: spoonacularRecipe.used_count,
         missed_count: spoonacularRecipe.missed_count,
+        used_ingredient_names: spoonacularRecipe.used_ingredient_names,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
