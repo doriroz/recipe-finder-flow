@@ -619,7 +619,7 @@ async function fetchRecipeFromSpoonacular(
 
     // Hard rejection thresholds
     const minCoverage = 0.6;
-    const minPrecision = 0.35;
+    const minPrecision = 0.50;
     const maxMissed = userCount + 3;
 
     // Find first candidate passing all guards
