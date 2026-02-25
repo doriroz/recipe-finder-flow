@@ -21,6 +21,7 @@ const RecipeResult = () => {
   const [recipeSource, setRecipeSource] = useState<"local" | "ai" | "spoonacular" | undefined>();
   const [usedCount, setUsedCount] = useState<number | undefined>();
   const [missedCount, setMissedCount] = useState<number | undefined>();
+  const [usedIngredientNames, setUsedIngredientNames] = useState<string[] | undefined>();
 
   // Pick up why_it_works, reliability_score, spoonacular_verified, and source from navigation state
   useEffect(() => {
@@ -31,6 +32,7 @@ const RecipeResult = () => {
       source?: "local" | "ai" | "spoonacular";
       used_count?: number;
       missed_count?: number;
+      used_ingredient_names?: string[];
     } | null;
     if (state?.why_it_works) setWhyItWorks(state.why_it_works);
     if (state?.reliability_score) setReliabilityScore(state.reliability_score as any);
@@ -38,6 +40,7 @@ const RecipeResult = () => {
     if (state?.source) setRecipeSource(state.source);
     if (state?.used_count !== undefined) setUsedCount(state.used_count);
     if (state?.missed_count !== undefined) setMissedCount(state.missed_count);
+    if (state?.used_ingredient_names) setUsedIngredientNames(state.used_ingredient_names);
   }, [location.state]);
 
   // Fetch specific recipe if ID provided, otherwise get latest user recipe
@@ -86,6 +89,7 @@ const RecipeResult = () => {
     source: recipeSource,
     used_count: usedCount,
     missed_count: missedCount,
+    used_ingredient_names: usedIngredientNames,
   } :
   {
     // Fallback to mock data when no recipes exist

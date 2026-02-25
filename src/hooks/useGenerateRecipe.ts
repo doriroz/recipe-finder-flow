@@ -98,6 +98,7 @@ export const useGenerateRecipe = () => {
             source: data.source,
             used_count: data.used_count,
             missed_count: data.missed_count,
+            used_ingredient_names: data.used_ingredient_names,
           },
         });
       }
