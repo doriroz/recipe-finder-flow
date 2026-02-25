@@ -1,62 +1,43 @@
 
 
-## Add "Ingredient Match" Indicator to Recipe Page
+## Fix Recipe Matching: Remove Precision Filter, Keep Coverage-Based Ranking
 
 ### Problem
-The backend computes how many of the user's selected ingredients were used in the recipe (`used`, `missed`, `coverage`, `precision`), but throws this data away. The user has no idea which of their ingredients made it into the recipe.
+With `minPrecision` at 50%, most recipes get rejected because typical recipes have many ingredients beyond what the user selected. This defeats the app's purpose — finding recipes with whatever you have at home. A recipe using 3 out of your 4 ingredients is great even if the recipe itself needs 10 total ingredients.
+
+### Root Cause
+**Precision** = "what percentage of the recipe's ingredients did the user provide." A recipe with 10 ingredients where the user has 3 = 30% precision. This metric penalizes complex recipes unfairly.
+
+**Coverage** = "what percentage of the user's ingredients are used." If the user selected 4 and 3 are used = 75% coverage. This is what actually matters for this app.
 
 ### Solution
-Pass the match stats from the backend all the way to the recipe page, and display a small, informative badge.
-
----
+Remove the `minPrecision` threshold entirely. Keep `minCoverage` (60%) as the quality guard, and let the composite score do the ranking. The best-scoring recipe will naturally balance both factors.
 
 ### Changes
 
-**1. Edge Function (`supabase/functions/generate-and-save-recipe/index.ts`)**
+**Edge Function (`supabase/functions/generate-and-save-recipe/index.ts`)**
 
-- In `fetchRecipeFromSpoonacular`, include `used` and `missed` counts in the returned object (alongside `title`, `ingredients`, etc.)
-- In the main handler's Spoonacular response (lines 891-900), add `used_count` and `missed_count` to the JSON response:
-  ```
-  used_count: spoonacularRecipe.used,
-  missed_count: spoonacularRecipe.missed,
-  ```
-
-**2. Hook (`src/hooks/useGenerateRecipe.ts`)**
-
-- Pass `used_count` and `missed_count` through `navigate` state (lines 93-100):
-  ```
-  used_count: data.used_count,
-  missed_count: data.missed_count,
-  ```
-
-**3. Recipe Result Page (`src/pages/RecipeResult.tsx`)**
-
-- Read `used_count` and `missed_count` from `location.state`
-- Pass them to `RecipeCard` as new props
-
-**4. Recipe Card (`src/components/RecipeCard.tsx`)**
-
-- Accept optional `used_count` and `missed_count` props
-- Display a small badge in the "Quick Info" bar, e.g.:
-  ```
-  "4 מתוך 6 מרכיבים שלך נמצאים במתכון"
-  (4 out of 6 of your ingredients are in the recipe)
-  ```
-- Style: green tint if coverage is high (80%+), amber if medium, subtle muted if low
-- Only show the badge when the values are present (not for mock/old recipes)
-
-### Visual
+- Remove the `minPrecision` variable and its rejection check (lines 622, 632-634)
+- Keep `minCoverage = 0.6` and `maxMissed` guards as-is
+- This means: at least 60% of the user's ingredients must appear in the recipe, but the recipe can have as many extra ingredients as needed
 
 ```text
-+---------------------------------------------+
-| Clock 30 min | ChefHat Medium | Users 4     |
-+---------------------------------------------+
-| CheckCircle  4/6 מהמרכיבים שבחרת במתכון    |
-+---------------------------------------------+
+Before:
+  minCoverage = 0.6    -- keep
+  minPrecision = 0.50  -- REMOVE
+  maxMissed = userCount + 3  -- keep
+
+After:
+  minCoverage = 0.6
+  maxMissed = userCount + 3
 ```
 
+The composite score (70% coverage + 30% precision) still ranks recipes that need fewer extra ingredients higher, so the best match is chosen naturally without hard-rejecting everything.
+
 ### What stays the same
-- No changes to the recipe database schema
-- No changes to the ingredient input flow
-- Mock recipes won't show this badge (no match data)
+- Coverage threshold (60%) remains
+- maxMissed guard remains
+- Scoring formula unchanged
+- All frontend code unchanged
+- Match badge display unchanged
 
