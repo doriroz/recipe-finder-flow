@@ -160,7 +160,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
   const ingredientStrings = recipe.ingredients.map(ingredientToString);
 
   return (
-    <div className="card-warm animate-slide-up max-w-2xl mx-auto bg-orange-50">
+    <div className="card-warm animate-slide-up max-w-2xl mx-auto bg-cream-dark">
       {/* Recipe Header */}
       <div className="flex items-start gap-4 mb-6">
         <div className="text-6xl">{recipe.image}</div>
