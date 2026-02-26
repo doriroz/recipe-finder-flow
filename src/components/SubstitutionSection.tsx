@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface Substitution {
   original: string;
@@ -32,6 +33,7 @@ interface SubstitutionSectionProps {
 }
 
 const SubstitutionSection = ({ substitutions, ingredients, recipeTitle }: SubstitutionSectionProps) => {
+  const navigate = useNavigate();
   const [selectedIngredient, setSelectedIngredient] = useState<string>("");
   const [suggestedReplacement, setSuggestedReplacement] = useState("");
   const [userSuggestions, setUserSuggestions] = useState<UserSuggestion[]>([]);
@@ -65,11 +67,19 @@ const SubstitutionSection = ({ substitutions, ingredients, recipeTitle }: Substi
       });
 
       if (error) {
-        throw error;
+        // Extract error message from response body for credit errors
+        let errorMessage = "שגיאה בבדיקת ההחלפה";
+        try {
+          if (error.context && typeof error.context.json === "function") {
+            const body = await error.context.json();
+            if (body?.error) errorMessage = body.error;
+          }
+        } catch {}
+        throw { message: errorMessage, isCredit: errorMessage.includes("קרדיטים") };
       }
 
       if (data?.error) {
-        throw new Error(data.error);
+        throw { message: data.error, isCredit: String(data.error).includes("קרדיטים") };
       }
 
       // Update the suggestion with result
@@ -85,9 +95,21 @@ const SubstitutionSection = ({ substitutions, ingredients, recipeTitle }: Substi
       setSelectedIngredient("");
       setSuggestedReplacement("");
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Validation error:", err);
-      toast.error("שגיאה בבדיקת ההחלפה");
+      const errorMessage = err?.message || "שגיאה בבדיקת ההחלפה";
+
+      if (err?.isCredit || errorMessage.includes("קרדיטים")) {
+        toast.error(errorMessage, {
+          action: {
+            label: "חידוש קרדיטים",
+            onClick: () => navigate("/profile"),
+          },
+          duration: 8000,
+        });
+      } else {
+        toast.error(errorMessage);
+      }
       // Remove the failed suggestion
       setUserSuggestions(prev => prev.slice(0, -1));
     } finally {
