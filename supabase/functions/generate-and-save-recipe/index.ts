@@ -562,6 +562,102 @@ function convertToMetric(amount: number, unit: string): MetricResult {
   return { amount, unit, skipTranslation: false };
 }
 
+// ============ CREATIVE FALLBACK ENGINE ============
+
+async function generateCreativeFallback(
+  englishIngredients: string[],
+  hebrewIngredients: string[],
+  apiKey: string
+): Promise<RecipeResponse | null> {
+  console.log("Generating creative fallback recipe for:", englishIngredients);
+
+  // Categorize ingredients
+  const proteinKw = ["chicken","beef","pork","fish","salmon","tuna","shrimp","egg","tofu","lamb","turkey","sausage","meat","steak"];
+  const carbKw = ["rice","pasta","bread","potato","noodle","flour","couscous","quinoa","oat"];
+  const vegKw = ["tomato","onion","garlic","pepper","carrot","lettuce","cucumber","zucchini","spinach","broccoli","mushroom","corn","pea","bean","eggplant","squash","cabbage","celery"];
+
+  const categories = { protein: [] as string[], carb: [] as string[], veg: [] as string[], other: [] as string[] };
+  for (const ing of englishIngredients) {
+    const lower = ing.toLowerCase();
+    if (proteinKw.some(p => lower.includes(p))) categories.protein.push(ing);
+    else if (carbKw.some(p => lower.includes(p))) categories.carb.push(ing);
+    else if (vegKw.some(p => lower.includes(p))) categories.veg.push(ing);
+    else categories.other.push(ing);
+  }
+
+  // Determine cooking style
+  let style = "stir-fry";
+  if (categories.protein.length > 0 && categories.carb.length > 0) style = "skillet bowl";
+  else if (categories.protein.length > 0) style = "pan-seared dish";
+  else if (categories.veg.length >= 3) style = "vegetable medley";
+  else if (categories.carb.length > 0) style = "one-pot dish";
+
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          {
+            role: "system",
+            content: `You are a creative chef. Generate a simple, coherent recipe in Hebrew using ONLY the provided ingredients (plus basic pantry items like salt, pepper, oil).
+Return ONLY a JSON object with this exact structure:
+{
+  "title": "שם המתכון",
+  "ingredients": [{"name": "שם", "amount": "כמות", "unit": "יחידה"}],
+  "instructions": ["שלב 1", "שלב 2", ...],
+  "cooking_time": 30,
+  "difficulty": "medium"
+}
+No extra text.`,
+          },
+          {
+            role: "user",
+            content: `Create a ${style} recipe using these ingredients: ${englishIngredients.join(", ")}. Hebrew ingredient names: ${hebrewIngredients.join(", ")}. Keep it simple, 4-6 steps max.`,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Creative fallback AI error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim();
+    const jsonMatch = content?.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+
+    return {
+      title: parsed.title || `מתכון יצירתי עם ${hebrewIngredients[0]}`,
+      ingredients: (parsed.ingredients || []).map((i: any) => ({
+        name: i.name || "",
+        amount: i.amount ? String(i.amount) : undefined,
+        unit: i.unit || undefined,
+      })),
+      instructions: parsed.instructions || ["הכינו את המצרכים", "בשלו והגישו"],
+      substitutions: [],
+      cooking_time: parsed.cooking_time || 30,
+      difficulty: parsed.difficulty || "medium",
+      why_it_works: "מתכון יצירתי שנוצר במיוחד עבור המצרכים שבחרתם",
+      reliability_score: "creative",
+      used_count: hebrewIngredients.length,
+      missed_count: 0,
+      used_ingredient_names: hebrewIngredients,
+    };
+  } catch (err) {
+    console.error("Creative fallback generation error:", err);
+    return null;
+  }
+}
+
 // ============ SPOONACULAR RECIPE FETCHING ============
 
 async function fetchRecipeFromSpoonacular(
@@ -594,16 +690,32 @@ async function fetchRecipeFromSpoonacular(
       return null;
     }
     const findData = await findRes.json();
-    if (!findData || findData.length === 0) return null;
+    if (!findData || findData.length === 0) {
+      // Layer 3D: No Spoonacular results at all — generate creative fallback
+      console.log("No Spoonacular results. Triggering creative fallback.");
+      return await generateCreativeFallback(englishIngredients, hebrewIngredients, apiKey);
+    }
 
-    // Composite scoring: coverage * 0.7 + precision * 0.3
+    // Protein keywords for structural scoring bonus
+    const proteinKeywords = ["chicken","beef","pork","fish","salmon","tuna",
+      "shrimp","egg","tofu","lamb","turkey","sausage","meat","steak","bacon"];
+
+    // Composite scoring: coverage * 0.7 + precision * 0.3 + structural bonuses
     const scored = findData.map((c: any) => {
       const used = c.usedIngredientCount || 0;
       const missed = c.missedIngredientCount || 0;
       const coverage = userCount > 0 ? used / userCount : 0;
       const precision = (used + missed) > 0 ? used / (used + missed) : 0;
-      const score = coverage * 0.7 + precision * 0.3;
-      return { ...c, used, missed, coverage, precision, score };
+      const baseScore = coverage * 0.7 + precision * 0.3;
+
+      // Structural bonuses
+      const hasProtein = (c.usedIngredients || []).some((i: any) =>
+        proteinKeywords.some(p => (i.name || "").toLowerCase().includes(p)));
+      let bonus = 0;
+      if (hasProtein) bonus += 0.05;
+      if (missed <= 3) bonus += 0.05;
+
+      return { ...c, used, missed, coverage, precision, score: baseScore + bonus };
     });
 
     // Sort: score desc, used desc, missed asc
@@ -612,38 +724,51 @@ async function fetchRecipeFromSpoonacular(
     );
 
     // Log all candidates for diagnostics
-    console.log("=== Spoonacular candidates (scored) ===");
+    console.log("=== Spoonacular candidates (scored, with bonuses) ===");
     scored.forEach((c: any, i: number) =>
       console.log(`  #${i + 1} "${c.title}" score=${c.score.toFixed(3)} coverage=${c.coverage.toFixed(2)} precision=${c.precision.toFixed(2)} used=${c.used} missed=${c.missed}`)
     );
 
-    // Hard rejection thresholds
-    const minCoverage = 0.6;
-    const minPrecision = 0.50;
+    // Layer 1: Dynamic coverage thresholds (no precision gate)
+    let minCoverage = userCount <= 2 ? 0.4 : userCount <= 4 ? 0.5 : 0.6;
     const maxMissed = userCount + 3;
+    console.log(`Dynamic thresholds: minCoverage=${minCoverage}, maxMissed=${maxMissed} (userCount=${userCount})`);
 
-    // Find first candidate passing all guards
+    // Layer 2: Relaxation loop — reduce coverage by 0.1, max 2 retries
     let best: any = null;
-    for (const c of scored) {
-      if (c.coverage < minCoverage) {
-        console.log(`  REJECTED "${c.title}": coverage ${c.coverage.toFixed(2)} < ${minCoverage}`);
-        continue;
+    let relaxAttempts = 0;
+    while (!best && relaxAttempts <= 2) {
+      for (const c of scored) {
+        if (c.coverage < minCoverage) {
+          console.log(`  REJECTED "${c.title}": coverage ${c.coverage.toFixed(2)} < ${minCoverage.toFixed(1)}`);
+          continue;
+        }
+        if (c.missed > maxMissed) {
+          console.log(`  REJECTED "${c.title}": missed ${c.missed} > max ${maxMissed}`);
+          continue;
+        }
+        best = c;
+        break;
       }
-      if (c.precision < minPrecision) {
-        console.log(`  REJECTED "${c.title}": precision ${c.precision.toFixed(2)} < ${minPrecision}`);
-        continue;
+      if (!best) {
+        minCoverage -= 0.1;
+        relaxAttempts++;
+        console.log(`Relaxing coverage to ${minCoverage.toFixed(1)}, attempt ${relaxAttempts}`);
       }
-      if (c.missed > maxMissed) {
-        console.log(`  REJECTED "${c.title}": missed ${c.missed} > max ${maxMissed}`);
-        continue;
-      }
-      best = c;
-      break;
     }
 
+    // Layer 3: Structured fallback — accept top candidate regardless
     if (!best) {
-      console.log("No candidate passed quality guards (coverage/precision/missed). Rejecting all.");
-      return null;
+      best = scored[0] || null;
+      if (best) {
+        console.log(`FALLBACK: accepting top candidate "${best.title}" (score=${best.score.toFixed(3)}) despite low coverage`);
+      }
+    }
+
+    // If still nothing (shouldn't happen since findData.length > 0), creative fallback
+    if (!best) {
+      console.log("All candidates exhausted. Triggering creative fallback.");
+      return await generateCreativeFallback(englishIngredients, hebrewIngredients, apiKey);
     }
 
     console.log(`SELECTED "${best.title}" score=${best.score.toFixed(3)} coverage=${best.coverage.toFixed(2)} precision=${best.precision.toFixed(2)} used=${best.used} missed=${best.missed}`);
@@ -744,7 +869,7 @@ async function fetchRecipeFromSpoonacular(
       cooking_time: cookingTime,
       difficulty,
       why_it_works: `מתכון מאומת מ-Spoonacular עם ${ingCount} מצרכים ו-${stepCount} שלבי הכנה`,
-      reliability_score: "high",
+      reliability_score: best.coverage >= 0.5 ? "high" : "medium",
       used_count: best.used,
       missed_count: best.missed,
       used_ingredient_names: usedIngNames,
