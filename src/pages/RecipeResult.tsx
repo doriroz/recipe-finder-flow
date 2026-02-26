@@ -89,7 +89,7 @@ const RecipeResult = () => {
     source: recipeSource,
     used_count: usedCount,
     missed_count: missedCount,
-    used_ingredient_names: usedIngredientNames,
+    used_ingredient_names: usedIngredientNames
   } :
   {
     // Fallback to mock data when no recipes exist
@@ -157,21 +157,21 @@ const RecipeResult = () => {
             {/* Difficulty badge — informational only, no regeneration */}
             {recipe &&
           <div className="max-w-2xl mx-auto mb-6 animate-fade-in">
-                <div className="card-warm flex items-center justify-between bg-cream-dark">
-                  <span className="text-sm font-medium text-foreground">רמת קושי</span>
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
-              computedDifficulty === "קל" ?
-              "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
-              computedDifficulty === "מאתגר" ?
-              "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" :
-              "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"}`
-              }>
-                    {computedDifficulty === "קל" && "⭐"}
-                    {computedDifficulty === "בינוני" && "⭐⭐"}
-                    {computedDifficulty === "מאתגר" && "⭐⭐⭐"}
-                    {" "}{computedDifficulty}
-                  </span>
-                </div>
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               </div>
           }
 
