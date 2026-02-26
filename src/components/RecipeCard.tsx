@@ -51,18 +51,18 @@ interface RecipeCardProps {
  * Used only when the ingredient is stored as a plain string (backwards-compat).
  */
 const parseLegacyIngredient = (
-  ingredient: string
-): { amount: number | null; unit: string; name: string } => {
+ingredient: string)
+: {amount: number | null;unit: string;name: string;} => {
   const hebrewNumbers: Record<string, number> = {
     חצי: 0.5,
     רבע: 0.25,
-    שליש: 0.333,
+    שליש: 0.333
   };
 
   const fractionMap: Record<string, number> = {
     "½": 0.5,
     "¼": 0.25,
-    "¾": 0.75,
+    "¾": 0.75
   };
 
   const match = ingredient.match(/^([\d.½¼¾]+|חצי|רבע|שליש)?\s*(.*)$/);
@@ -108,9 +108,9 @@ const formatNumber = (n: number): string => {
  * @param scaleFactor multiplier = requestedServings / originalServings
  */
 const scaleIngredient = (
-  ingredient: StructuredIngredient | string,
-  scaleFactor: number
-): string => {
+ingredient: StructuredIngredient | string,
+scaleFactor: number)
+: string => {
   // ── Structured path (preferred) ──────────────────────────────────────────
   if (typeof ingredient === "object") {
     const { name, amount, unit } = ingredient;
@@ -121,7 +121,7 @@ const scaleIngredient = (
     }
 
     const numericAmount =
-      typeof amount === "number" ? amount : parseFloat(String(amount));
+    typeof amount === "number" ? amount : parseFloat(String(amount));
 
     if (isNaN(numericAmount)) {
       // Non-numeric amount like "לפי הטעם" — show as-is
@@ -160,7 +160,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
   const ingredientStrings = recipe.ingredients.map(ingredientToString);
 
   return (
-    <div className="card-warm animate-slide-up max-w-2xl mx-auto">
+    <div className="card-warm animate-slide-up max-w-2xl mx-auto bg-orange-50">
       {/* Recipe Header */}
       <div className="flex items-start gap-4 mb-6">
         <div className="text-6xl">{recipe.image}</div>
@@ -187,39 +187,39 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
       </div>
 
       {/* Ingredient Match Badge */}
-      {recipe.used_count != null && recipe.missed_count != null && (
-        (() => {
-          const total = recipe.used_count + recipe.missed_count;
-          const coverage = total > 0 ? recipe.used_count / total : 0;
-          const colorClass = coverage >= 0.8
-            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-            : coverage >= 0.5
-            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-            : "bg-muted text-muted-foreground";
-          return (
-            <div className={`px-4 py-3 rounded-xl mb-6 ${colorClass}`}>
+      {recipe.used_count != null && recipe.missed_count != null &&
+      (() => {
+        const total = recipe.used_count + recipe.missed_count;
+        const coverage = total > 0 ? recipe.used_count / total : 0;
+        const colorClass = coverage >= 0.8 ?
+        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
+        coverage >= 0.5 ?
+        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" :
+        "bg-muted text-muted-foreground";
+        return (
+          <div className={`px-4 py-3 rounded-xl mb-6 ${colorClass}`}>
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-medium">
                   {recipe.used_count} מתוך {total} מהמרכיבים שבחרת נמצאים במתכון
                 </span>
               </div>
-              {recipe.used_ingredient_names && recipe.used_ingredient_names.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {recipe.used_ingredient_names.map((name, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-white/60 dark:bg-white/10"
-                    >
+              {recipe.used_ingredient_names && recipe.used_ingredient_names.length > 0 &&
+            <div className="flex flex-wrap gap-1.5 mt-1">
+                  {recipe.used_ingredient_names.map((name, i) =>
+              <span
+                key={i}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-white/60 dark:bg-white/10">
+
                       ✓ {name}
                     </span>
-                  ))}
-                </div>
               )}
-            </div>
-          );
-        })()
-      )}
+                </div>
+            }
+            </div>);
+
+      })()
+      }
 
       {/* Ingredients List with Servings Adjuster */}
       <div className="mb-6">
@@ -233,8 +233,8 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
               <button
                 onClick={incrementServings}
                 className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
-                aria-label="הוסף מנה"
-              >
+                aria-label="הוסף מנה">
+
                 <Plus className="w-4 h-4" />
               </button>
               <span className="w-8 text-center font-bold text-lg text-foreground">
@@ -243,8 +243,8 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
               <button
                 onClick={decrementServings}
                 className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
-                aria-label="הפחת מנה"
-              >
+                aria-label="הפחת מנה">
+
                 <Minus className="w-4 h-4" />
               </button>
             </div>
@@ -252,48 +252,48 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         </div>
 
         <ul className="space-y-2">
-          {recipe.ingredients.map((ingredient, index) => (
-            <li
-              key={index}
-              className={`flex items-center gap-2 py-2 px-3 rounded-lg transition-colors ${
-                index % 2 === 0 ? "bg-muted/30" : ""
-              }`}
-            >
+          {recipe.ingredients.map((ingredient, index) =>
+          <li
+            key={index}
+            className={`flex items-center gap-2 py-2 px-3 rounded-lg transition-colors ${
+            index % 2 === 0 ? "bg-muted/30" : ""}`
+            }>
+
               <span className="w-2 h-2 rounded-full bg-primary shrink-0"></span>
               <span className="text-foreground">
                 {scaleIngredient(ingredient, scaleFactor)}
               </span>
             </li>
-          ))}
+          )}
         </ul>
       </div>
 
       {/* Reliability Score, Spoonacular Badge & Chef's Tip */}
       <div className="mb-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          {recipe.reliability_score && (
-            <ReliabilityScore score={recipe.reliability_score} />
-          )}
+          {recipe.reliability_score &&
+          <ReliabilityScore score={recipe.reliability_score} />
+          }
           <div
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-              recipe.source === "spoonacular"
-                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                : recipe.spoonacular_verified
-                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                : recipe.source === "local"
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
-                : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-            }`}
-          >
+            recipe.source === "spoonacular" ?
+            "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" :
+            recipe.spoonacular_verified ?
+            "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
+            recipe.source === "local" ?
+            "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" :
+            "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"}`
+            }>
+
             <span>{recipe.source === "spoonacular" ? "🔍" : recipe.spoonacular_verified ? "✅" : recipe.source === "local" ? "📚" : "🧪"}</span>
             <span>
-              {recipe.source === "spoonacular"
-                ? "מתכון מ-Spoonacular"
-                : recipe.spoonacular_verified
-                ? 'מאומת ע״י Spoonacular'
-                : recipe.source === "local"
-                ? "מתכון מהמאגר המקומי"
-                : "לא אומת – מבוסס AI בלבד"}
+              {recipe.source === "spoonacular" ?
+              "מתכון מ-Spoonacular" :
+              recipe.spoonacular_verified ?
+              'מאומת ע״י Spoonacular' :
+              recipe.source === "local" ?
+              "מתכון מהמאגר המקומי" :
+              "לא אומת – מבוסס AI בלבד"}
             </span>
           </div>
         </div>
@@ -310,8 +310,8 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         <SubstitutionSection
           substitutions={recipe.substitutions || []}
           ingredients={ingredientStrings}
-          recipeTitle={recipe.title}
-        />
+          recipeTitle={recipe.title} />
+
       </div>
 
       {/* AI Disclaimer */}
@@ -324,13 +324,13 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         variant="hero"
         size="xl"
         className="w-full"
-        onClick={onStartCooking}
-      >
+        onClick={onStartCooking}>
+
         <ChefHat className="w-6 h-6" />
         בואו נבשל!
       </Button>
-    </div>
-  );
+    </div>);
+
 };
 
 export default RecipeCard;
