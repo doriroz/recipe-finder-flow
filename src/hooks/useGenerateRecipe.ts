@@ -88,19 +88,30 @@ export const useGenerateRecipe = () => {
         return;
       }
 
-      if (data?.success && data?.recipe) {
+      if (data?.success) {
         toast.success("המתכון נוצר בהצלחה!");
-        navigate(`/recipe?id=${data.recipe.id}`, {
-          state: {
-            why_it_works: data.why_it_works,
-            reliability_score: data.reliability_score,
-            spoonacular_verified: data.spoonacular_verified ?? false,
-            source: data.source,
-            used_count: data.used_count,
-            missed_count: data.missed_count,
-            used_ingredient_names: data.used_ingredient_names,
-          },
-        });
+        
+        // New multi-recipe format
+        if (data.recipes && Array.isArray(data.recipes) && data.recipes.length > 0) {
+          navigate(`/recipe`, {
+            state: {
+              recipes: data.recipes,
+            },
+          });
+        } else if (data.recipe) {
+          // Backwards compatibility - single recipe
+          navigate(`/recipe?id=${data.recipe.id}`, {
+            state: {
+              why_it_works: data.why_it_works,
+              reliability_score: data.reliability_score,
+              spoonacular_verified: data.spoonacular_verified ?? false,
+              source: data.source,
+              used_count: data.used_count,
+              missed_count: data.missed_count,
+              used_ingredient_names: data.used_ingredient_names,
+            },
+          });
+        }
       }
     } catch (err) {
       console.error("Generate recipe error:", err);
