@@ -21,6 +21,33 @@ interface RecipeResponse {
   used_ingredient_names?: string[];
 }
 
+interface ScoredCandidate {
+  id: number;
+  title: string;
+  usedIngredientCount: number;
+  missedIngredientCount: number;
+  usedIngredients: any[];
+  missedIngredients: any[];
+  finalScore: number;
+  coverage: number;
+  precision: number;
+  badge: string;
+  contextLine: string;
+}
+
+interface RecipeResultItem {
+  recipe: any;
+  badge: string;
+  contextLine: string;
+  why_it_works: string;
+  reliability_score: "high" | "medium" | "creative";
+  spoonacular_verified: boolean;
+  source: "local" | "ai" | "spoonacular";
+  used_count: number;
+  missed_count: number;
+  used_ingredient_names: string[];
+}
+
 type DifficultyLevel = "low" | "medium" | "high";
 
 // ============ MYMEMORY TRANSLATION (Hebrew→English only) ============
@@ -660,128 +687,96 @@ No extra text.`,
 
 // ============ SPOONACULAR RECIPE FETCHING ============
 
-async function fetchRecipeFromSpoonacular(
+function scoreCandidates(findData: any[], userCount: number): ScoredCandidate[] {
+  const proteinKeywords = ["chicken","beef","pork","fish","salmon","tuna",
+    "shrimp","egg","tofu","lamb","turkey","sausage","meat","steak","bacon"];
+
+  const scored: ScoredCandidate[] = findData.map((c: any) => {
+    const used = c.usedIngredientCount || 0;
+    const missed = c.missedIngredientCount || 0;
+    const totalIngredients = used + missed;
+    const coverage = userCount > 0 ? used / userCount : 0;
+    const precision = totalIngredients > 0 ? used / totalIngredients : 0;
+
+    const extraCount = totalIngredients - used;
+    const burdenRatio = userCount > 0 ? extraCount / userCount : 0;
+
+    // Dynamic maxBurdenRatio
+    const maxBurdenRatio = userCount <= 3 ? 0.75 : userCount <= 5 ? 1.0 : 1.5;
+    const burdenPenalty = Math.min(burdenRatio / maxBurdenRatio, 1);
+
+    // Structural bonus
+    const hasProtein = (c.usedIngredients || []).some((i: any) =>
+      proteinKeywords.some(p => (i.name || "").toLowerCase().includes(p)));
+    let structuralBonus = 0;
+    if (hasProtein) structuralBonus += 0.05;
+    if (missed <= 3) structuralBonus += 0.05;
+
+    const finalScore =
+      0.55 * coverage +
+      0.20 * precision +
+      0.15 * (1 - burdenPenalty) +
+      0.10 * structuralBonus;
+
+    // Badge mapping
+    const badge = finalScore >= 0.85 ? "המלצת השף" :
+                  finalScore >= 0.70 ? "התאמה מצוינת" :
+                  "אפשרות יצירתית";
+
+    // Context line
+    let contextLine = "";
+    if (used >= 5) contextLine = `משתמש ב-${used} מהמצרכים שבחרת`;
+    else if (missed <= 2) contextLine = `דורש רק ${missed} תוספות קטנות`;
+    else contextLine = `מבוסס על ${used} מהמצרכים שלך`;
+
+    return {
+      ...c,
+      usedIngredientCount: used,
+      missedIngredientCount: missed,
+      finalScore,
+      coverage,
+      precision,
+      badge,
+      contextLine,
+    };
+  });
+
+  // Hard reject only if burdenRatio > 2.0
+  const filtered = scored.filter((c: any) => {
+    const total = c.usedIngredientCount + c.missedIngredientCount;
+    const extra = total - c.usedIngredientCount;
+    const burdenRatio = userCount > 0 ? extra / userCount : 0;
+    if (burdenRatio > 2.0) {
+      console.log(`  HARD REJECTED "${c.title}": burdenRatio=${burdenRatio.toFixed(2)} > 2.0`);
+      return false;
+    }
+    return true;
+  });
+
+  // Sort by finalScore descending
+  filtered.sort((a, b) => b.finalScore - a.finalScore);
+
+  return filtered;
+}
+
+async function processOneCandidate(
+  candidate: ScoredCandidate,
   hebrewIngredients: string[],
+  englishIngredients: string[],
   apiKey: string,
-  supabaseAdmin: any
-): Promise<RecipeResponse | null> {
-  const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
-  if (!SPOONACULAR_API_KEY) {
-    console.error("SPOONACULAR_API_KEY not configured");
-    return null;
-  }
-
+  supabaseAdmin: any,
+  SPOONACULAR_API_KEY: string
+): Promise<{
+  recipeData: RecipeResponse;
+  badge: string;
+  contextLine: string;
+} | null> {
   try {
-    // Translate ingredients to English (Hebrew→English via MyMemory)
-    const rawTranslated = await translateEachHeToEn(hebrewIngredients);
-    // Normalize: trim, remove trailing punctuation, collapse spaces
-    const englishIngredients = rawTranslated.map(t =>
-      t.trim().replace(/[.,;:!?]+$/, '').replace(/\s{2,}/g, ' ').trim()
-    );
-    console.log("Translated & normalized ingredients for Spoonacular:", englishIngredients);
-
-    const userCount = hebrewIngredients.length;
-
-    // Find recipes by ingredients — ignorePantry=true, fetch 8 candidates
-    const findUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=8&ranking=1&ignorePantry=true&apiKey=${SPOONACULAR_API_KEY}`;
-    const findRes = await fetch(findUrl);
-    if (!findRes.ok) {
-      console.error("Spoonacular findByIngredients error:", findRes.status);
-      return null;
-    }
-    const findData = await findRes.json();
-    if (!findData || findData.length === 0) {
-      // Layer 3D: No Spoonacular results at all — generate creative fallback
-      console.log("No Spoonacular results. Triggering creative fallback.");
-      return await generateCreativeFallback(englishIngredients, hebrewIngredients, apiKey);
-    }
-
-    // Protein keywords for structural scoring bonus
-    const proteinKeywords = ["chicken","beef","pork","fish","salmon","tuna",
-      "shrimp","egg","tofu","lamb","turkey","sausage","meat","steak","bacon"];
-
-    // Composite scoring: coverage * 0.7 + precision * 0.3 + structural bonuses
-    const scored = findData.map((c: any) => {
-      const used = c.usedIngredientCount || 0;
-      const missed = c.missedIngredientCount || 0;
-      const coverage = userCount > 0 ? used / userCount : 0;
-      const precision = (used + missed) > 0 ? used / (used + missed) : 0;
-      const baseScore = coverage * 0.7 + precision * 0.3;
-
-      // Structural bonuses
-      const hasProtein = (c.usedIngredients || []).some((i: any) =>
-        proteinKeywords.some(p => (i.name || "").toLowerCase().includes(p)));
-      let bonus = 0;
-      if (hasProtein) bonus += 0.05;
-      if (missed <= 3) bonus += 0.05;
-
-      return { ...c, used, missed, coverage, precision, score: baseScore + bonus };
-    });
-
-    // Sort: score desc, used desc, missed asc
-    scored.sort((a: any, b: any) =>
-      b.score - a.score || b.used - a.used || a.missed - b.missed
-    );
-
-    // Log all candidates for diagnostics
-    console.log("=== Spoonacular candidates (scored, with bonuses) ===");
-    scored.forEach((c: any, i: number) =>
-      console.log(`  #${i + 1} "${c.title}" score=${c.score.toFixed(3)} coverage=${c.coverage.toFixed(2)} precision=${c.precision.toFixed(2)} used=${c.used} missed=${c.missed}`)
-    );
-
-    // Layer 1: Dynamic coverage thresholds (no precision gate)
-    let minCoverage = userCount <= 2 ? 0.4 : userCount <= 4 ? 0.5 : 0.6;
-    const maxMissed = userCount + 3;
-    console.log(`Dynamic thresholds: minCoverage=${minCoverage}, maxMissed=${maxMissed} (userCount=${userCount})`);
-
-    // Layer 2: Relaxation loop — reduce coverage by 0.1, max 2 retries
-    let best: any = null;
-    let relaxAttempts = 0;
-    while (!best && relaxAttempts <= 2) {
-      for (const c of scored) {
-        if (c.coverage < minCoverage) {
-          console.log(`  REJECTED "${c.title}": coverage ${c.coverage.toFixed(2)} < ${minCoverage.toFixed(1)}`);
-          continue;
-        }
-        if (c.missed > maxMissed) {
-          console.log(`  REJECTED "${c.title}": missed ${c.missed} > max ${maxMissed}`);
-          continue;
-        }
-        best = c;
-        break;
-      }
-      if (!best) {
-        minCoverage -= 0.1;
-        relaxAttempts++;
-        console.log(`Relaxing coverage to ${minCoverage.toFixed(1)}, attempt ${relaxAttempts}`);
-      }
-    }
-
-    // Layer 3: Structured fallback — accept top candidate regardless
-    if (!best) {
-      best = scored[0] || null;
-      if (best) {
-        console.log(`FALLBACK: accepting top candidate "${best.title}" (score=${best.score.toFixed(3)}) despite low coverage`);
-      }
-    }
-
-    // If still nothing (shouldn't happen since findData.length > 0), creative fallback
-    if (!best) {
-      console.log("All candidates exhausted. Triggering creative fallback.");
-      return await generateCreativeFallback(englishIngredients, hebrewIngredients, apiKey);
-    }
-
-    console.log(`SELECTED "${best.title}" score=${best.score.toFixed(3)} coverage=${best.coverage.toFixed(2)} precision=${best.precision.toFixed(2)} used=${best.used} missed=${best.missed}`);
-
-    const recipeId = best.id;
-
-    // Get full recipe info
-    const infoUrl = `https://api.spoonacular.com/recipes/${recipeId}/information?apiKey=${SPOONACULAR_API_KEY}`;
+    const infoUrl = `https://api.spoonacular.com/recipes/${candidate.id}/information?apiKey=${SPOONACULAR_API_KEY}`;
     const infoRes = await fetch(infoUrl);
     if (!infoRes.ok) return null;
     const info = await infoRes.json();
 
-    // Extract data
     const title = info.title || "Recipe";
     const cookingTime = info.readyInMinutes || 30;
     const rawIngredients: { name: string; amount: number; unit: string }[] = (info.extendedIngredients || []).map((ing: any) => ({
@@ -790,7 +785,6 @@ async function fetchRecipeFromSpoonacular(
       unit: ing.unit || "",
     }));
 
-    // Convert imperial → metric before translation
     const extIngredients = rawIngredients.map(ing => {
       const converted = convertToMetric(ing.amount, ing.unit);
       return {
@@ -802,20 +796,14 @@ async function fetchRecipeFromSpoonacular(
     });
 
     const steps: string[] = (info.analyzedInstructions?.[0]?.steps || []).map((s: any) => s.step || "");
-
     if (steps.length === 0 && info.instructions) {
       const cleanInstructions = info.instructions.replace(/<[^>]*>/g, "").trim();
       if (cleanInstructions) steps.push(cleanInstructions);
     }
-
     if (steps.length === 0) return null;
 
-    // Only send units that need AI translation (non-Hebrew ones)
-    const unitsForTranslation = extIngredients.map(i =>
-      i.skipUnitTranslation ? "" : i.unit
-    );
+    const unitsForTranslation = extIngredients.map(i => i.skipUnitTranslation ? "" : i.unit);
 
-    // AI translate with DB cache: title + ingredient names + non-Hebrew units + steps
     const translated = await translateRecipeWithAI(
       apiKey,
       supabaseAdmin,
@@ -827,31 +815,27 @@ async function fetchRecipeFromSpoonacular(
     const ingredients = extIngredients.map((ing, idx) => ({
       name: translated.ingredientNames[idx] || ing.name,
       amount: ing.amount ? String(ing.amount) : undefined,
-      // Use already-Hebrew unit if skipTranslation, otherwise use AI-translated unit
       unit: ing.skipUnitTranslation ? ing.unit : (translated.units[idx] || undefined),
     }));
 
-    // Estimate difficulty
     const stepCount = translated.steps.length;
     const ingCount = ingredients.length;
     let difficulty = "medium";
     if (stepCount <= 4 && ingCount <= 6) difficulty = "low";
     else if (stepCount >= 8 || ingCount >= 12) difficulty = "high";
 
-    // Map Spoonacular's used English ingredient names back to the user's original Hebrew names
+    // Map used ingredient names back to Hebrew
     const enToHeLookup = new Map<string, string>();
     for (let i = 0; i < englishIngredients.length; i++) {
       enToHeLookup.set(englishIngredients[i].toLowerCase().trim(), hebrewIngredients[i]);
     }
     const usedIngNames: string[] = [];
-    for (const ui of (best.usedIngredients || [])) {
+    for (const ui of (candidate.usedIngredients || [])) {
       const enName = (ui.name || "").toLowerCase().trim();
-      // Try exact match first, then partial
       const heMatch = enToHeLookup.get(enName);
       if (heMatch) {
         usedIngNames.push(heMatch);
       } else {
-        // Partial match
         for (const [en, he] of enToHeLookup.entries()) {
           if (enName.includes(en) || en.includes(enName)) {
             usedIngNames.push(he);
@@ -862,18 +846,151 @@ async function fetchRecipeFromSpoonacular(
     }
 
     return {
-      title: translated.title,
-      ingredients,
-      instructions: translated.steps,
-      substitutions: [],
-      cooking_time: cookingTime,
-      difficulty,
-      why_it_works: `מתכון מאומת מ-Spoonacular עם ${ingCount} מצרכים ו-${stepCount} שלבי הכנה`,
-      reliability_score: best.coverage >= 0.5 ? "high" : "medium",
-      used_count: best.used,
-      missed_count: best.missed,
-      used_ingredient_names: usedIngNames,
+      recipeData: {
+        title: translated.title,
+        ingredients,
+        instructions: translated.steps,
+        substitutions: [],
+        cooking_time: cookingTime,
+        difficulty,
+        why_it_works: `מתכון מאומת מ-Spoonacular עם ${ingCount} מצרכים ו-${stepCount} שלבי הכנה`,
+        reliability_score: candidate.coverage >= 0.5 ? "high" : "medium",
+        used_count: candidate.usedIngredientCount,
+        missed_count: candidate.missedIngredientCount,
+        used_ingredient_names: usedIngNames,
+      },
+      badge: candidate.badge,
+      contextLine: candidate.contextLine,
     };
+  } catch (err) {
+    console.error(`Error processing candidate ${candidate.id}:`, err);
+    return null;
+  }
+}
+
+async function fetchRecipesFromSpoonacular(
+  hebrewIngredients: string[],
+  apiKey: string,
+  supabaseAdmin: any
+): Promise<RecipeResultItem[] | null> {
+  const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
+  if (!SPOONACULAR_API_KEY) {
+    console.error("SPOONACULAR_API_KEY not configured");
+    return null;
+  }
+
+  try {
+    const rawTranslated = await translateEachHeToEn(hebrewIngredients);
+    const englishIngredients = rawTranslated.map(t =>
+      t.trim().replace(/[.,;:!?]+$/, '').replace(/\s{2,}/g, ' ').trim()
+    );
+    console.log("Translated & normalized ingredients for Spoonacular:", englishIngredients);
+
+    const userCount = hebrewIngredients.length;
+
+    const findUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=10&ranking=1&ignorePantry=true&apiKey=${SPOONACULAR_API_KEY}`;
+    const findRes = await fetch(findUrl);
+    if (!findRes.ok) {
+      console.error("Spoonacular findByIngredients error:", findRes.status);
+      return null;
+    }
+    const findData = await findRes.json();
+    if (!findData || findData.length === 0) {
+      console.log("No Spoonacular results. Triggering creative fallback.");
+      const fallback = await generateCreativeFallback(englishIngredients, hebrewIngredients, apiKey);
+      if (!fallback) return null;
+      return [{
+        recipe: null, // will be inserted by caller
+        badge: "אפשרות יצירתית",
+        contextLine: `מתכון יצירתי מבוסס על ${hebrewIngredients.length} המצרכים שלך`,
+        why_it_works: fallback.why_it_works,
+        reliability_score: "creative",
+        spoonacular_verified: false,
+        source: "ai",
+        used_count: fallback.used_count || 0,
+        missed_count: fallback.missed_count || 0,
+        used_ingredient_names: fallback.used_ingredient_names || [],
+        _recipeData: fallback,
+      } as any];
+    }
+
+    // Score all candidates with the new formula
+    const scored = scoreCandidates(findData, userCount);
+
+    console.log("=== Spoonacular candidates (Smart Chef scoring) ===");
+    scored.forEach((c, i) =>
+      console.log(`  #${i + 1} "${c.title}" finalScore=${c.finalScore.toFixed(3)} coverage=${c.coverage.toFixed(2)} precision=${c.precision.toFixed(2)} badge="${c.badge}" used=${c.usedIngredientCount} missed=${c.missedIngredientCount}`)
+    );
+
+    // If no candidates passed hard reject, use relaxation + creative fallback
+    if (scored.length === 0) {
+      console.log("All candidates hard-rejected. Triggering creative fallback.");
+      const fallback = await generateCreativeFallback(englishIngredients, hebrewIngredients, apiKey);
+      if (!fallback) return null;
+      return [{
+        recipe: null,
+        badge: "אפשרות יצירתית",
+        contextLine: `מתכון יצירתי מבוסס על ${hebrewIngredients.length} המצרכים שלך`,
+        why_it_works: fallback.why_it_works,
+        reliability_score: "creative",
+        spoonacular_verified: false,
+        source: "ai",
+        used_count: fallback.used_count || 0,
+        missed_count: fallback.missed_count || 0,
+        used_ingredient_names: fallback.used_ingredient_names || [],
+        _recipeData: fallback,
+      } as any];
+    }
+
+    // Take top 3 candidates
+    const top3 = scored.slice(0, 3);
+    console.log(`Processing top ${top3.length} candidates...`);
+
+    // Process each candidate (fetch full info, translate)
+    const results: RecipeResultItem[] = [];
+    for (const candidate of top3) {
+      const processed = await processOneCandidate(
+        candidate, hebrewIngredients, englishIngredients,
+        apiKey, supabaseAdmin, SPOONACULAR_API_KEY
+      );
+      if (processed) {
+        results.push({
+          recipe: null, // will be set after DB insert
+          badge: processed.badge,
+          contextLine: processed.contextLine,
+          why_it_works: processed.recipeData.why_it_works,
+          reliability_score: processed.recipeData.reliability_score,
+          spoonacular_verified: true,
+          source: "spoonacular",
+          used_count: processed.recipeData.used_count || 0,
+          missed_count: processed.recipeData.missed_count || 0,
+          used_ingredient_names: processed.recipeData.used_ingredient_names || [],
+          _recipeData: processed.recipeData,
+        } as any);
+      }
+    }
+
+    // If no candidates processed successfully, creative fallback
+    if (results.length === 0) {
+      console.log("No candidates processed. Triggering creative fallback.");
+      const fallback = await generateCreativeFallback(englishIngredients, hebrewIngredients, apiKey);
+      if (!fallback) return null;
+      return [{
+        recipe: null,
+        badge: "אפשרות יצירתית",
+        contextLine: `מתכון יצירתי מבוסס על ${hebrewIngredients.length} המצרכים שלך`,
+        why_it_works: fallback.why_it_works,
+        reliability_score: "creative",
+        spoonacular_verified: false,
+        source: "ai",
+        used_count: fallback.used_count || 0,
+        missed_count: fallback.missed_count || 0,
+        used_ingredient_names: fallback.used_ingredient_names || [],
+        _recipeData: fallback,
+      } as any];
+    }
+
+    return results;
   } catch (err) {
     console.error("Spoonacular fetch error:", err);
     return null;
@@ -986,6 +1103,19 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
+          recipes: [{
+            recipe: insertedRecipe,
+            badge: "התאמה מצוינת",
+            contextLine: `מתכון מותאם מהמאגר המקומי`,
+            why_it_works: `מתכון מותאם מהמאגר המקומי עם התאמת מצרכים של ${Math.round(localMatch.score)}%`,
+            reliability_score: "high",
+            spoonacular_verified: false,
+            source: "local",
+            used_count: 0,
+            missed_count: 0,
+            used_ingredient_names: [],
+          }],
+          // Backwards compat
           recipe: insertedRecipe,
           why_it_works: `מתכון מותאם מהמאגר המקומי עם התאמת מצרכים של ${Math.round(localMatch.score)}%`,
           reliability_score: "high",
@@ -996,7 +1126,7 @@ serve(async (req) => {
       );
     }
 
-    // ---- STEP 3: Spoonacular recipe (AI translation, 0 user credits) ----
+    // ---- STEP 3: Spoonacular recipes (top 3, AI translation, 0 user credits) ----
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY not configured for translation");
       return new Response(
@@ -1005,9 +1135,9 @@ serve(async (req) => {
       );
     }
 
-    const spoonacularRecipe = await fetchRecipeFromSpoonacular(ingredientNames, LOVABLE_API_KEY, supabaseAdmin);
+    const spoonacularResults = await fetchRecipesFromSpoonacular(ingredientNames, LOVABLE_API_KEY, supabaseAdmin);
 
-    if (!spoonacularRecipe) {
+    if (!spoonacularResults || spoonacularResults.length === 0) {
       return new Response(
         JSON.stringify({ error: "לא מצאנו מתכון מתאים למצרכים שבחרתם. נסו לשנות או להוסיף מצרכים" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -1017,42 +1147,75 @@ serve(async (req) => {
     // Log translation usage (0 credits to user)
     await logAiUsage(supabaseAdmin, userId, "translation", 400, 0, "ai");
 
-    // Look up substitutions from DB
-    const hebrewIngNames = spoonacularRecipe.ingredients.map((i: any) => i.name);
-    const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, hebrewIngNames);
-    if (dbSubstitutions.length > 0) {
-      spoonacularRecipe.substitutions = dbSubstitutions;
-      console.log(`Found ${dbSubstitutions.length} substitutions from DB`);
+    // Process and save each recipe
+    const responseRecipes: any[] = [];
+    for (const result of spoonacularResults) {
+      const recipeData = (result as any)._recipeData;
+      if (!recipeData) continue;
+
+      // Look up substitutions from DB
+      const hebrewIngNames = recipeData.ingredients.map((i: any) => i.name);
+      const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, hebrewIngNames);
+      if (dbSubstitutions.length > 0) {
+        recipeData.substitutions = dbSubstitutions;
+      }
+
+      const { data: insertedRecipe, error: insertError } = await supabase
+        .from("recipes")
+        .insert({
+          title: recipeData.title,
+          ingredients: recipeData.ingredients,
+          instructions: recipeData.instructions,
+          substitutions: recipeData.substitutions || [],
+          cooking_time: recipeData.cooking_time || null,
+          user_id: userId,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error(`Failed to save recipe: ${insertError.message}`);
+        continue;
+      }
+
+      responseRecipes.push({
+        recipe: insertedRecipe,
+        badge: result.badge,
+        contextLine: result.contextLine,
+        why_it_works: result.why_it_works,
+        reliability_score: result.reliability_score,
+        spoonacular_verified: result.spoonacular_verified,
+        source: result.source,
+        used_count: result.used_count,
+        missed_count: result.missed_count,
+        used_ingredient_names: result.used_ingredient_names,
+      });
     }
 
-    const { data: insertedRecipe, error: insertError } = await supabase
-      .from("recipes")
-      .insert({
-        title: spoonacularRecipe.title,
-        ingredients: spoonacularRecipe.ingredients,
-        instructions: spoonacularRecipe.instructions,
-        substitutions: spoonacularRecipe.substitutions || [],
-        cooking_time: spoonacularRecipe.cooking_time || null,
-        user_id: userId,
-      })
-      .select()
-      .single();
-
-    if (insertError) throw new Error(`Failed to save recipe: ${insertError.message}`);
+    if (responseRecipes.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "לא הצלחנו לעבד מתכונים. נסו שוב." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     await logAiUsage(supabaseAdmin, userId, "recipe_generation", 0, 0, "spoonacular");
 
+    // Return both new format (recipes array) and backwards-compat (recipe)
+    const firstResult = responseRecipes[0];
     return new Response(
       JSON.stringify({
         success: true,
-        recipe: insertedRecipe,
-        why_it_works: spoonacularRecipe.why_it_works || null,
-        reliability_score: spoonacularRecipe.reliability_score || "high",
-        spoonacular_verified: true,
-        source: "spoonacular",
-        used_count: spoonacularRecipe.used_count,
-        missed_count: spoonacularRecipe.missed_count,
-        used_ingredient_names: spoonacularRecipe.used_ingredient_names,
+        recipes: responseRecipes,
+        // Backwards compatibility
+        recipe: firstResult.recipe,
+        why_it_works: firstResult.why_it_works,
+        reliability_score: firstResult.reliability_score,
+        spoonacular_verified: firstResult.spoonacular_verified,
+        source: firstResult.source,
+        used_count: firstResult.used_count,
+        missed_count: firstResult.missed_count,
+        used_ingredient_names: firstResult.used_ingredient_names,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

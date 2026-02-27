@@ -41,6 +41,23 @@ export interface RecipeDisplay extends Recipe {
   reliability_score?: "high" | "medium" | "creative";
 }
 
+// Badge labels for Smart Chef Selection
+export type RecipeBadge = "המלצת השף" | "התאמה מצוינת" | "אפשרות יצירתית";
+
+// A recipe result item from the backend (top 3 selection)
+export interface RecipeResultItem {
+  recipe: Recipe;
+  badge: RecipeBadge;
+  contextLine: string;
+  why_it_works: string;
+  reliability_score: "high" | "medium" | "creative";
+  spoonacular_verified: boolean;
+  source: "local" | "ai" | "spoonacular";
+  used_count: number;
+  missed_count: number;
+  used_ingredient_names: string[];
+}
+
 // User gallery item matching Supabase schema
 export interface UserGalleryItem {
   id: string;
