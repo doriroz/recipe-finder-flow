@@ -126,6 +126,8 @@ export type Database = {
           created_by: string | null
           emoji: string
           id: string
+          is_core_anchor: boolean | null
+          is_staple: boolean | null
           name: string
         }
         Insert: {
@@ -134,6 +136,8 @@ export type Database = {
           created_by?: string | null
           emoji?: string
           id?: string
+          is_core_anchor?: boolean | null
+          is_staple?: boolean | null
           name: string
         }
         Update: {
@@ -142,6 +146,8 @@ export type Database = {
           created_by?: string | null
           emoji?: string
           id?: string
+          is_core_anchor?: boolean | null
+          is_staple?: boolean | null
           name?: string
         }
         Relationships: []
@@ -149,6 +155,7 @@ export type Database = {
       recipe_library: {
         Row: {
           category: string | null
+          complexity: string | null
           cooking_time: number | null
           created_at: string
           difficulty: string | null
@@ -161,6 +168,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          complexity?: string | null
           cooking_time?: number | null
           created_at?: string
           difficulty?: string | null
@@ -173,6 +181,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          complexity?: string | null
           cooking_time?: number | null
           created_at?: string
           difficulty?: string | null

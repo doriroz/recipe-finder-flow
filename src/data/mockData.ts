@@ -6,6 +6,8 @@ export interface Ingredient {
   emoji: string;
   category: string;
   popularityScore: number;
+  is_staple?: boolean;
+  is_core_anchor?: boolean;
 }
 
 export const CATEGORIES = [

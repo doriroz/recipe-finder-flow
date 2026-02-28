@@ -9,18 +9,21 @@ import { calculateDifficulty } from "@/lib/calculateDifficulty";
 interface RecipeCarouselProps {
   recipeItems: RecipeResultItem[];
   onStartCooking: (recipeId: string) => void;
+  onGenerateAI?: () => void;
 }
 
 const badgeStyles: Record<string, string> = {
   "המלצת השף": "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 border-amber-300",
   "התאמה מצוינת": "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200 border-emerald-300",
   "אפשרות יצירתית": "bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200 border-violet-300",
+  "השראה למצרך שלך": "bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-200 border-blue-300",
 };
 
 const badgeEmoji: Record<string, string> = {
-  "המלצת השף": "👨‍🍳",
+  "המלצת השף": "⭐",
   "התאמה מצוינת": "✨",
   "אפשרות יצירתית": "🎨",
+  "השראה למצרך שלך": "✨",
 };
 
 function toDisplayRecipe(item: RecipeResultItem): RecipeCardData {
@@ -53,7 +56,7 @@ function toDisplayRecipe(item: RecipeResultItem): RecipeCardData {
   };
 }
 
-const RecipeCarousel = ({ recipeItems, onStartCooking }: RecipeCarouselProps) => {
+const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCarouselProps) => {
   const [viewMode, setViewMode] = useState<"carousel" | "recipeDetail">("carousel");
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -78,6 +81,7 @@ const RecipeCarousel = ({ recipeItems, onStartCooking }: RecipeCarouselProps) =>
   // Single recipe — render directly
   if (recipeItems.length === 1) {
     const display = toDisplayRecipe(recipeItems[0]);
+    const showAI = recipeItems[0].showAIButton && onGenerateAI;
     return (
       <div className="animate-fade-in">
         <div className="text-center mb-6">
@@ -89,6 +93,18 @@ const RecipeCarousel = ({ recipeItems, onStartCooking }: RecipeCarouselProps) =>
           )}
         </div>
         <RecipeCard recipe={display} onStartCooking={() => onStartCooking(recipeItems[0].recipe.id)} />
+        {showAI && (
+          <div className="mt-6 text-center">
+            <Button
+              onClick={onGenerateAI}
+              size="lg"
+              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-bold px-8 py-4 text-lg rounded-xl shadow-lg"
+            >
+              🤖 צור מתכון AI אישי
+            </Button>
+            <p className="text-muted-foreground text-xs mt-2">ייווצר מתכון מותאם אישית למצרכים שבחרת</p>
+          </div>
+        )}
       </div>
     );
   }

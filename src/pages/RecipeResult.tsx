@@ -6,6 +6,7 @@ import RecipeCard, { RecipeCardData } from "@/components/RecipeCard";
 import RecipeCarousel from "@/components/RecipeCarousel";
 import { useRecipe, useUserRecipes } from "@/hooks/useRecipes";
 import { useAuth } from "@/hooks/useAuth";
+import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
 import { mockRecipe } from "@/data/mockData";
 import { calculateDifficulty } from "@/lib/calculateDifficulty";
 import { RecipeResultItem } from "@/types/recipe";
@@ -21,8 +22,11 @@ const RecipeResult = () => {
   const [cookingSessionActive, setCookingSessionActive] = useState(false);
   const [lockedRecipeId, setLockedRecipeId] = useState<string | null>(null);
 
+  const { generateRecipe, isGenerating: isGeneratingAI } = useGenerateRecipe();
+
   // Multi-recipe state from navigation
   const [recipeItems, setRecipeItems] = useState<RecipeResultItem[] | null>(null);
+  const [userIngredientNames, setUserIngredientNames] = useState<string[]>([]);
 
   // Legacy single-recipe state (backwards compat)
   const [whyItWorks, setWhyItWorks] = useState<string | undefined>();
@@ -41,6 +45,7 @@ const RecipeResult = () => {
     // New multi-recipe format
     if (state.recipes && Array.isArray(state.recipes) && state.recipes.length > 0) {
       setRecipeItems(state.recipes);
+      if (state.ingredientNames) setUserIngredientNames(state.ingredientNames);
       return;
     }
 
@@ -92,7 +97,22 @@ const RecipeResult = () => {
         </header>
 
         <main className="container mx-auto px-4 py-8 pb-24">
-          <RecipeCarousel recipeItems={recipeItems} onStartCooking={handleStartCooking} />
+          <RecipeCarousel
+            recipeItems={recipeItems}
+            onStartCooking={handleStartCooking}
+            onGenerateAI={userIngredientNames.length > 0 ? () => {
+              generateRecipe({
+                ingredients: userIngredientNames.map((name, i) => ({ id: i, name, emoji: "", category: "" })),
+                forceCreative: true,
+              });
+            } : undefined}
+          />
+          {isGeneratingAI && (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Loader2 className="w-10 h-10 text-primary animate-spin mb-3" />
+              <p className="text-muted-foreground text-sm">יוצר מתכון AI אישי...</p>
+            </div>
+          )}
         </main>
       </div>
     );
