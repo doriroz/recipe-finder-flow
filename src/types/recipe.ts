@@ -42,7 +42,7 @@ export interface RecipeDisplay extends Recipe {
 }
 
 // Badge labels for Smart Chef Selection
-export type RecipeBadge = "המלצת השף" | "התאמה מצוינת" | "אפשרות יצירתית";
+export type RecipeBadge = "המלצת השף" | "התאמה מצוינת" | "אפשרות יצירתית" | "השראה למצרך שלך";
 
 // A recipe result item from the backend (top 3 selection)
 export interface RecipeResultItem {
@@ -56,6 +56,7 @@ export interface RecipeResultItem {
   used_count: number;
   missed_count: number;
   used_ingredient_names: string[];
+  showAIButton?: boolean;
 }
 
 // User gallery item matching Supabase schema

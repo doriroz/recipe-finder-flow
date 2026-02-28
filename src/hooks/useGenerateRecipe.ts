@@ -13,6 +13,7 @@ interface Ingredient {
 interface GenerateRecipeOptions {
   ingredients?: Ingredient[];
   imageBase64?: string;
+  forceCreative?: boolean;
 }
 
 export const useGenerateRecipe = () => {
@@ -29,11 +30,10 @@ export const useGenerateRecipe = () => {
     });
   };
 
-  const generateRecipe = async ({ ingredients, imageBase64 }: GenerateRecipeOptions) => {
+  const generateRecipe = async ({ ingredients, imageBase64, forceCreative }: GenerateRecipeOptions) => {
     setIsGenerating(true);
 
     try {
-      // Check if user is authenticated
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) {
         toast.error("יש להתחבר כדי ליצור מתכון");
@@ -41,8 +41,12 @@ export const useGenerateRecipe = () => {
         return;
       }
 
-      const payload: { ingredients?: string[]; imageBase64?: string } = {};
+      const payload: { ingredients?: string[]; imageBase64?: string; forceCreative?: boolean } = {};
       
+      if (forceCreative) {
+        payload.forceCreative = true;
+      }
+
       if (imageBase64) {
         payload.imageBase64 = imageBase64;
       } else if (ingredients && ingredients.length > 0) {
@@ -96,6 +100,7 @@ export const useGenerateRecipe = () => {
           navigate(`/recipe`, {
             state: {
               recipes: data.recipes,
+              ingredientNames: ingredients?.map(i => i.name) || [],
             },
           });
         } else if (data.recipe) {
