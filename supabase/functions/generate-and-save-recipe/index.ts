@@ -61,11 +61,13 @@ const STAPLE_INGREDIENTS_HE = new Set([
 const CORE_ANCHOR_INGREDIENTS_HE = new Set([
   "עוף", "בשר טחון", "סלמון", "טונה", "חזה עוף", "בשר בקר", "ביצה", "טופו",
   "פסטה", "אורז", "קוסקוס", "שריות עוף", "דג סול", "נקניקיות",
+  "חציל", "כרוב", "תפוח אדמה", "בטטה", "כרובית", "דלעת",
 ]);
 
 const CORE_ANCHOR_INGREDIENTS_EN = new Set([
   "chicken", "beef", "ground beef", "salmon", "tuna", "chicken breast", "egg", "tofu",
   "pasta", "rice", "couscous", "turkey", "lamb", "pork", "sausage", "steak", "fish",
+  "eggplant", "cabbage", "potato", "sweet potato", "cauliflower", "squash", "pumpkin",
 ]);
 
 const STAPLE_INGREDIENTS_EN = new Set([
@@ -348,11 +350,30 @@ function applyChefLogicLocal(
       }
     }
 
+    // RULE 0: Minimum Match Rule — reject if zero ingredient overlap
+    const usedCountCheck = usedNames.length;
+    if (usedCountCheck === 0) {
+      console.log(`  Chef Logic REJECT (zero-match) "${recipe.title}": no ingredient overlap`);
+      continue;
+    }
+
     // RULE 1: Core Anchor Rule — reject if recipe needs a core anchor user didn't select
     if (missedAnchors.length > 0) {
       console.log(`  Chef Logic REJECT (anchor) "${recipe.title}": missing anchors [${missedAnchors.join(", ")}]`);
       continue;
     }
+
+    // RULE 1b: Bidirectional Anchor Rule — reject if user selected a core anchor the recipe doesn't contain
+    for (const userIng of userSet) {
+      if (isCoreAnchorHe(userIng)) {
+        const recipeHasIt = recipeIngs.some(ri => ri.includes(userIng) || userIng.includes(ri));
+        if (!recipeHasIt) {
+          console.log(`  Chef Logic REJECT (reverse-anchor) "${recipe.title}": user selected anchor "${userIng}" but recipe lacks it`);
+          missedAnchors.push(userIng); // reuse to trigger skip
+        }
+      }
+    }
+    if (missedAnchors.length > 0) continue;
 
     // RULE 2: Burden Rule — count missing non-staple ingredients
     if (missedNonStaple.length > maxBurden) {
@@ -798,6 +819,12 @@ function scoreCandidatesWithChefLogic(findData: any[], userCount: number, userIn
     const missed = c.missedIngredientCount || 0;
     const missedIngredients = c.missedIngredients || [];
 
+    // RULE 0: Minimum Match Rule — reject if zero ingredient overlap
+    if (used === 0) {
+      console.log(`  Chef Logic REJECT (zero-match) "${c.title}": no ingredient overlap`);
+      continue;
+    }
+
     // RULE 1: Core Anchor Rule — reject if missing a core anchor
     const missedAnchors = missedIngredients.filter((i: any) =>
       CORE_ANCHOR_INGREDIENTS_EN.has((i.name || "").toLowerCase().trim())
@@ -806,6 +833,22 @@ function scoreCandidatesWithChefLogic(findData: any[], userCount: number, userIn
       console.log(`  Chef Logic REJECT (anchor) "${c.title}": missing anchors [${missedAnchors.map((a: any) => a.name).join(", ")}]`);
       continue;
     }
+
+    // RULE 1b: Bidirectional Anchor Rule — reject if user selected a core anchor the recipe doesn't contain
+    let userAnchorMissing = false;
+    for (const userIng of userSet) {
+      if (CORE_ANCHOR_INGREDIENTS_EN.has(userIng)) {
+        const recipeHasIt = (c.usedIngredients || []).some((i: any) =>
+          (i.name || "").toLowerCase().trim().includes(userIng) || userIng.includes((i.name || "").toLowerCase().trim())
+        );
+        if (!recipeHasIt) {
+          console.log(`  Chef Logic REJECT (reverse-anchor) "${c.title}": user selected anchor "${userIng}" but recipe lacks it`);
+          userAnchorMissing = true;
+          break;
+        }
+      }
+    }
+    if (userAnchorMissing) continue;
 
     // RULE 2: Burden Rule — count missing non-staple ingredients
     const missedNonStaple = missedIngredients.filter((i: any) =>

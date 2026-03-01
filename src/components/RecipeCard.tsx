@@ -189,8 +189,24 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
       {/* Ingredient Match Badge */}
       {recipe.used_count != null && recipe.missed_count != null &&
       (() => {
-        const total = recipe.used_count + recipe.missed_count;
-        const coverage = total > 0 ? recipe.used_count / total : 0;
+        // Strict intersection: only count names that exist in the recipe's actual ingredients list
+        const recipeIngNames = new Set(
+          recipe.ingredients.map(ing =>
+            (typeof ing === "string" ? ing : ing.name).trim()
+          )
+        );
+        const strictUsedNames = (recipe.used_ingredient_names || []).filter(name =>
+          {
+            const trimmed = name.trim();
+            for (const riName of recipeIngNames) {
+              if (riName === trimmed || riName.includes(trimmed) || trimmed.includes(riName)) return true;
+            }
+            return false;
+          }
+        );
+        const strictUsedCount = strictUsedNames.length;
+        const total = strictUsedCount + recipe.missed_count;
+        const coverage = total > 0 ? strictUsedCount / total : 0;
         const colorClass = coverage >= 0.8 ?
         "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
         coverage >= 0.5 ?
@@ -201,16 +217,15 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-medium">
-                  {recipe.used_count} מתוך {total} מהמרכיבים שבחרת נמצאים במתכון
+                  {strictUsedCount} מתוך {total} מהמרכיבים שבחרת נמצאים במתכון
                 </span>
               </div>
-              {recipe.used_ingredient_names && recipe.used_ingredient_names.length > 0 &&
+              {strictUsedNames.length > 0 &&
             <div className="flex flex-wrap gap-1.5 mt-1">
-                  {recipe.used_ingredient_names.map((name, i) =>
+                  {strictUsedNames.map((name, i) =>
               <span
                 key={i}
                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-white/60 dark:bg-white/10">
-
                       ✓ {name}
                     </span>
               )}
