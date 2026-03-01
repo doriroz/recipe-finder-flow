@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.reset-credits]
 verify_jwt = false
+
+[functions.debug-matching]
+verify_jwt = false
