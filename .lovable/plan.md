@@ -1,82 +1,98 @@
 
+## Sync Main Logic with Debug: Full Coverage Plan
 
-## Fix 3 Critical Bugs in Chef Matching Logic
+### Problem
+The debug page only tests Step 1 (Hebrew local matching). The actual bugs users see come from Steps 2 and 3, which are invisible to the debug tool. Critically, Step 3 (Local Fallback) bypasses ALL Chef Logic rules entirely.
 
-### Bug Summary
+### Fix 1: Apply Chef Logic to Step 3 Fallback (Backend)
 
-1. **Hallucinated matched ingredients** -- UI shows matches against recipe instructions/staples instead of strict ingredient list intersection
-2. **Broken Core Anchor Rule** -- user selects Rice but gets Eggplant Salad; bidirectional anchor check missing; major vegetables not in anchor list
-3. **0-match recipes pass** -- recipes with zero user ingredient overlap slip through because burden count is low
+**File: `supabase/functions/generate-and-save-recipe/index.ts` (lines 444-486)**
 
----
+The `findFallbackInspiration` function currently grabs the first "Everyday" recipe matching ONE anchor. It must enforce the bidirectional anchor rule at minimum.
 
-### Fix 1: Strict Ingredient Match Calculation (Frontend)
+Changes:
+- After finding a recipe with the user's primary anchor, verify ALL user-selected anchors are present in the recipe
+- If a user selected Rice + Eggplant + Pasta, the fallback must contain all three (or skip that candidate)
+- If no recipe satisfies this, return null (triggering Step 4 AI instead)
+- Also reject fallback candidates with zero non-anchor ingredient overlap
 
-**File: `src/components/RecipeCard.tsx` (lines 189-220)**
+### Fix 2: Expand Debug to Cover All 4 Steps (Backend + Frontend)
 
-The "Ingredient Match Badge" currently displays `recipe.used_count` and `recipe.used_ingredient_names` as passed from the backend. The backend computes these using fuzzy substring matching (`.includes()`) which can match words in cooking instructions or partial strings.
+**File: `supabase/functions/debug-matching/index.ts`**
 
-**Change:** Recompute the match display in the RecipeCard itself using a strict intersection between `recipe.used_ingredient_names` and the recipe's actual `ingredients` array (the structured `{name, amount, unit}` objects). Only show an ingredient as "matched" if it appears in the recipe's ingredients list by exact name match.
+Add three new sections to the debug output:
 
-- Extract ingredient names from `recipe.ingredients` into a Set
-- Filter `recipe.used_ingredient_names` to only include names that exist in that Set
-- Update `used_count` display to reflect the strict count
-- This is a frontend-only safety net; the backend fix (below) also tightens matching
+A) **Step 2 Simulation**: Run `scoreCandidatesWithChefLogic` against the English anchor/staple lists using translated ingredient names. Show which Spoonacular-style candidates would pass or fail. (No actual Spoonacular API call needed -- just test the English-side filtering logic against the local library's English names if available.)
 
-### Fix 2: Bidirectional Core Anchor Rule + Expanded Anchor List (Backend + DB)
+B) **Step 3 Simulation**: Run `findFallbackInspiration` (the fixed version) and show:
+- Which anchor was selected as "primary"
+- Which fallback recipe was chosen and why
+- Whether it would have been rejected by the strict rules
 
-**File: `supabase/functions/generate-and-save-recipe/index.ts`**
+C) **Step Summary**: Add a top-level summary showing which step would have been reached in a real run (e.g., "Step 1: 0 results -> Step 2: 0 results -> Step 3: Fallback triggered").
 
-**A) Bidirectional Anchor Rule (lines 307-355 in `applyChefLogicLocal`, lines 790-865 in `scoreCandidatesWithChefLogic`):**
+**File: `src/pages/DebugMatching.tsx`**
 
-Current logic only checks: "does the recipe require an anchor the user didn't select?" (one direction).
+Add UI sections for:
+- A "Waterfall Summary" card showing which step would fire
+- A "Step 3 Fallback" table showing the fallback candidate and its anchor analysis
+- Color-coded step indicators (green = results found, red = no results, grey = skipped)
 
-Add the reverse check: "did the user select a core anchor that the recipe does NOT contain?" If the user selected Rice and the recipe has no rice at all, reject the recipe.
+### Fix 3: Keep Anchor/Staple Lists in One Place
 
-Implementation:
-- After the existing anchor check, add a new loop: for each user ingredient that is a core anchor, verify the recipe contains it
-- If a user-selected anchor is absent from the recipe's ingredients, reject the recipe
-- Apply same logic to both `applyChefLogicLocal` (Hebrew, Step 1) and `scoreCandidatesWithChefLogic` (English, Step 2)
+Currently both edge functions duplicate the STAPLE and ANCHOR sets. Any update to one must be manually mirrored to the other.
 
-**B) Expand Core Anchor Lists:**
+Create a shared constants approach:
+- In the debug function, add a comment block at the top: "IMPORTANT: These lists MUST match generate-and-save-recipe/index.ts"
+- Add the English anchor/staple lists to debug-matching (currently missing entirely) so Step 2 can be simulated
+- Add `CORE_ANCHOR_INGREDIENTS_EN` and `STAPLE_INGREDIENTS_EN` to the debug function
 
-Add major vegetables and proteins to both Hebrew and English anchor sets:
-- Hebrew: "חציל" (eggplant), "כרוב" (cabbage), "תפוח אדמה" (potato), "בטטה" (sweet potato), "כרובית" (cauliflower), "דלעת" (squash/pumpkin)
-- English: "eggplant", "cabbage", "potato", "sweet potato", "cauliflower", "squash", "pumpkin"
+### Technical Details
 
-**C) Database update:** Populate the `ingredients` table with `is_core_anchor = true` for these items so the data model stays consistent (using the insert tool, not migration).
-
-### Fix 3: Minimum Match Rule -- Zero-Match Rejection (Backend)
-
-**File: `supabase/functions/generate-and-save-recipe/index.ts`**
-
-In both `applyChefLogicLocal` (line ~330) and `scoreCandidatesWithChefLogic` (line ~796):
-
-Add a check BEFORE the anchor and burden rules:
-
+**Step 3 fix (main function):**
 ```text
-if (usedCount === 0) {
-  reject recipe immediately
-  continue
-}
+function findFallbackInspiration(userIngredients, library):
+  userAnchors = userIngredients.filter(isCoreAnchorHe)
+  if no anchors: return null
+
+  for each recipe in library:
+    skip if "Special"
+    recipeIngs = recipe.ingredient_names
+    
+    // NEW: Check ALL user anchors are in recipe
+    allAnchorsPresent = true
+    for each anchor in userAnchors:
+      if recipe doesn't contain anchor:
+        allAnchorsPresent = false
+        break
+    if not allAnchorsPresent: continue
+    
+    // Existing: compute usedNames
+    if usedNames.length === 0: continue  // zero-match guard
+    
+    return scored result
+  
+  return null  // no valid fallback -> triggers Step 4
 ```
 
-This ensures no recipe with zero ingredient overlap can ever pass through Steps 1 or 2, regardless of how few total ingredients it has.
+**Debug expansion (debug function):**
+- Add `simulateStep3` function that runs the fixed fallback logic and returns the candidate with metadata
+- Add `waterfall` field to response: `{ step1Count, step2Count, step3Result, wouldReachStep }`
+- Response shape adds: `fallback: { recipe, anchorsChecked, passed, reason } | null`
 
----
+**Debug UI additions:**
+- New "Waterfall Flow" card at the top of results showing step progression
+- New "Step 3 Analysis" card showing the fallback candidate details
+- Badge on each step: "X results" or "No results -- skipped to next step"
 
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `supabase/functions/generate-and-save-recipe/index.ts` | Add minimum-match rule (usedCount > 0), bidirectional anchor check, expand anchor lists |
-| `src/components/RecipeCard.tsx` | Strict intersection for ingredient match badge display |
+| `supabase/functions/generate-and-save-recipe/index.ts` | Fix `findFallbackInspiration` to enforce bidirectional anchor rule and zero-match guard |
+| `supabase/functions/debug-matching/index.ts` | Add English lists, Step 3 simulation, waterfall summary |
+| `src/pages/DebugMatching.tsx` | Add waterfall summary card, Step 3 analysis table |
 
-### Database Data Update
-- Populate `ingredients` table with core anchor flags for expanded items (eggplant, cabbage, potato, etc.) using the insert tool
-
-### Files NOT Modified
-- RecipeCarousel.tsx (no changes needed, it passes data from backend as-is)
-- RecipeResult.tsx, useGenerateRecipe.ts, types/recipe.ts (no structural changes)
-- Cooking flow, landing page, gallery -- untouched
-
+### Deployment
+- Both edge functions will be redeployed
+- No database changes needed
