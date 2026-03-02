@@ -445,44 +445,51 @@ function findFallbackInspiration(
   userIngredients: string[],
   library: LibraryRecipe[]
 ): ChefScoredRecipe | null {
-  // Find user's most prominent core anchor
-  let bestAnchor: string | null = null;
-  for (const ing of userIngredients) {
-    if (isCoreAnchorHe(ing)) {
-      bestAnchor = ing;
-      break;
-    }
-  }
+  // Collect ALL user anchors
+  const userAnchors = userIngredients.filter(i => isCoreAnchorHe(i));
+  if (userAnchors.length === 0) return null;
 
-  if (!bestAnchor) return null;
+  const userSet = new Set(userIngredients.map(i => i.trim()));
 
-  // Find an "Everyday" recipe that uses this anchor
   for (const recipe of library) {
     if (recipe.complexity === "Special") continue;
     const recipeIngs = recipe.ingredient_names || [];
-    const hasAnchor = recipeIngs.some(i => i.includes(bestAnchor!) || bestAnchor!.includes(i));
-    if (hasAnchor) {
-      const userSet = new Set(userIngredients.map(i => i.trim()));
-      const usedNames = recipeIngs.filter(ri => {
-        for (const ui of userSet) {
-          if (ui === ri || ui.includes(ri) || ri.includes(ui)) return true;
-        }
-        return false;
-      });
 
-      return {
-        recipe,
-        finalScore: 0.3,
-        usedCount: usedNames.length,
-        missedCount: recipeIngs.length - usedNames.length,
-        usedIngredientNames: usedNames,
-        badge: "השראה למצרך שלך",
-        contextLine: `לא מצאנו התאמה מושלמת, אבל הנה מתכון יומיומי קלאסי ל${bestAnchor}`,
-      };
+    // NEW: Check ALL user anchors are present in recipe (bidirectional anchor rule)
+    let allAnchorsPresent = true;
+    for (const anchor of userAnchors) {
+      const recipeHasIt = recipeIngs.some(ri => ri.includes(anchor) || anchor.includes(ri));
+      if (!recipeHasIt) {
+        allAnchorsPresent = false;
+        break;
+      }
     }
+    if (!allAnchorsPresent) continue;
+
+    // Compute used ingredients
+    const usedNames = recipeIngs.filter(ri => {
+      for (const ui of userSet) {
+        if (ui === ri || ui.includes(ri) || ri.includes(ui)) return true;
+      }
+      return false;
+    });
+
+    // NEW: Zero-match guard — skip if no overlap at all
+    if (usedNames.length === 0) continue;
+
+    const bestAnchor = userAnchors[0];
+    return {
+      recipe,
+      finalScore: 0.3,
+      usedCount: usedNames.length,
+      missedCount: recipeIngs.length - usedNames.length,
+      usedIngredientNames: usedNames,
+      badge: "השראה למצרך שלך",
+      contextLine: `לא מצאנו התאמה מושלמת, אבל הנה מתכון יומיומי קלאסי ל${bestAnchor}`,
+    };
   }
 
-  return null;
+  return null; // no valid fallback -> triggers Step 4
 }
 
 // ============ CREDIT & RATE LIMITING ============
