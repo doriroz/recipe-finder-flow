@@ -95,6 +95,9 @@ interface DebugRecipeResult {
   coverage: number | null;
   precision: number | null;
   burdenPenalty: number | null;
+  structuralBonus?: number | null;
+  burdenRatio?: number | null;
+  maxBurdenRatio?: number | null;
 }
 
 interface FallbackResult {
@@ -112,6 +115,26 @@ interface WaterfallSummary {
   step3Result: FallbackResult | null;
   wouldReachStep: number;
 }
+
+// ============ MYMEMORY TRANSLATION ============
+
+async function translateText(text: string, langpair: string): Promise<string> {
+  try {
+    const truncated = text.length > 490 ? text.substring(0, 490) : text;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(truncated)}&langpair=${encodeURIComponent(langpair)}`;
+    const res = await fetch(url);
+    if (!res.ok) return text;
+    const data = await res.json();
+    if (data.responseStatus === 200 && data.responseData?.translatedText) {
+      return data.responseData.translatedText;
+    }
+    return text;
+  } catch {
+    return text;
+  }
+}
+
+// ============ STEP 1: Hebrew local matching ============
 
 function debugChefLogic(
   userIngredients: string[],
@@ -215,7 +238,7 @@ function debugChefLogic(
     const finalScore = 0.55 * coverage + 0.20 * precision + 0.15 * (1 - burdenPenalty) + 0.10 * structuralBonus;
     const badge = finalScore >= 0.85 ? "המלצת השף" : finalScore >= 0.70 ? "התאמה מצוינת" : "המלצת השף";
 
-    results.push({ ...base, status: "accepted", rejectionReason: null, finalScore, badge, coverage, precision, burdenPenalty } as DebugRecipeResult);
+    results.push({ ...base, status: "accepted", rejectionReason: null, finalScore, badge, coverage, precision, burdenPenalty, structuralBonus, burdenRatio, maxBurdenRatio } as DebugRecipeResult);
   }
 
   results.sort((a, b) => {
@@ -227,112 +250,174 @@ function debugChefLogic(
   return results;
 }
 
-// ============ STEP 2 SIMULATION (English-side filtering) ============
+// ============ STEP 2 LIVE: Real Spoonacular API call ============
 
-function simulateStep2(
-  userIngredients: string[],
-  library: LibraryRecipe[]
-): DebugRecipeResult[] {
-  // Simulate English-side Chef Logic against library recipes that have English titles
-  // This tests the same rules but with EN anchor/staple sets
-  const englishRecipes = library.filter(r => /^[a-zA-Z]/.test(r.title));
-  if (englishRecipes.length === 0) return [];
+interface Step2LiveResult {
+  translationMap: Record<string, string>;
+  spoonacularUrl: string;
+  rawCandidates: any[];
+  afterChefLogic: DebugRecipeResult[];
+  candidatesBeforeFilter: number;
+  candidatesAfterFilter: number;
+  error: string | null;
+}
 
-  const userSet = new Set(userIngredients.map(i => i.trim().toLowerCase()));
-  const userCount = userIngredients.length;
-  const maxBurden = userCount <= 2 ? 2 : 3;
-  const userAnchors = userIngredients.filter(i => isCoreAnchorEn(i));
-  const results: DebugRecipeResult[] = [];
+async function liveStep2(userIngredientsHe: string[]): Promise<Step2LiveResult> {
+  const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
+  if (!SPOONACULAR_API_KEY) {
+    return { translationMap: {}, spoonacularUrl: "", rawCandidates: [], afterChefLogic: [], candidatesBeforeFilter: 0, candidatesAfterFilter: 0, error: "SPOONACULAR_API_KEY not configured" };
+  }
 
-  for (const recipe of englishRecipes) {
-    const recipeIngs = (recipe.ingredient_names || []).map(i => i.toLowerCase());
-    if (recipeIngs.length === 0) continue;
+  // 1. Translate each Hebrew ingredient to English via MyMemory
+  const translationMap: Record<string, string> = {};
+  const englishIngredients: string[] = [];
+  for (const heIng of userIngredientsHe) {
+    const en = await translateText(heIng, "he|en");
+    translationMap[heIng] = en;
+    englishIngredients.push(en.toLowerCase().trim());
+  }
 
-    const nonStapleRecipeIngs = recipeIngs.filter(i => !isStapleEn(i));
-    const anchorRecipeIngs = recipeIngs.filter(i => isCoreAnchorEn(i));
+  // 2. Call Spoonacular findByIngredients
+  const ingredientsParam = englishIngredients.join(",");
+  const spoonacularUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientsParam)}&number=10&ranking=1&ignorePantry=true&apiKey=${SPOONACULAR_API_KEY}`;
+  const maskedUrl = spoonacularUrl.replace(SPOONACULAR_API_KEY, "***MASKED***");
 
-    const usedNames: string[] = [];
-    const missedNonStaple: string[] = [];
-    const missedAnchors: string[] = [];
-
-    for (const recipeIng of recipeIngs) {
-      let found = false;
-      for (const userIng of userSet) {
-        if (userIng === recipeIng || userIng.includes(recipeIng) || recipeIng.includes(userIng)) {
-          found = true;
-          usedNames.push(recipeIng);
-          break;
-        }
-      }
-      if (!found) {
-        if (!isStapleEn(recipeIng)) missedNonStaple.push(recipeIng);
-        if (isCoreAnchorEn(recipeIng)) missedAnchors.push(recipeIng);
-      }
+  let rawCandidates: any[] = [];
+  try {
+    const res = await fetch(spoonacularUrl);
+    if (!res.ok) {
+      const errText = await res.text();
+      return { translationMap, spoonacularUrl: maskedUrl, rawCandidates: [], afterChefLogic: [], candidatesBeforeFilter: 0, candidatesAfterFilter: 0, error: `Spoonacular API error ${res.status}: ${errText}` };
     }
+    rawCandidates = await res.json();
+  } catch (err) {
+    return { translationMap, spoonacularUrl: maskedUrl, rawCandidates: [], afterChefLogic: [], candidatesBeforeFilter: 0, candidatesAfterFilter: 0, error: `Fetch error: ${err}` };
+  }
+
+  // 3. Apply Chef Logic scoring (same as main function)
+  const userCount = userIngredientsHe.length;
+  const maxBurden = userCount <= 2 ? 2 : 3;
+  const userSetEn = new Set(englishIngredients);
+  const afterChefLogic: DebugRecipeResult[] = [];
+
+  for (const c of rawCandidates) {
+    const used = c.usedIngredientCount || c.usedIngredients?.length || 0;
+    const missed = c.missedIngredientCount || c.missedIngredients?.length || 0;
+    const missedIngredients = c.missedIngredients || [];
+    const usedIngredients = c.usedIngredients || [];
+    const usedNames = usedIngredients.map((i: any) => i.name || "");
+    const missedNames = missedIngredients.map((i: any) => i.name || "");
 
     const base: Partial<DebugRecipeResult> = {
-      title: recipe.title,
-      recipeId: recipe.id,
-      usedCount: usedNames.length,
-      missedCount: missedNonStaple.length,
+      title: c.title || "Unknown",
+      recipeId: String(c.id || ""),
+      usedCount: used,
+      missedCount: missed,
       usedIngredientNames: usedNames,
-      missedNonStaple,
-      missedAnchors: [...missedAnchors],
-      detectedUserAnchors: userAnchors,
-      detectedRecipeAnchors: anchorRecipeIngs,
-      recipeIngredientNames: recipe.ingredient_names || [],
-      complexity: recipe.complexity || "Everyday",
+      missedNonStaple: missedNames.filter((n: string) => !isStapleEn(n)),
+      missedAnchors: [],
+      detectedUserAnchors: englishIngredients.filter(i => isCoreAnchorEn(i)),
+      detectedRecipeAnchors: [...usedNames, ...missedNames].filter((n: string) => isCoreAnchorEn(n)),
+      recipeIngredientNames: [...usedNames, ...missedNames],
+      complexity: "External",
     };
 
-    if (usedNames.length === 0) {
-      results.push({ ...base, status: "rejected", rejectionReason: "Zero matches", finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
-      continue;
-    }
-    if (missedAnchors.length > 0) {
-      results.push({ ...base, status: "rejected", rejectionReason: `Missing anchor: ${missedAnchors.join(", ")}`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
+    // RULE 0: Zero match
+    if (used === 0) {
+      afterChefLogic.push({ ...base, status: "rejected", rejectionReason: "Zero matches – no ingredient overlap", finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
       continue;
     }
 
-    let reverseAnchorMissing: string | null = null;
-    for (const userIng of userSet) {
+    // RULE 1: Core Anchor – recipe needs anchor user didn't select
+    const missedAnchorsArr = missedIngredients.filter((i: any) => isCoreAnchorEn((i.name || "").toLowerCase().trim()));
+    if (missedAnchorsArr.length > 0) {
+      const names = missedAnchorsArr.map((a: any) => a.name);
+      afterChefLogic.push({ ...base, status: "rejected", rejectionReason: `Missing anchor: ${names.join(", ")}`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null, missedAnchors: names } as DebugRecipeResult);
+      continue;
+    }
+
+    // RULE 1b: Reverse anchor – user selected anchor recipe doesn't have
+    let userAnchorMissing: string | null = null;
+    for (const userIng of userSetEn) {
       if (isCoreAnchorEn(userIng)) {
-        const recipeHasIt = recipeIngs.some(ri => ri.includes(userIng) || userIng.includes(ri));
-        if (!recipeHasIt) { reverseAnchorMissing = userIng; break; }
+        const recipeHasIt = usedIngredients.some((i: any) =>
+          (i.name || "").toLowerCase().trim().includes(userIng) || userIng.includes((i.name || "").toLowerCase().trim())
+        );
+        if (!recipeHasIt) { userAnchorMissing = userIng; break; }
       }
     }
-    if (reverseAnchorMissing) {
-      results.push({ ...base, status: "rejected", rejectionReason: `Reverse anchor: "${reverseAnchorMissing}" not in recipe`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
+    if (userAnchorMissing) {
+      afterChefLogic.push({ ...base, status: "rejected", rejectionReason: `Reverse anchor: user selected "${userAnchorMissing}" but recipe lacks it`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
       continue;
     }
 
+    // RULE 2: Burden
+    const missedNonStaple = missedIngredients.filter((i: any) => !isStapleEn((i.name || "").toLowerCase().trim()));
     if (missedNonStaple.length > maxBurden) {
-      results.push({ ...base, status: "rejected", rejectionReason: `Burden: ${missedNonStaple.length} missing > max ${maxBurden}`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
+      afterChefLogic.push({ ...base, status: "rejected", rejectionReason: `Burden: ${missedNonStaple.length} missing non-staples > max ${maxBurden}`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
       continue;
     }
 
-    const usedCount = usedNames.length;
-    const totalIngredients = recipeIngs.length;
-    const coverage = userCount > 0 ? usedCount / userCount : 0;
-    const precision = totalIngredients > 0 ? usedCount / totalIngredients : 0;
-    const extraCount = totalIngredients - usedCount;
+    // SCORING
+    const totalIngredients = used + missed;
+    const coverage = userCount > 0 ? used / userCount : 0;
+    const precision = totalIngredients > 0 ? used / totalIngredients : 0;
+    const extraCount = totalIngredients - used;
     const burdenRatio = userCount > 0 ? extraCount / userCount : 0;
     const maxBurdenRatio = userCount <= 3 ? 0.75 : userCount <= 5 ? 1.0 : 1.5;
     const burdenPenalty = Math.min(burdenRatio / maxBurdenRatio, 1);
-    const finalScore = 0.55 * coverage + 0.20 * precision + 0.15 * (1 - burdenPenalty);
 
-    results.push({ ...base, status: "accepted", rejectionReason: null, finalScore, badge: finalScore >= 0.7 ? "Good Match" : "Match", coverage, precision, burdenPenalty } as DebugRecipeResult);
+    const proteinKeywords = ["chicken","beef","pork","fish","salmon","tuna","shrimp","egg","tofu","lamb","turkey","sausage","meat","steak"];
+    const hasProtein = usedIngredients.some((i: any) => proteinKeywords.some(p => (i.name || "").toLowerCase().includes(p)));
+    let structuralBonus = 0;
+    if (hasProtein) structuralBonus += 0.05;
+    if (missed <= 3) structuralBonus += 0.05;
+
+    const finalScore = 0.55 * coverage + 0.20 * precision + 0.15 * (1 - burdenPenalty) + 0.10 * structuralBonus;
+
+    afterChefLogic.push({
+      ...base,
+      status: "accepted",
+      rejectionReason: null,
+      finalScore,
+      badge: finalScore >= 0.85 ? "Chef's Pick" : finalScore >= 0.70 ? "Good Match" : "Match",
+      coverage,
+      precision,
+      burdenPenalty,
+      structuralBonus,
+      burdenRatio,
+      maxBurdenRatio,
+    } as DebugRecipeResult);
   }
 
-  results.sort((a, b) => {
+  afterChefLogic.sort((a, b) => {
     if (a.status === "accepted" && b.status !== "accepted") return -1;
     if (a.status !== "accepted" && b.status === "accepted") return 1;
     return (b.finalScore || 0) - (a.finalScore || 0);
   });
 
-  return results;
+  const accepted = afterChefLogic.filter(r => r.status === "accepted");
+
+  return {
+    translationMap,
+    spoonacularUrl: maskedUrl,
+    rawCandidates: rawCandidates.map(c => ({
+      id: c.id,
+      title: c.title,
+      image: c.image,
+      usedIngredientCount: c.usedIngredientCount,
+      missedIngredientCount: c.missedIngredientCount,
+      usedIngredients: (c.usedIngredients || []).map((i: any) => ({ name: i.name, original: i.original })),
+      missedIngredients: (c.missedIngredients || []).map((i: any) => ({ name: i.name, original: i.original })),
+    })),
+    afterChefLogic,
+    candidatesBeforeFilter: rawCandidates.length,
+    candidatesAfterFilter: accepted.length,
+    error: null,
+  };
 }
 
-// ============ STEP 3 SIMULATION (Fallback with fixed logic) ============
+// ============ STEP 3 SIMULATION (Fallback) ============
 
 function simulateStep3(
   userIngredients: string[],
@@ -350,12 +435,10 @@ function simulateStep3(
     const recipeIngs = recipe.ingredient_names || [];
 
     let allAnchorsPresent = true;
-    let missingAnchor = "";
     for (const anchor of userAnchors) {
       const recipeHasIt = recipeIngs.some(ri => ri.includes(anchor) || anchor.includes(ri));
       if (!recipeHasIt) {
         allAnchorsPresent = false;
-        missingAnchor = anchor;
         break;
       }
     }
@@ -446,19 +529,19 @@ serve(async (req) => {
     const step1Accepted = step1Results.filter(r => r.status === "accepted");
     const step1Rejected = step1Results.filter(r => r.status === "rejected");
 
-    // Step 2: English-side simulation (uses EN ingredients from library)
-    const step2Results = simulateStep2(ingredients, library || []);
-    const step2Accepted = step2Results.filter(r => r.status === "accepted");
+    // Step 2: LIVE Spoonacular API call (real dry-run)
+    const step2Live = await liveStep2(ingredients);
 
     // Step 3: Fallback simulation
     const step3Result = simulateStep3(ingredients, library || []);
 
     // Waterfall summary
-    const wouldReachStep = step1Accepted.length > 0 ? 1 : step2Accepted.length > 0 ? 2 : step3Result.passed ? 3 : 4;
+    const step2AcceptedCount = step2Live.afterChefLogic.filter(r => r.status === "accepted").length;
+    const wouldReachStep = step1Accepted.length > 0 ? 1 : step2AcceptedCount > 0 ? 2 : step3Result.passed ? 3 : 4;
 
     const waterfall: WaterfallSummary = {
       step1Count: step1Accepted.length,
-      step2Count: step2Accepted.length,
+      step2Count: step2AcceptedCount,
       step3Result,
       wouldReachStep,
     };
@@ -472,6 +555,8 @@ serve(async (req) => {
 
     const userAnchors = ingredients.filter((i: string) => isCoreAnchorHe(i));
     const userStaples = ingredients.filter((i: string) => isStapleHe(i));
+    const userCount = ingredients.length;
+    const maxBurdenRatio = userCount <= 3 ? 0.75 : userCount <= 5 ? 1.0 : 1.5;
 
     return new Response(
       JSON.stringify({
@@ -483,6 +568,12 @@ serve(async (req) => {
           maxBurden: ingredients.length <= 2 ? 2 : 3,
           totalLibraryRecipes: library?.length || 0,
         },
+        formula: {
+          weights: { coverage: 0.55, precision: 0.20, burden: 0.15, structural: 0.10 },
+          maxBurden: ingredients.length <= 2 ? 2 : 3,
+          maxBurdenRatio,
+          description: "finalScore = 0.55×coverage + 0.20×precision + 0.15×(1-burdenPenalty) + 0.10×structuralBonus",
+        },
         waterfall,
         summary: {
           accepted: step1Accepted.length,
@@ -491,11 +582,7 @@ serve(async (req) => {
         },
         accepted: step1Accepted.slice(0, 10),
         rejected: step1Rejected.slice(0, 20),
-        step2: {
-          accepted: step2Accepted.slice(0, 10),
-          rejected: step2Results.filter(r => r.status === "rejected").slice(0, 10),
-          total: step2Results.length,
-        },
+        step2_live: step2Live,
         fallback: step3Result,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
