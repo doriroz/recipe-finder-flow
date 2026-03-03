@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RecipeCard, { RecipeCardData } from "@/components/RecipeCard";
 import { RecipeResultItem } from "@/types/recipe";
@@ -17,6 +17,7 @@ const badgeStyles: Record<string, string> = {
   "התאמה מצוינת": "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200 border-emerald-300",
   "אפשרות יצירתית": "bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200 border-violet-300",
   "השראה למצרך שלך": "bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-200 border-blue-300",
+  "בסיס מצוין": "bg-teal-100 text-teal-900 dark:bg-teal-900/40 dark:text-teal-200 border-teal-300",
 };
 
 const badgeEmoji: Record<string, string> = {
@@ -24,6 +25,7 @@ const badgeEmoji: Record<string, string> = {
   "התאמה מצוינת": "✨",
   "אפשרות יצירתית": "🎨",
   "השראה למצרך שלך": "✨",
+  "בסיס מצוין": "🌟",
 };
 
 function toDisplayRecipe(item: RecipeResultItem): RecipeCardData {
@@ -56,6 +58,38 @@ function toDisplayRecipe(item: RecipeResultItem): RecipeCardData {
   };
 }
 
+function MagicChefCard({ onGenerateAI }: { onGenerateAI: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 p-6 text-white shadow-xl"
+    >
+      {/* Sparkle decorations */}
+      <div className="absolute top-2 left-4 text-white/30 text-2xl animate-pulse">✦</div>
+      <div className="absolute bottom-3 right-6 text-white/20 text-xl animate-pulse" style={{ animationDelay: "0.5s" }}>✧</div>
+      <div className="absolute top-4 right-12 text-white/25 text-lg animate-pulse" style={{ animationDelay: "1s" }}>✦</div>
+
+      <div className="relative z-10 text-center space-y-3">
+        <div className="text-3xl">👨‍🍳</div>
+        <h3 className="text-lg font-bold">מעדיפים התאמה מושלמת?</h3>
+        <p className="text-sm text-white/90 leading-relaxed">
+          צרו מתכון מותאם אישית עם AI על בסיס המצרכים שלכם!
+        </p>
+        <Button
+          onClick={onGenerateAI}
+          size="lg"
+          className="bg-white text-purple-700 hover:bg-white/90 font-bold px-8 py-4 text-base rounded-xl shadow-lg transition-all hover:scale-105"
+        >
+          <Sparkles className="w-5 h-5 ml-2 animate-pulse" />
+          צור מתכון AI אישי
+        </Button>
+      </div>
+    </motion.div>
+  );
+}
+
 const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCarouselProps) => {
   const [viewMode, setViewMode] = useState<"carousel" | "recipeDetail">("carousel");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -82,28 +116,46 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
   if (recipeItems.length === 1) {
     const display = toDisplayRecipe(recipeItems[0]);
     const showAI = recipeItems[0].showAIButton && onGenerateAI;
+    const activeBadge = showAI ? "בסיס מצוין" : recipeItems[0].badge;
+
     return (
-      <div className="animate-fade-in">
-        <div className="text-center mb-6">
-          <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${badgeStyles[recipeItems[0].badge] || badgeStyles["אפשרות יצירתית"]}`}>
-            {badgeEmoji[recipeItems[0].badge]} {recipeItems[0].badge}
-          </span>
-          {recipeItems[0].contextLine && (
-            <p className="text-muted-foreground text-sm mt-2">{recipeItems[0].contextLine}</p>
-          )}
-        </div>
-        <RecipeCard recipe={display} onStartCooking={() => onStartCooking(recipeItems[0].recipe.id)} />
+      <div className="space-y-5">
+        {/* Friendly message for partial matches */}
         {showAI && (
-          <div className="mt-6 text-center">
-            <Button
-              onClick={onGenerateAI}
-              size="lg"
-              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-bold px-8 py-4 text-lg rounded-xl shadow-lg"
-            >
-              🤖 צור מתכון AI אישי
-            </Button>
-            <p className="text-muted-foreground text-xs mt-2">ייווצר מתכון מותאם אישית למצרכים שבחרת</p>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center bg-teal-50 dark:bg-teal-950/50 rounded-xl p-4 border border-teal-200 dark:border-teal-800"
+          >
+            <p className="text-lg font-semibold text-teal-800 dark:text-teal-200">
+              🌟 מצאנו נקודת התחלה מצוינת בשבילך!
+            </p>
+            <p className="text-sm text-teal-600 dark:text-teal-400 mt-1">
+              הנה מתכון שמתאים למצרכים שבחרת
+            </p>
+          </motion.div>
+        )}
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <div className="text-center mb-6">
+            <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${badgeStyles[activeBadge] || badgeStyles["אפשרות יצירתית"]}`}>
+              {badgeEmoji[activeBadge]} {activeBadge}
+            </span>
+            {recipeItems[0].contextLine && (
+              <p className="text-muted-foreground text-sm mt-2">{recipeItems[0].contextLine}</p>
+            )}
           </div>
+          <RecipeCard recipe={display} onStartCooking={() => onStartCooking(recipeItems[0].recipe.id)} />
+        </motion.div>
+
+        {/* Magic Chef Card */}
+        {showAI && onGenerateAI && (
+          <MagicChefCard onGenerateAI={onGenerateAI} />
         )}
       </div>
     );
