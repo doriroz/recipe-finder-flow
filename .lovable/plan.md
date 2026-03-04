@@ -1,137 +1,102 @@
 
 
-## Fix Matching Bug + Enhanced Debug + AI Suggestion UX
+## Plan: Soften Anchor Logic + Merge Pipeline + Repaint Recipe Page
 
-### Root Cause Analysis
+### Part 1: Soften Anchor Rejection Logic
 
-The matching bug has two root causes:
+**Files: `generate-and-save-recipe/index.ts` + `debug-matching/index.ts`**
 
-1. **Step 2 debug is fake**: The current `debug-matching` function simulates Step 2 by filtering English-titled recipes from the LOCAL library (only 9 spoonacular entries). It never calls the actual Spoonacular API. The real Step 2 translates Hebrew ingredients via MyMemory, calls `findByIngredients`, then applies Chef Logic. The debug shows none of this.
+Currently, both `applyChefLogicLocal` (lines 360-376) and `scoreCandidatesWithChefLogic` (lines 836-858) hard-reject recipes when an anchor is missing. Change to:
 
-2. **Small library + strict rules**: With only ~42 recipes (33 Everyday), the strict bidirectional anchor rule + burden limit rejects most candidates. When Step 1 fails and Step 2 also fails (Spoonacular candidates filtered by Chef Logic), the user gets either a weak fallback or nothing.
+**Replace hard rejection with soft penalty:**
+- Remove the `continue` statements for RULE 1 (missing anchor) and RULE 1b (reverse anchor)
+- Instead, penalize `structuralBonus` by -0.15 per missing anchor
+- After scoring, only accept if: `coverage >= 0.5 AND usedCount >= 2 AND finalScore >= 0.55`
+- Recipes that fail these thresholds still get rejected, but good partial matches survive
 
-### Formula Reference (for debug display)
-
+**In `applyChefLogicLocal` (lines 360-376):**
 ```text
-finalScore = 0.55 * coverage + 0.20 * precision + 0.15 * (1 - burdenPenalty) + 0.10 * structuralBonus
-
-Where:
-  coverage       = usedCount / userIngredientCount
-  precision      = usedCount / totalRecipeIngredients  
-  burdenRatio    = (totalRecipeIngredients - usedCount) / userIngredientCount
-  maxBurdenRatio = 0.75 (<=3 user ings) | 1.0 (<=5) | 1.5 (6+)
-  burdenPenalty  = min(burdenRatio / maxBurdenRatio, 1)
-  structuralBonus = +0.05 if protein matched, +0.05 if <=3 non-staple missed
+// OLD: if (missedAnchors.length > 0) continue;
+// NEW: Track anchor penalties for structuralBonus
+let anchorPenalty = missedAnchors.length * 0.15;
+// Also check reverse anchors, add to anchorPenalty instead of continue
+structuralBonus = structuralBonus - anchorPenalty;
+// After computing finalScore:
+if (coverage < 0.5 || usedCount < 2 || finalScore < 0.55) continue;
 ```
+
+Same change in `scoreCandidatesWithChefLogic` (lines 836-858) for Spoonacular candidates.
+
+Same change in `debug-matching/index.ts` `debugChefLogic` and `liveStep2` functions.
+
+Scoring weights remain untouched: `0.55*coverage + 0.20*precision + 0.15*(1-burdenPenalty) + 0.10*structuralBonus`.
 
 ---
 
-### Part 1: Fix Debug to Show Real Step 2 (Backend)
+### Part 2: Merge Local + API Pipeline
 
-**File: `supabase/functions/debug-matching/index.ts`**
+**File: `generate-and-save-recipe/index.ts` (lines 1191-1381)**
 
-Replace the fake Step 2 simulation with a REAL dry-run that:
+Currently Step 1 returns immediately if local results exist. Change to:
 
-1. **Translates** Hebrew ingredients to English via MyMemory API (same as main function)
-2. **Calls Spoonacular** `findByIngredients` endpoint with the translated ingredients
-3. **Applies** `scoreCandidatesWithChefLogic` (same rules as main function)
-4. **Returns** full raw data:
+1. Run Step 1 (local matching) and store results with their `finalScore`
+2. If best local score < 0.8, also run Step 2 (Spoonacular API)
+3. Merge all candidates into one array
+4. Sort by `finalScore` descending
+5. Return top 3 overall
 
 ```text
-step2_live: {
-  translationMap: { "אורז": "rice", "עוף": "chicken", ... }
-  spoonacularUrl: "https://api.spoonacular.com/recipes/findByIngredients?..."
-  spoonacularRawResponse: [ { id, title, usedCount, missedCount, usedIngredients, missedIngredients } ]
-  afterChefLogic: [ { title, status, rejectionReason, finalScore, ... } ]
-  candidatesBeforeFilter: number
-  candidatesAfterFilter: number
+// Pseudocode for new flow:
+const localResults = applyChefLogicLocal(...)  // scored array
+const bestLocalScore = localResults[0]?.finalScore || 0
+
+let allCandidates = [...process local results into response format]
+
+if (bestLocalScore < 0.8 && SPOONACULAR_API_KEY) {
+  // Run Step 2
+  const spoonacularResults = [...process spoonacular candidates]
+  allCandidates = [...allCandidates, ...spoonacularResults]
 }
+
+// Sort merged results by finalScore
+allCandidates.sort((a, b) => b.finalScore - a.finalScore)
+const top3 = allCandidates.slice(0, 3)
+
+if (top3.length > 0) return top3
+// else fall through to Step 3 fallback
 ```
 
-This makes every API call and its result visible on the debug page.
+This requires storing `finalScore` on each response recipe item temporarily for sorting. The `RecipeResultItem` type and response shape stay the same.
 
 ---
 
-### Part 2: Enhanced Debug UI (Frontend)
+### Part 3: Repaint Recipe Page
 
-**File: `src/pages/DebugMatching.tsx`**
+**Reference image analysis:** The user crossed out the bottom section of the recipe card. The desired layout keeps:
+- Header with back button + logo
+- Badge + context line
+- Recipe title + description + quick stats (time, difficulty, servings)
+- Ingredient match indicator (green/amber chips)
+- Ingredients list with servings adjuster
+- "Let's Cook" button
 
-Add three new sections to the debug page:
+**Remove/hide (crossed out in image):**
+- Reliability score + source badge row
+- Chef's Tip (why_it_works)
+- Diet Filter section
+- Substitutions section
+- AI disclaimer text
 
-1. **Formula Reference Card** (always visible at top):
-   - Shows the exact scoring formula with all weights
-   - Shows current maxBurden based on ingredient count
-   - Shows which ingredients are detected as anchors vs staples
+The Magic Chef card (left side in image) stays as-is in the carousel for partial matches.
 
-2. **Step 2 Live Analysis Card**:
-   - **Translation Table**: Hebrew input -> English output per ingredient (shows MyMemory result)
-   - **Spoonacular Raw Response**: Table showing each candidate with `usedCount`, `missedCount`, `usedIngredients`, `missedIngredients` as returned by the API
-   - **Post-Chef-Logic Table**: Same candidates but after filtering, showing accept/reject + reason
-   - **API URL**: The exact Spoonacular URL called (with API key masked)
+**File: `src/components/RecipeCard.tsx`**
 
-3. **Per-Recipe Score Drill-Down** (expandable rows in accepted tables):
-   - Click a recipe row to see: coverage value, precision value, burdenRatio, burdenPenalty, structuralBonus, and how they combine into finalScore
+Remove lines 286-335 (reliability score, chef tip, diet filter, substitutions, AI disclaimer). Keep the clean flow: header → match badge → ingredients → cook button.
 
----
-
-### Part 3: Friendly AI Suggestion UX
-
-**File: `src/components/RecipeCarousel.tsx`**
-
-When `showAIButton` is true (Step 3 fallback) or when showing partial matches:
-
-1. **Friendly message with fade-in**: Replace the current plain text with an animated banner:
-   - Text: "מצאנו נקודת התחלה מצוינת בשבילך!" ("We found a great starting point for you!")
-   - "בסיס מצוין" ("Great Base") tag on the recipe card
-   - Smooth `motion.div` fade-in animation
-
-2. **Magic Chef Card**: A gradient card (violet-to-purple) displayed above or below the partial match:
-   - Text: "מעדיפים התאמה מושלמת? צרו מתכון מותאם אישית עם AI על בסיס המצרכים שלכם!"
-   - Sparkle icon button that triggers `onGenerateAI`
-   - Subtle sparkle/glow animation on the button
-
-3. **Badge system update**: Add "בסיס מצוין" to `badgeStyles` and `badgeEmoji` maps with a warm blue/teal style
-
----
-
-### Technical Details
-
-**Debug Edge Function changes:**
-
-The function needs to:
-- Import and use `SPOONACULAR_API_KEY` from secrets
-- Call MyMemory translate API (same `translateText` function as main)
-- Call Spoonacular `findByIngredients` 
-- Apply the same `scoreCandidatesWithChefLogic` filtering
-- Return all raw data without saving anything or deducting credits
-
-**New response shape additions:**
-```text
-{
-  // ... existing fields ...
-  step2_live: {
-    translationMap: Record<string, string>,
-    spoonacularUrl: string,           // API key masked
-    rawCandidates: SpoonacularCandidate[],
-    afterChefLogic: DebugRecipeResult[],
-    candidatesBeforeFilter: number,
-    candidatesAfterFilter: number,
-    error: string | null
-  },
-  formula: {
-    weights: { coverage: 0.55, precision: 0.20, burden: 0.15, structural: 0.10 },
-    maxBurden: number,
-    maxBurdenRatio: number,
-    description: string
-  }
-}
-```
-
-**RecipeCarousel changes:**
-
-- Add "בסיס מצוין" badge style (teal gradient)
-- Wrap single-recipe + showAIButton block with friendly message and Magic Chef card
-- Use `framer-motion` for fade-in animation (already imported)
+Also refine visual styling to match the image's cleaner, rounder card aesthetic:
+- Softer card with more rounded corners
+- Cleaner spacing between sections
+- The "Let's Cook" button remains full-width at the bottom
 
 ---
 
@@ -139,11 +104,11 @@ The function needs to:
 
 | File | Change |
 |------|--------|
-| `supabase/functions/debug-matching/index.ts` | Add real Spoonacular dry-run, translation mapping, formula metadata |
-| `src/pages/DebugMatching.tsx` | Formula card, Step 2 live analysis with translation table and raw API data, expandable score drill-down |
-| `src/components/RecipeCarousel.tsx` | "Great Base" badge, friendly message banner, Magic Chef AI promotion card with sparkle animation |
+| `supabase/functions/generate-and-save-recipe/index.ts` | Soften anchor rejection in `applyChefLogicLocal` + `scoreCandidatesWithChefLogic`; merge local+API pipeline |
+| `supabase/functions/debug-matching/index.ts` | Mirror softened anchor logic in `debugChefLogic` + `liveStep2` |
+| `src/components/RecipeCard.tsx` | Remove crossed-out sections (reliability, chef tip, diet, substitutions, disclaimer) |
 
 ### Deployment
-- Redeploy `debug-matching` edge function
-- No database changes needed
+- Redeploy both edge functions
+- No database changes
 
