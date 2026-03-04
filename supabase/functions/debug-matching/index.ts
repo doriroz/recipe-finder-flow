@@ -190,21 +190,14 @@ function debugChefLogic(
       results.push({ ...base, status: "rejected", rejectionReason: "אפס התאמות – אין חפיפה בין המצרכים", finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
       continue;
     }
-    if (missedAnchors.length > 0) {
-      results.push({ ...base, status: "rejected", rejectionReason: `עוגן חסר: המתכון דורש ${missedAnchors.join(", ")} שלא נבחרו`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
-      continue;
-    }
+    // Anchor penalties (soft, not hard rejection)
+    let anchorPenalty = missedAnchors.length * 0.15;
 
-    let reverseAnchorMissing: string | null = null;
     for (const userIng of userSet) {
       if (isCoreAnchorHe(userIng)) {
         const recipeHasIt = recipeIngs.some(ri => ri.includes(userIng) || userIng.includes(ri));
-        if (!recipeHasIt) { reverseAnchorMissing = userIng; break; }
+        if (!recipeHasIt) { anchorPenalty += 0.15; }
       }
-    }
-    if (reverseAnchorMissing) {
-      results.push({ ...base, status: "rejected", rejectionReason: `עוגן הפוך: בחרת "${reverseAnchorMissing}" אבל המתכון לא מכיל אותו`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
-      continue;
     }
 
     if (missedNonStaple.length > maxBurden) {
@@ -234,8 +227,16 @@ function debugChefLogic(
     let structuralBonus = 0;
     if (hasProtein) structuralBonus += 0.05;
     if (missedNonStaple.length <= 3) structuralBonus += 0.05;
+    structuralBonus -= anchorPenalty;
 
     const finalScore = 0.55 * coverage + 0.20 * precision + 0.15 * (1 - burdenPenalty) + 0.10 * structuralBonus;
+
+    // Soft threshold
+    if (coverage < 0.5 || usedCount < 2 || finalScore < 0.55) {
+      results.push({ ...base, status: "rejected", rejectionReason: `סף מינימלי: coverage=${coverage.toFixed(2)} usedCount=${usedCount} finalScore=${finalScore.toFixed(3)}`, finalScore, badge: null, coverage, precision, burdenPenalty, structuralBonus, burdenRatio, maxBurdenRatio } as DebugRecipeResult);
+      continue;
+    }
+
     const badge = finalScore >= 0.85 ? "המלצת השף" : finalScore >= 0.70 ? "התאמה מצוינת" : "המלצת השף";
 
     results.push({ ...base, status: "accepted", rejectionReason: null, finalScore, badge, coverage, precision, burdenPenalty, structuralBonus, burdenRatio, maxBurdenRatio } as DebugRecipeResult);
@@ -328,27 +329,18 @@ async function liveStep2(userIngredientsHe: string[]): Promise<Step2LiveResult> 
       continue;
     }
 
-    // RULE 1: Core Anchor – recipe needs anchor user didn't select
+    // RULE 1: Core Anchor — soft penalty
     const missedAnchorsArr = missedIngredients.filter((i: any) => isCoreAnchorEn((i.name || "").toLowerCase().trim()));
-    if (missedAnchorsArr.length > 0) {
-      const names = missedAnchorsArr.map((a: any) => a.name);
-      afterChefLogic.push({ ...base, status: "rejected", rejectionReason: `Missing anchor: ${names.join(", ")}`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null, missedAnchors: names } as DebugRecipeResult);
-      continue;
-    }
+    let anchorPenalty = missedAnchorsArr.length * 0.15;
 
-    // RULE 1b: Reverse anchor – user selected anchor recipe doesn't have
-    let userAnchorMissing: string | null = null;
+    // RULE 1b: Reverse anchor — soft penalty
     for (const userIng of userSetEn) {
       if (isCoreAnchorEn(userIng)) {
         const recipeHasIt = usedIngredients.some((i: any) =>
           (i.name || "").toLowerCase().trim().includes(userIng) || userIng.includes((i.name || "").toLowerCase().trim())
         );
-        if (!recipeHasIt) { userAnchorMissing = userIng; break; }
+        if (!recipeHasIt) { anchorPenalty += 0.15; }
       }
-    }
-    if (userAnchorMissing) {
-      afterChefLogic.push({ ...base, status: "rejected", rejectionReason: `Reverse anchor: user selected "${userAnchorMissing}" but recipe lacks it`, finalScore: null, badge: null, coverage: null, precision: null, burdenPenalty: null } as DebugRecipeResult);
-      continue;
     }
 
     // RULE 2: Burden
@@ -372,8 +364,15 @@ async function liveStep2(userIngredientsHe: string[]): Promise<Step2LiveResult> 
     let structuralBonus = 0;
     if (hasProtein) structuralBonus += 0.05;
     if (missed <= 3) structuralBonus += 0.05;
+    structuralBonus -= anchorPenalty;
 
     const finalScore = 0.55 * coverage + 0.20 * precision + 0.15 * (1 - burdenPenalty) + 0.10 * structuralBonus;
+
+    // Soft threshold
+    if (coverage < 0.5 || used < 2 || finalScore < 0.55) {
+      afterChefLogic.push({ ...base, status: "rejected", rejectionReason: `Threshold: coverage=${coverage.toFixed(2)} used=${used} finalScore=${finalScore.toFixed(3)}`, finalScore, badge: null, coverage, precision, burdenPenalty, structuralBonus, burdenRatio, maxBurdenRatio, missedAnchors: missedAnchorsArr.map((a: any) => a.name) } as DebugRecipeResult);
+      continue;
+    }
 
     afterChefLogic.push({
       ...base,
@@ -387,6 +386,7 @@ async function liveStep2(userIngredientsHe: string[]): Promise<Step2LiveResult> 
       structuralBonus,
       burdenRatio,
       maxBurdenRatio,
+      missedAnchors: missedAnchorsArr.map((a: any) => a.name),
     } as DebugRecipeResult);
   }
 
