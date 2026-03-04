@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { Clock, Users, ChefHat, Plus, Minus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import SubstitutionSection from "@/components/SubstitutionSection";
-import ChefTip from "@/components/ChefTip";
-import ReliabilityScore from "@/components/ReliabilityScore";
-import DietFilter from "@/components/DietFilter";
 
 interface Substitution {
   original: string;
@@ -156,11 +152,8 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
   const incrementServings = () => setServings((prev) => Math.min(prev + 1, 20));
   const decrementServings = () => setServings((prev) => Math.max(prev - 1, 1));
 
-  // Flat string list for DietFilter / SubstitutionSection
-  const ingredientStrings = recipe.ingredients.map(ingredientToString);
-
   return (
-    <div className="card-warm animate-slide-up max-w-2xl mx-auto bg-[sidebar-accent-foreground] bg-cream">
+    <div className="animate-slide-up max-w-2xl mx-auto bg-card rounded-2xl shadow-lg border border-border p-6">
       {/* Recipe Header */}
       <div className="flex items-start gap-4 mb-6">
         <div className="text-6xl">{recipe.image}</div>
@@ -283,56 +276,6 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         </ul>
       </div>
 
-      {/* Reliability Score, Spoonacular Badge & Chef's Tip */}
-      <div className="mb-6 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          {recipe.reliability_score &&
-          <ReliabilityScore score={recipe.reliability_score} />
-          }
-          <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-            recipe.source === "spoonacular" ?
-            "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" :
-            recipe.spoonacular_verified ?
-            "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
-            recipe.source === "local" ?
-            "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" :
-            "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"}`
-            }>
-
-            <span>{recipe.source === "spoonacular" ? "🔍" : recipe.spoonacular_verified ? "✅" : recipe.source === "local" ? "📚" : "🧪"}</span>
-            <span>
-              {recipe.source === "spoonacular" ?
-              "מתכון מ-Spoonacular" :
-              recipe.spoonacular_verified ?
-              'מאומת ע״י Spoonacular' :
-              recipe.source === "local" ?
-              "מתכון מהמאגר המקומי" :
-              "לא אומת – מבוסס AI בלבד"}
-            </span>
-          </div>
-        </div>
-        {recipe.why_it_works && <ChefTip tip={recipe.why_it_works} />}
-      </div>
-
-      {/* Diet Filter */}
-      <div className="mb-6">
-        <DietFilter ingredients={ingredientStrings} />
-      </div>
-
-      {/* Smart Substitutions Section */}
-      <div className="mb-6">
-        <SubstitutionSection
-          substitutions={recipe.substitutions || []}
-          ingredients={ingredientStrings}
-          recipeTitle={recipe.title} />
-
-      </div>
-
-      {/* AI Disclaimer */}
-      <p className="text-xs text-muted-foreground text-center mb-4 leading-relaxed">
-        המתכון מבוסס על מקורות חיצוניים מאומתים ועקרונות בישול קלאסיים. תמיד כדאי להפעיל שיקול דעת במטבח!
-      </p>
 
       {/* Start Cooking Button */}
       <Button

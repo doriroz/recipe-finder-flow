@@ -357,23 +357,19 @@ function applyChefLogicLocal(
       continue;
     }
 
-    // RULE 1: Core Anchor Rule — reject if recipe needs a core anchor user didn't select
-    if (missedAnchors.length > 0) {
-      console.log(`  Chef Logic REJECT (anchor) "${recipe.title}": missing anchors [${missedAnchors.join(", ")}]`);
-      continue;
-    }
+    // RULE 1: Core Anchor — soft penalty instead of hard rejection
+    let anchorPenalty = missedAnchors.length * 0.15;
 
-    // RULE 1b: Bidirectional Anchor Rule — reject if user selected a core anchor the recipe doesn't contain
+    // RULE 1b: Bidirectional Anchor — soft penalty
     for (const userIng of userSet) {
       if (isCoreAnchorHe(userIng)) {
         const recipeHasIt = recipeIngs.some(ri => ri.includes(userIng) || userIng.includes(ri));
         if (!recipeHasIt) {
-          console.log(`  Chef Logic REJECT (reverse-anchor) "${recipe.title}": user selected anchor "${userIng}" but recipe lacks it`);
-          missedAnchors.push(userIng); // reuse to trigger skip
+          console.log(`  Chef Logic PENALTY (reverse-anchor) "${recipe.title}": user selected anchor "${userIng}" but recipe lacks it`);
+          anchorPenalty += 0.15;
         }
       }
     }
-    if (missedAnchors.length > 0) continue;
 
     // RULE 2: Burden Rule — count missing non-staple ingredients
     if (missedNonStaple.length > maxBurden) {
@@ -407,6 +403,7 @@ function applyChefLogicLocal(
     let structuralBonus = 0;
     if (hasProtein) structuralBonus += 0.05;
     if (missedNonStaple.length <= 3) structuralBonus += 0.05;
+    structuralBonus -= anchorPenalty;
 
     const finalScore =
       0.55 * coverage +
@@ -414,9 +411,15 @@ function applyChefLogicLocal(
       0.15 * (1 - burdenPenalty) +
       0.10 * structuralBonus;
 
+    // Soft threshold: must meet minimum coverage, match count, and score
+    if (coverage < 0.5 || usedCount < 2 || finalScore < 0.55) {
+      console.log(`  Chef Logic REJECT (threshold) "${recipe.title}": coverage=${coverage.toFixed(2)} usedCount=${usedCount} finalScore=${finalScore.toFixed(3)}`);
+      continue;
+    }
+
     const badge = finalScore >= 0.85 ? "המלצת השף" :
                   finalScore >= 0.70 ? "התאמה מצוינת" :
-                  "המלצת השף"; // Step 1 local matches always get chef recommendation
+                  "המלצת השף";
 
     let contextLine = "";
     if (usedCount >= 5) contextLine = `משתמש ב-${usedCount} מהמצרכים שבחרת`;
@@ -832,30 +835,24 @@ function scoreCandidatesWithChefLogic(findData: any[], userCount: number, userIn
       continue;
     }
 
-    // RULE 1: Core Anchor Rule — reject if missing a core anchor
+    // RULE 1: Core Anchor — soft penalty instead of hard rejection
     const missedAnchors = missedIngredients.filter((i: any) =>
       CORE_ANCHOR_INGREDIENTS_EN.has((i.name || "").toLowerCase().trim())
     );
-    if (missedAnchors.length > 0) {
-      console.log(`  Chef Logic REJECT (anchor) "${c.title}": missing anchors [${missedAnchors.map((a: any) => a.name).join(", ")}]`);
-      continue;
-    }
+    let anchorPenalty = missedAnchors.length * 0.15;
 
-    // RULE 1b: Bidirectional Anchor Rule — reject if user selected a core anchor the recipe doesn't contain
-    let userAnchorMissing = false;
+    // RULE 1b: Bidirectional Anchor — soft penalty
     for (const userIng of userSet) {
       if (CORE_ANCHOR_INGREDIENTS_EN.has(userIng)) {
         const recipeHasIt = (c.usedIngredients || []).some((i: any) =>
           (i.name || "").toLowerCase().trim().includes(userIng) || userIng.includes((i.name || "").toLowerCase().trim())
         );
         if (!recipeHasIt) {
-          console.log(`  Chef Logic REJECT (reverse-anchor) "${c.title}": user selected anchor "${userIng}" but recipe lacks it`);
-          userAnchorMissing = true;
-          break;
+          console.log(`  Chef Logic PENALTY (reverse-anchor) "${c.title}": user selected anchor "${userIng}" but recipe lacks it`);
+          anchorPenalty += 0.15;
         }
       }
     }
-    if (userAnchorMissing) continue;
 
     // RULE 2: Burden Rule — count missing non-staple ingredients
     const missedNonStaple = missedIngredients.filter((i: any) =>
@@ -882,6 +879,7 @@ function scoreCandidatesWithChefLogic(findData: any[], userCount: number, userIn
     let structuralBonus = 0;
     if (hasProtein) structuralBonus += 0.05;
     if (missed <= 3) structuralBonus += 0.05;
+    structuralBonus -= anchorPenalty;
 
     const finalScore =
       0.55 * coverage +
@@ -889,9 +887,15 @@ function scoreCandidatesWithChefLogic(findData: any[], userCount: number, userIn
       0.15 * (1 - burdenPenalty) +
       0.10 * structuralBonus;
 
+    // Soft threshold: must meet minimum coverage, match count, and score
+    if (coverage < 0.5 || used < 2 || finalScore < 0.55) {
+      console.log(`  Chef Logic REJECT (threshold) "${c.title}": coverage=${coverage.toFixed(2)} used=${used} finalScore=${finalScore.toFixed(3)}`);
+      continue;
+    }
+
     const badge = finalScore >= 0.85 ? "המלצת השף" :
                   finalScore >= 0.70 ? "התאמה מצוינת" :
-                  "המלצת השף"; // Step 2 results get chef recommendation
+                  "המלצת השף";
 
     let contextLine = "";
     if (used >= 5) contextLine = `משתמש ב-${used} מהמצרכים שבחרת`;
@@ -1188,7 +1192,7 @@ serve(async (req) => {
       );
     }
 
-    // ---- STEP 1: Local DB Strict Match (Chef Logic) ----
+    // ---- STEP 1+2 MERGED: Local + API Pipeline ----
     console.log("=== STEP 1: Local DB Strict Match ===");
     const { data: library, error: libError } = await supabaseAdmin
       .from("recipe_library")
@@ -1198,89 +1202,68 @@ serve(async (req) => {
       console.error("Failed to load recipe library:", libError);
     }
 
+    let allCandidates: any[] = [];
+    let bestLocalScore = 0;
+
+    // Step 1: Local matching
     if (library && library.length > 0) {
       const localResults = applyChefLogicLocal(ingredientNames, library);
       console.log(`Step 1: ${localResults.length} recipes passed Chef Logic out of ${library.length} total`);
 
-      if (localResults.length > 0) {
-        const top3 = localResults.slice(0, 3);
-        const responseRecipes: any[] = [];
+      bestLocalScore = localResults[0]?.finalScore || 0;
 
-        for (const result of top3) {
-          const recipe = result.recipe;
-          const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, recipe.ingredient_names || []);
+      for (const result of localResults.slice(0, 5)) {
+        const recipe = result.recipe;
+        const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, recipe.ingredient_names || []);
 
-          const { data: insertedRecipe, error: insertError } = await supabase
-            .from("recipes")
-            .insert({
-              title: recipe.title,
-              ingredients: recipe.ingredients,
-              instructions: recipe.instructions,
-              substitutions: dbSubstitutions.length > 0 ? dbSubstitutions : (recipe.substitutions || []),
-              cooking_time: recipe.cooking_time || null,
-              user_id: userId,
-            })
-            .select()
-            .single();
+        const { data: insertedRecipe, error: insertError } = await supabase
+          .from("recipes")
+          .insert({
+            title: recipe.title,
+            ingredients: recipe.ingredients,
+            instructions: recipe.instructions,
+            substitutions: dbSubstitutions.length > 0 ? dbSubstitutions : (recipe.substitutions || []),
+            cooking_time: recipe.cooking_time || null,
+            user_id: userId,
+          })
+          .select()
+          .single();
 
-          if (insertError) {
-            console.error(`Failed to save local recipe: ${insertError.message}`);
-            continue;
-          }
-
-          responseRecipes.push({
-            recipe: insertedRecipe,
-            badge: result.badge,
-            contextLine: result.contextLine,
-            why_it_works: `מתכון מהמאגר המקומי – ${result.contextLine}`,
-            reliability_score: "high",
-            spoonacular_verified: false,
-            source: "local",
-            used_count: result.usedCount,
-            missed_count: result.missedCount,
-            used_ingredient_names: result.usedIngredientNames,
-            showAIButton: false,
-          });
+        if (insertError) {
+          console.error(`Failed to save local recipe: ${insertError.message}`);
+          continue;
         }
 
-        if (responseRecipes.length > 0) {
-          await logAiUsage(supabaseAdmin, userId, "recipe_generation", 0, 0, "local");
-          await incrementLocalMatchCount(supabaseAdmin, userId);
-
-          const firstResult = responseRecipes[0];
-          return new Response(
-            JSON.stringify({
-              success: true,
-              recipes: responseRecipes,
-              recipe: firstResult.recipe,
-              why_it_works: firstResult.why_it_works,
-              reliability_score: firstResult.reliability_score,
-              spoonacular_verified: false,
-              source: "local",
-            }),
-            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+        allCandidates.push({
+          recipe: insertedRecipe,
+          badge: result.badge,
+          contextLine: result.contextLine,
+          why_it_works: `מתכון מהמאגר המקומי – ${result.contextLine}`,
+          reliability_score: "high",
+          spoonacular_verified: false,
+          source: "local",
+          used_count: result.usedCount,
+          missed_count: result.missedCount,
+          used_ingredient_names: result.usedIngredientNames,
+          showAIButton: false,
+          _finalScore: result.finalScore,
+        });
       }
     }
 
-    // ---- STEP 2: External API (Spoonacular) with Chef Logic ----
-    console.log("=== STEP 2: Spoonacular with Chef Logic ===");
-    if (!LOVABLE_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "שגיאת תצורה פנימית" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    // Step 2: Call Spoonacular API if best local score < 0.8
     const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
-    if (!SPOONACULAR_API_KEY) {
-      console.error("SPOONACULAR_API_KEY not configured");
-    }
 
-    let spoonacularResults: any[] = [];
+    if (bestLocalScore < 0.8 && SPOONACULAR_API_KEY) {
+      console.log(`=== STEP 2: Spoonacular (best local score ${bestLocalScore.toFixed(3)} < 0.8) ===`);
 
-    if (SPOONACULAR_API_KEY) {
+      if (!LOVABLE_API_KEY) {
+        return new Response(
+          JSON.stringify({ error: "שגיאת תצורה פנימית" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       try {
         const rawTranslated = await translateEachHeToEn(ingredientNames);
         const englishIngredients = rawTranslated.map(t =>
@@ -1295,7 +1278,6 @@ serve(async (req) => {
         if (findRes.ok) {
           const findData = await findRes.json();
           if (findData && findData.length > 0) {
-            // Apply Chef Logic to Spoonacular candidates
             const scored = scoreCandidatesWithChefLogic(findData, userCount, englishIngredients);
 
             console.log("=== Spoonacular candidates (Chef Logic) ===");
@@ -1303,17 +1285,14 @@ serve(async (req) => {
               console.log(`  #${i + 1} "${c.title}" score=${c.finalScore.toFixed(3)} badge="${c.badge}" used=${c.usedIngredientCount} missed=${c.missedIngredientCount}`)
             );
 
-            const top3 = scored.slice(0, 3);
-            for (const candidate of top3) {
+            for (const candidate of scored.slice(0, 5)) {
               const processed = await processOneCandidate(
                 candidate, ingredientNames, englishIngredients,
                 LOVABLE_API_KEY, supabaseAdmin, SPOONACULAR_API_KEY
               );
               if (processed) {
-                // Save to recipe_library for future local matches
                 await saveSpoonacularToLibrary(supabaseAdmin, processed.recipeData);
 
-                // Look up substitutions
                 const hebrewIngNames = processed.recipeData.ingredients.map((i: any) => i.name);
                 const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, hebrewIngNames);
                 if (dbSubstitutions.length > 0) {
@@ -1338,7 +1317,7 @@ serve(async (req) => {
                   continue;
                 }
 
-                spoonacularResults.push({
+                allCandidates.push({
                   recipe: insertedRecipe,
                   badge: processed.badge,
                   contextLine: processed.contextLine,
@@ -1350,6 +1329,7 @@ serve(async (req) => {
                   missed_count: processed.recipeData.missed_count || 0,
                   used_ingredient_names: processed.recipeData.used_ingredient_names || [],
                   showAIButton: false,
+                  _finalScore: candidate.finalScore,
                 });
               }
             }
@@ -1360,21 +1340,39 @@ serve(async (req) => {
       } catch (err) {
         console.error("Spoonacular fetch error:", err);
       }
+    } else if (bestLocalScore >= 0.8) {
+      console.log(`=== STEP 2: Skipped (best local score ${bestLocalScore.toFixed(3)} >= 0.8) ===`);
     }
 
-    if (spoonacularResults.length > 0) {
-      await logAiUsage(supabaseAdmin, userId, "recipe_generation", 400, 0, "spoonacular");
+    // Merge and sort all candidates by finalScore
+    allCandidates.sort((a, b) => (b._finalScore || 0) - (a._finalScore || 0));
+    const mergedTop3 = allCandidates.slice(0, 3);
 
-      const firstResult = spoonacularResults[0];
+    if (mergedTop3.length > 0) {
+      // Clean up internal scoring field
+      const responseRecipes = mergedTop3.map(({ _finalScore, ...rest }) => rest);
+
+      const hasLocal = responseRecipes.some(r => r.source === "local");
+      const hasSpoonacular = responseRecipes.some(r => r.source === "spoonacular");
+
+      if (hasLocal) {
+        await logAiUsage(supabaseAdmin, userId, "recipe_generation", 0, 0, "local");
+        await incrementLocalMatchCount(supabaseAdmin, userId);
+      }
+      if (hasSpoonacular) {
+        await logAiUsage(supabaseAdmin, userId, "recipe_generation", 400, 0, "spoonacular");
+      }
+
+      const firstResult = responseRecipes[0];
       return new Response(
         JSON.stringify({
           success: true,
-          recipes: spoonacularResults,
+          recipes: responseRecipes,
           recipe: firstResult.recipe,
           why_it_works: firstResult.why_it_works,
           reliability_score: firstResult.reliability_score,
-          spoonacular_verified: true,
-          source: "spoonacular",
+          spoonacular_verified: firstResult.spoonacular_verified,
+          source: firstResult.source,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
