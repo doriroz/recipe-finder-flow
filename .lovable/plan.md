@@ -1,112 +1,86 @@
 
 
-## Plan: Soften Anchor Logic + Merge Pipeline + Repaint Recipe Page
+## Plan: Simplified Scoring + Restore Substitutions + Layout Match
 
-### Part 1: Soften Anchor Rejection Logic
+### What the user wants
 
-**Files: `generate-and-save-recipe/index.ts` + `debug-matching/index.ts`**
+1. **Restore SubstitutionSection** to RecipeCard — it was removed by mistake in the previous edit
+2. **Repaint the recipe page** to match the reference image (recipe card with substitutions + Magic Chef card side-by-side on desktop)
+3. **Completely replace the scoring logic** with a simple formula across both edge functions
+4. **Sync debug-matching** to use the same simplified logic
 
-Currently, both `applyChefLogicLocal` (lines 360-376) and `scoreCandidatesWithChefLogic` (lines 836-858) hard-reject recipes when an anchor is missing. Change to:
+### Part 1: New Simple Scoring Formula
 
-**Replace hard rejection with soft penalty:**
-- Remove the `continue` statements for RULE 1 (missing anchor) and RULE 1b (reverse anchor)
-- Instead, penalize `structuralBonus` by -0.15 per missing anchor
-- After scoring, only accept if: `coverage >= 0.5 AND usedCount >= 2 AND finalScore >= 0.55`
-- Recipes that fail these thresholds still get rejected, but good partial matches survive
+Replace ALL Chef Logic scoring in `generate-and-save-recipe/index.ts` and `debug-matching/index.ts`.
 
-**In `applyChefLogicLocal` (lines 360-376):**
-```text
-// OLD: if (missedAnchors.length > 0) continue;
-// NEW: Track anchor penalties for structuralBonus
-let anchorPenalty = missedAnchors.length * 0.15;
-// Also check reverse anchors, add to anchorPenalty instead of continue
-structuralBonus = structuralBonus - anchorPenalty;
-// After computing finalScore:
-if (coverage < 0.5 || usedCount < 2 || finalScore < 0.55) continue;
+**New rules (replaces `applyChefLogicLocal`, `scoreCandidatesWithChefLogic`, and `debugChefLogic`):**
+
+```
+matchCount = number of user ingredient keys found in recipe
+missingCount = recipe ingredients NOT in user's selection
+score = matchCount - (missingCount * 0.5)
+Reject ONLY if matchCount == 0
 ```
 
-Same change in `scoreCandidatesWithChefLogic` (lines 836-858) for Spoonacular candidates.
+**Remove entirely:**
+- Anchor ingredient rules (CORE_ANCHOR sets, `isCoreAnchorHe`, `isCoreAnchorEn`, anchor penalties)
+- Staple ingredient filtering from scoring (keep sets only for display/debug info)
+- 50% coverage threshold
+- Burden rules (maxBurden, burdenPenalty, burdenRatio)
+- structuralBonus / protein detection
+- Complexity rule for "Special" recipes
+- `findFallbackInspiration` function (Step 3 fallback)
 
-Same change in `debug-matching/index.ts` `debugChefLogic` and `liveStep2` functions.
+**New pipeline flow in `generate-and-save-recipe`:**
+1. Always search local recipe_library — score all, collect those with matchCount > 0
+2. If fewer than 10 local results found, call Spoonacular API
+3. Save Spoonacular results to recipe_library for caching (existing `saveSpoonacularToLibrary`)
+4. Merge local + API into one list
+5. Sort by score descending
+6. Return top 3
+7. If zero results after merge → return "no match" error (no Step 3 fallback)
 
-Scoring weights remain untouched: `0.55*coverage + 0.20*precision + 0.15*(1-burdenPenalty) + 0.10*structuralBonus`.
+**Badge assignment:**
+- score >= 3.0 → "המלצת השף"
+- score >= 1.5 → "התאמה מצוינת"  
+- else → "אפשרות יצירתית"
 
----
+### Part 2: Restore SubstitutionSection in RecipeCard
 
-### Part 2: Merge Local + API Pipeline
-
-**File: `generate-and-save-recipe/index.ts` (lines 1191-1381)**
-
-Currently Step 1 returns immediately if local results exist. Change to:
-
-1. Run Step 1 (local matching) and store results with their `finalScore`
-2. If best local score < 0.8, also run Step 2 (Spoonacular API)
-3. Merge all candidates into one array
-4. Sort by `finalScore` descending
-5. Return top 3 overall
-
-```text
-// Pseudocode for new flow:
-const localResults = applyChefLogicLocal(...)  // scored array
-const bestLocalScore = localResults[0]?.finalScore || 0
-
-let allCandidates = [...process local results into response format]
-
-if (bestLocalScore < 0.8 && SPOONACULAR_API_KEY) {
-  // Run Step 2
-  const spoonacularResults = [...process spoonacular candidates]
-  allCandidates = [...allCandidates, ...spoonacularResults]
-}
-
-// Sort merged results by finalScore
-allCandidates.sort((a, b) => b.finalScore - a.finalScore)
-const top3 = allCandidates.slice(0, 3)
-
-if (top3.length > 0) return top3
-// else fall through to Step 3 fallback
-```
-
-This requires storing `finalScore` on each response recipe item temporarily for sorting. The `RecipeResultItem` type and response shape stay the same.
-
----
-
-### Part 3: Repaint Recipe Page
-
-**Reference image analysis:** The user crossed out the bottom section of the recipe card. The desired layout keeps:
-- Header with back button + logo
-- Badge + context line
-- Recipe title + description + quick stats (time, difficulty, servings)
-- Ingredient match indicator (green/amber chips)
-- Ingredients list with servings adjuster
-- "Let's Cook" button
-
-**Remove/hide (crossed out in image):**
-- Reliability score + source badge row
-- Chef's Tip (why_it_works)
-- Diet Filter section
-- Substitutions section
-- AI disclaimer text
-
-The Magic Chef card (left side in image) stays as-is in the carousel for partial matches.
+Add back the SubstitutionSection component import and render it after the ingredients list, before the "Let's Cook" button. The image clearly shows the smart substitutions section.
 
 **File: `src/components/RecipeCard.tsx`**
+- Import `SubstitutionSection`
+- Render it between ingredients list and button, passing `substitutions`, `ingredients` (as string[]), and `recipeTitle`
 
-Remove lines 286-335 (reliability score, chef tip, diet filter, substitutions, AI disclaimer). Keep the clean flow: header → match badge → ingredients → cook button.
+### Part 3: Recipe Page Layout (match reference image)
 
-Also refine visual styling to match the image's cleaner, rounder card aesthetic:
-- Softer card with more rounded corners
-- Cleaner spacing between sections
-- The "Let's Cook" button remains full-width at the bottom
+The reference image shows on desktop: Magic Chef card on the LEFT, Recipe card on the RIGHT, side by side. On mobile: stacked.
 
----
+**File: `src/pages/RecipeResult.tsx`** (multi-recipe carousel section)
+- Use a 2-column grid on `lg` screens: left = MagicChefCard (sticky), right = RecipeCarousel
+- On mobile: MagicChefCard below the carousel (existing behavior)
+
+**File: `src/components/RecipeCarousel.tsx`**
+- No major changes needed, the MagicChefCard already exists
+
+### Part 4: Sync debug-matching
+
+**File: `supabase/functions/debug-matching/index.ts`**
+- Replace `debugChefLogic` with the same simple formula: `score = matchCount - (missingCount * 0.5)`, reject only if matchCount == 0
+- Replace `liveStep2` scoring with the same formula
+- Remove Step 3 simulation (no longer needed)
+- Keep translation/API call logic unchanged
+- Update the formula reference in the response
 
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `supabase/functions/generate-and-save-recipe/index.ts` | Soften anchor rejection in `applyChefLogicLocal` + `scoreCandidatesWithChefLogic`; merge local+API pipeline |
-| `supabase/functions/debug-matching/index.ts` | Mirror softened anchor logic in `debugChefLogic` + `liveStep2` |
-| `src/components/RecipeCard.tsx` | Remove crossed-out sections (reliability, chef tip, diet, substitutions, disclaimer) |
+| `supabase/functions/generate-and-save-recipe/index.ts` | Replace scoring with simple formula, remove anchors/burden/thresholds, new merge pipeline |
+| `supabase/functions/debug-matching/index.ts` | Mirror simplified scoring, remove Step 3 |
+| `src/components/RecipeCard.tsx` | Restore SubstitutionSection |
+| `src/pages/RecipeResult.tsx` | 2-column layout for Magic Chef + recipe on desktop |
 
 ### Deployment
 - Redeploy both edge functions
