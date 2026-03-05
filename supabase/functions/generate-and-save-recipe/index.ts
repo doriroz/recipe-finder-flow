@@ -21,20 +21,6 @@ interface RecipeResponse {
   used_ingredient_names?: string[];
 }
 
-interface ScoredCandidate {
-  id: number;
-  title: string;
-  usedIngredientCount: number;
-  missedIngredientCount: number;
-  usedIngredients: any[];
-  missedIngredients: any[];
-  finalScore: number;
-  coverage: number;
-  precision: number;
-  badge: string;
-  contextLine: string;
-}
-
 interface RecipeResultItem {
   recipe: any;
   badge: string;
@@ -50,30 +36,6 @@ interface RecipeResultItem {
 }
 
 type DifficultyLevel = "low" | "medium" | "high";
-
-// ============ CHEF LOGIC: STAPLE & ANCHOR LISTS ============
-
-const STAPLE_INGREDIENTS_HE = new Set([
-  "מלח", "פלפל שחור", "שמן זית", "שמן קנולה", "סוכר", "מים", "חומץ", "רוטב סויה",
-  "שמן", "פלפל",
-]);
-
-const CORE_ANCHOR_INGREDIENTS_HE = new Set([
-  "עוף", "בשר טחון", "סלמון", "טונה", "חזה עוף", "בשר בקר", "ביצה", "טופו",
-  "פסטה", "אורז", "קוסקוס", "שריות עוף", "דג סול", "נקניקיות",
-  "חציל", "כרוב", "תפוח אדמה", "בטטה", "כרובית", "דלעת",
-]);
-
-const CORE_ANCHOR_INGREDIENTS_EN = new Set([
-  "chicken", "beef", "ground beef", "salmon", "tuna", "chicken breast", "egg", "tofu",
-  "pasta", "rice", "couscous", "turkey", "lamb", "pork", "sausage", "steak", "fish",
-  "eggplant", "cabbage", "potato", "sweet potato", "cauliflower", "squash", "pumpkin",
-]);
-
-const STAPLE_INGREDIENTS_EN = new Set([
-  "salt", "black pepper", "pepper", "olive oil", "canola oil", "sugar", "water",
-  "vinegar", "soy sauce", "oil", "vegetable oil",
-]);
 
 // ============ MYMEMORY TRANSLATION (Hebrew→English only) ============
 
@@ -266,7 +228,7 @@ async function findSubstitutionsFromDB(
   }
 }
 
-// ============ CHEF LOGIC: RULES & SCORING ============
+// ============ SIMPLE SCORING LOGIC ============
 
 interface LibraryRecipe {
   id: string;
@@ -280,219 +242,123 @@ interface LibraryRecipe {
   complexity?: string;
 }
 
-interface ChefScoredRecipe {
+interface ScoredRecipe {
   recipe: LibraryRecipe;
-  finalScore: number;
-  usedCount: number;
-  missedCount: number;
+  score: number;
+  matchCount: number;
+  missingCount: number;
   usedIngredientNames: string[];
   badge: string;
   contextLine: string;
 }
 
-function isStapleHe(name: string): boolean {
-  const lower = name.trim();
-  for (const s of STAPLE_INGREDIENTS_HE) {
-    if (lower === s || lower.includes(s) || s.includes(lower)) return true;
-  }
-  return false;
-}
-
-function isCoreAnchorHe(name: string): boolean {
-  const lower = name.trim();
-  for (const a of CORE_ANCHOR_INGREDIENTS_HE) {
-    if (lower === a || lower.includes(a) || a.includes(lower)) return true;
-  }
-  return false;
-}
-
-function applyChefLogicLocal(
+/**
+ * Simple scoring: score = matchCount - (missingCount * 0.5)
+ * Reject only if matchCount == 0
+ */
+function scoreLocalRecipes(
   userIngredients: string[],
   library: LibraryRecipe[]
-): ChefScoredRecipe[] {
+): ScoredRecipe[] {
   const userSet = new Set(userIngredients.map(i => i.trim()));
-  const userCount = userIngredients.length;
-  const maxBurden = userCount <= 2 ? 2 : 3;
-
-  const proteinKwHe = ["עוף", "בשר", "סלמון", "טונה", "דג", "ביצה", "טופו", "נקניק"];
-
-  const results: ChefScoredRecipe[] = [];
+  const results: ScoredRecipe[] = [];
 
   for (const recipe of library) {
     const recipeIngs = recipe.ingredient_names || [];
     if (recipeIngs.length === 0) continue;
 
-    // Separate recipe ingredients into staple and non-staple
-    const nonStapleRecipeIngs = recipeIngs.filter(i => !isStapleHe(i));
-    const anchorRecipeIngs = recipeIngs.filter(i => isCoreAnchorHe(i));
-
-    // Match user ingredients against recipe ingredients
+    // Count matches
     const usedNames: string[] = [];
-    const missedNonStaple: string[] = [];
-    const missedAnchors: string[] = [];
-
     for (const recipeIng of recipeIngs) {
-      let found = false;
       for (const userIng of userSet) {
         if (userIng === recipeIng || userIng.includes(recipeIng) || recipeIng.includes(userIng)) {
-          found = true;
           usedNames.push(recipeIng);
           break;
         }
       }
-      if (!found) {
-        if (!isStapleHe(recipeIng)) {
-          missedNonStaple.push(recipeIng);
-        }
-        if (isCoreAnchorHe(recipeIng)) {
-          missedAnchors.push(recipeIng);
-        }
-      }
     }
 
-    // RULE 0: Minimum Match Rule — reject if zero ingredient overlap
-    const usedCountCheck = usedNames.length;
-    if (usedCountCheck === 0) {
-      console.log(`  Chef Logic REJECT (zero-match) "${recipe.title}": no ingredient overlap`);
-      continue;
-    }
+    const matchCount = usedNames.length;
+    // Reject only if zero matches
+    if (matchCount === 0) continue;
 
-    // RULE 1: Core Anchor — soft penalty instead of hard rejection
-    let anchorPenalty = missedAnchors.length * 0.15;
+    const missingCount = recipeIngs.length - matchCount;
+    const score = matchCount - (missingCount * 0.5);
 
-    // RULE 1b: Bidirectional Anchor — soft penalty
-    for (const userIng of userSet) {
-      if (isCoreAnchorHe(userIng)) {
-        const recipeHasIt = recipeIngs.some(ri => ri.includes(userIng) || userIng.includes(ri));
-        if (!recipeHasIt) {
-          console.log(`  Chef Logic PENALTY (reverse-anchor) "${recipe.title}": user selected anchor "${userIng}" but recipe lacks it`);
-          anchorPenalty += 0.15;
-        }
-      }
-    }
-
-    // RULE 2: Burden Rule — count missing non-staple ingredients
-    if (missedNonStaple.length > maxBurden) {
-      console.log(`  Chef Logic REJECT (burden) "${recipe.title}": ${missedNonStaple.length} missing non-staples > max ${maxBurden}`);
-      continue;
-    }
-
-    // RULE 3: Complexity Rule — Special recipes need >= 80% non-staple coverage
-    if (recipe.complexity === "Special") {
-      const nonStapleCoverage = nonStapleRecipeIngs.length > 0
-        ? (nonStapleRecipeIngs.length - missedNonStaple.length) / nonStapleRecipeIngs.length
-        : 0;
-      if (nonStapleCoverage < 0.8) {
-        console.log(`  Chef Logic REJECT (complexity) "${recipe.title}": Special recipe, non-staple coverage ${(nonStapleCoverage * 100).toFixed(0)}% < 80%`);
-        continue;
-      }
-    }
-
-    // SCORING
-    const usedCount = usedNames.length;
-    const totalIngredients = recipeIngs.length;
-    const coverage = userCount > 0 ? usedCount / userCount : 0;
-    const precision = totalIngredients > 0 ? usedCount / totalIngredients : 0;
-
-    const extraCount = totalIngredients - usedCount;
-    const burdenRatio = userCount > 0 ? extraCount / userCount : 0;
-    const maxBurdenRatio = userCount <= 3 ? 0.75 : userCount <= 5 ? 1.0 : 1.5;
-    const burdenPenalty = Math.min(burdenRatio / maxBurdenRatio, 1);
-
-    const hasProtein = usedNames.some(n => proteinKwHe.some(p => n.includes(p)));
-    let structuralBonus = 0;
-    if (hasProtein) structuralBonus += 0.05;
-    if (missedNonStaple.length <= 3) structuralBonus += 0.05;
-    structuralBonus -= anchorPenalty;
-
-    const finalScore =
-      0.55 * coverage +
-      0.20 * precision +
-      0.15 * (1 - burdenPenalty) +
-      0.10 * structuralBonus;
-
-    // Soft threshold: must meet minimum coverage, match count, and score
-    if (coverage < 0.5 || usedCount < 2 || finalScore < 0.55) {
-      console.log(`  Chef Logic REJECT (threshold) "${recipe.title}": coverage=${coverage.toFixed(2)} usedCount=${usedCount} finalScore=${finalScore.toFixed(3)}`);
-      continue;
-    }
-
-    const badge = finalScore >= 0.85 ? "המלצת השף" :
-                  finalScore >= 0.70 ? "התאמה מצוינת" :
-                  "המלצת השף";
+    // Badge assignment
+    const badge = score >= 3.0 ? "המלצת השף" :
+                  score >= 1.5 ? "התאמה מצוינת" :
+                  "אפשרות יצירתית";
 
     let contextLine = "";
-    if (usedCount >= 5) contextLine = `משתמש ב-${usedCount} מהמצרכים שבחרת`;
-    else if (missedNonStaple.length <= 2) contextLine = `דורש רק ${missedNonStaple.length} תוספות קטנות`;
-    else contextLine = `מבוסס על ${usedCount} מהמצרכים שלך`;
+    if (matchCount >= 5) contextLine = `משתמש ב-${matchCount} מהמצרכים שבחרת`;
+    else if (missingCount <= 2) contextLine = `דורש רק ${missingCount} תוספות קטנות`;
+    else contextLine = `מבוסס על ${matchCount} מהמצרכים שלך`;
 
     results.push({
       recipe,
-      finalScore,
-      usedCount,
-      missedCount: missedNonStaple.length,
+      score,
+      matchCount,
+      missingCount,
       usedIngredientNames: usedNames,
       badge,
       contextLine,
     });
   }
 
-  // Sort by score descending
-  results.sort((a, b) => b.finalScore - a.finalScore);
+  results.sort((a, b) => b.score - a.score);
   return results;
 }
 
-// ============ STEP 3: LOCAL FALLBACK INSPIRATION ============
+/**
+ * Simple scoring for Spoonacular candidates
+ */
+interface ScoredSpoonacular {
+  id: number;
+  title: string;
+  usedIngredientCount: number;
+  missedIngredientCount: number;
+  usedIngredients: any[];
+  missedIngredients: any[];
+  score: number;
+  badge: string;
+  contextLine: string;
+  coverage: number;
+}
 
-function findFallbackInspiration(
-  userIngredients: string[],
-  library: LibraryRecipe[]
-): ChefScoredRecipe | null {
-  // Collect ALL user anchors
-  const userAnchors = userIngredients.filter(i => isCoreAnchorHe(i));
-  if (userAnchors.length === 0) return null;
+function scoreSpoonacularCandidates(findData: any[], userCount: number): ScoredSpoonacular[] {
+  const scored: ScoredSpoonacular[] = [];
 
-  const userSet = new Set(userIngredients.map(i => i.trim()));
+  for (const c of findData) {
+    const used = c.usedIngredientCount || 0;
+    const missed = c.missedIngredientCount || 0;
 
-  for (const recipe of library) {
-    if (recipe.complexity === "Special") continue;
-    const recipeIngs = recipe.ingredient_names || [];
+    if (used === 0) continue;
 
-    // NEW: Check ALL user anchors are present in recipe (bidirectional anchor rule)
-    let allAnchorsPresent = true;
-    for (const anchor of userAnchors) {
-      const recipeHasIt = recipeIngs.some(ri => ri.includes(anchor) || anchor.includes(ri));
-      if (!recipeHasIt) {
-        allAnchorsPresent = false;
-        break;
-      }
-    }
-    if (!allAnchorsPresent) continue;
+    const score = used - (missed * 0.5);
 
-    // Compute used ingredients
-    const usedNames = recipeIngs.filter(ri => {
-      for (const ui of userSet) {
-        if (ui === ri || ui.includes(ri) || ri.includes(ui)) return true;
-      }
-      return false;
+    const badge = score >= 3.0 ? "המלצת השף" :
+                  score >= 1.5 ? "התאמה מצוינת" :
+                  "אפשרות יצירתית";
+
+    let contextLine = "";
+    if (used >= 5) contextLine = `משתמש ב-${used} מהמצרכים שבחרת`;
+    else if (missed <= 2) contextLine = `דורש רק ${missed} תוספות קטנות`;
+    else contextLine = `מבוסס על ${used} מהמצרכים שלך`;
+
+    scored.push({
+      ...c,
+      usedIngredientCount: used,
+      missedIngredientCount: missed,
+      score,
+      badge,
+      contextLine,
+      coverage: userCount > 0 ? used / userCount : 0,
     });
-
-    // NEW: Zero-match guard — skip if no overlap at all
-    if (usedNames.length === 0) continue;
-
-    const bestAnchor = userAnchors[0];
-    return {
-      recipe,
-      finalScore: 0.3,
-      usedCount: usedNames.length,
-      missedCount: recipeIngs.length - usedNames.length,
-      usedIngredientNames: usedNames,
-      badge: "השראה למצרך שלך",
-      contextLine: `לא מצאנו התאמה מושלמת, אבל הנה מתכון יומיומי קלאסי ל${bestAnchor}`,
-    };
   }
 
-  return null; // no valid fallback -> triggers Step 4
+  scored.sort((a, b) => b.score - a.score);
+  return scored;
 }
 
 // ============ CREDIT & RATE LIMITING ============
@@ -816,112 +682,10 @@ No extra text.`,
   }
 }
 
-// ============ SPOONACULAR SCORING WITH CHEF LOGIC ============
-
-function scoreCandidatesWithChefLogic(findData: any[], userCount: number, userIngredientsEn: string[]): ScoredCandidate[] {
-  const userSet = new Set(userIngredientsEn.map(i => i.toLowerCase().trim()));
-  const maxBurden = userCount <= 2 ? 2 : 3;
-
-  const scored: ScoredCandidate[] = [];
-
-  for (const c of findData) {
-    const used = c.usedIngredientCount || 0;
-    const missed = c.missedIngredientCount || 0;
-    const missedIngredients = c.missedIngredients || [];
-
-    // RULE 0: Minimum Match Rule — reject if zero ingredient overlap
-    if (used === 0) {
-      console.log(`  Chef Logic REJECT (zero-match) "${c.title}": no ingredient overlap`);
-      continue;
-    }
-
-    // RULE 1: Core Anchor — soft penalty instead of hard rejection
-    const missedAnchors = missedIngredients.filter((i: any) =>
-      CORE_ANCHOR_INGREDIENTS_EN.has((i.name || "").toLowerCase().trim())
-    );
-    let anchorPenalty = missedAnchors.length * 0.15;
-
-    // RULE 1b: Bidirectional Anchor — soft penalty
-    for (const userIng of userSet) {
-      if (CORE_ANCHOR_INGREDIENTS_EN.has(userIng)) {
-        const recipeHasIt = (c.usedIngredients || []).some((i: any) =>
-          (i.name || "").toLowerCase().trim().includes(userIng) || userIng.includes((i.name || "").toLowerCase().trim())
-        );
-        if (!recipeHasIt) {
-          console.log(`  Chef Logic PENALTY (reverse-anchor) "${c.title}": user selected anchor "${userIng}" but recipe lacks it`);
-          anchorPenalty += 0.15;
-        }
-      }
-    }
-
-    // RULE 2: Burden Rule — count missing non-staple ingredients
-    const missedNonStaple = missedIngredients.filter((i: any) =>
-      !STAPLE_INGREDIENTS_EN.has((i.name || "").toLowerCase().trim())
-    );
-    if (missedNonStaple.length > maxBurden) {
-      console.log(`  Chef Logic REJECT (burden) "${c.title}": ${missedNonStaple.length} missing non-staples > max ${maxBurden}`);
-      continue;
-    }
-
-    // SCORING
-    const totalIngredients = used + missed;
-    const coverage = userCount > 0 ? used / userCount : 0;
-    const precision = totalIngredients > 0 ? used / totalIngredients : 0;
-
-    const extraCount = totalIngredients - used;
-    const burdenRatio = userCount > 0 ? extraCount / userCount : 0;
-    const maxBurdenRatio = userCount <= 3 ? 0.75 : userCount <= 5 ? 1.0 : 1.5;
-    const burdenPenalty = Math.min(burdenRatio / maxBurdenRatio, 1);
-
-    const proteinKeywords = ["chicken","beef","pork","fish","salmon","tuna","shrimp","egg","tofu","lamb","turkey","sausage","meat","steak"];
-    const hasProtein = (c.usedIngredients || []).some((i: any) =>
-      proteinKeywords.some(p => (i.name || "").toLowerCase().includes(p)));
-    let structuralBonus = 0;
-    if (hasProtein) structuralBonus += 0.05;
-    if (missed <= 3) structuralBonus += 0.05;
-    structuralBonus -= anchorPenalty;
-
-    const finalScore =
-      0.55 * coverage +
-      0.20 * precision +
-      0.15 * (1 - burdenPenalty) +
-      0.10 * structuralBonus;
-
-    // Soft threshold: must meet minimum coverage, match count, and score
-    if (coverage < 0.5 || used < 2 || finalScore < 0.55) {
-      console.log(`  Chef Logic REJECT (threshold) "${c.title}": coverage=${coverage.toFixed(2)} used=${used} finalScore=${finalScore.toFixed(3)}`);
-      continue;
-    }
-
-    const badge = finalScore >= 0.85 ? "המלצת השף" :
-                  finalScore >= 0.70 ? "התאמה מצוינת" :
-                  "המלצת השף";
-
-    let contextLine = "";
-    if (used >= 5) contextLine = `משתמש ב-${used} מהמצרכים שבחרת`;
-    else if (missedNonStaple.length <= 2) contextLine = `דורש רק ${missedNonStaple.length} תוספות קטנות`;
-    else contextLine = `מבוסס על ${used} מהמצרכים שלך`;
-
-    scored.push({
-      ...c,
-      usedIngredientCount: used,
-      missedIngredientCount: missed,
-      finalScore,
-      coverage,
-      precision,
-      badge,
-      contextLine,
-    });
-  }
-
-  scored.sort((a, b) => b.finalScore - a.finalScore);
-  return scored;
-}
-
 // ============ SPOONACULAR RECIPE FETCHING ============
 
 async function processOneCandidate(
-  candidate: ScoredCandidate,
+  candidate: ScoredSpoonacular,
   hebrewIngredients: string[],
   englishIngredients: string[],
   apiKey: string,
@@ -1053,7 +817,7 @@ async function saveSpoonacularToLibrary(
   }
 }
 
-// ============ MAIN HANDLER: 4-STEP WATERFALL ============
+// ============ MAIN HANDLER ============
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -1126,9 +890,9 @@ serve(async (req) => {
       ingredientNames = ingredients.map((i: any) => typeof i === "string" ? i : i.name);
     }
 
-    // ---- STEP 4 (forceCreative): AI On-Demand ----
+    // ---- forceCreative: AI On-Demand ----
     if (forceCreative) {
-      console.log("=== STEP 4: forceCreative AI generation ===");
+      console.log("=== AI On-Demand: forceCreative ===");
       const creditCheck = await checkAndDeductCredits(supabaseAdmin, userId, 2, "creative_recipe");
       if (!creditCheck.allowed) {
         return new Response(JSON.stringify({ error: creditCheck.reason }), {
@@ -1192,8 +956,8 @@ serve(async (req) => {
       );
     }
 
-    // ---- STEP 1+2 MERGED: Local + API Pipeline ----
-    console.log("=== STEP 1: Local DB Strict Match ===");
+    // ---- SIMPLE PIPELINE: Local + API merged ----
+    console.log("=== Step 1: Local DB matching (simple scoring) ===");
     const { data: library, error: libError } = await supabaseAdmin
       .from("recipe_library")
       .select("*");
@@ -1203,59 +967,55 @@ serve(async (req) => {
     }
 
     let allCandidates: any[] = [];
-    let bestLocalScore = 0;
 
-    // Step 1: Local matching
-    if (library && library.length > 0) {
-      const localResults = applyChefLogicLocal(ingredientNames, library);
-      console.log(`Step 1: ${localResults.length} recipes passed Chef Logic out of ${library.length} total`);
+    // Step 1: Score local recipes
+    const localResults = (library && library.length > 0) ? scoreLocalRecipes(ingredientNames, library) : [];
+    console.log(`Local: ${localResults.length} recipes with matchCount > 0 out of ${library?.length || 0} total`);
 
-      bestLocalScore = localResults[0]?.finalScore || 0;
+    // Insert local results as candidates
+    for (const result of localResults.slice(0, 10)) {
+      const recipe = result.recipe;
+      const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, recipe.ingredient_names || []);
 
-      for (const result of localResults.slice(0, 5)) {
-        const recipe = result.recipe;
-        const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, recipe.ingredient_names || []);
+      const { data: insertedRecipe, error: insertError } = await supabase
+        .from("recipes")
+        .insert({
+          title: recipe.title,
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
+          substitutions: dbSubstitutions.length > 0 ? dbSubstitutions : (recipe.substitutions || []),
+          cooking_time: recipe.cooking_time || null,
+          user_id: userId,
+        })
+        .select()
+        .single();
 
-        const { data: insertedRecipe, error: insertError } = await supabase
-          .from("recipes")
-          .insert({
-            title: recipe.title,
-            ingredients: recipe.ingredients,
-            instructions: recipe.instructions,
-            substitutions: dbSubstitutions.length > 0 ? dbSubstitutions : (recipe.substitutions || []),
-            cooking_time: recipe.cooking_time || null,
-            user_id: userId,
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error(`Failed to save local recipe: ${insertError.message}`);
-          continue;
-        }
-
-        allCandidates.push({
-          recipe: insertedRecipe,
-          badge: result.badge,
-          contextLine: result.contextLine,
-          why_it_works: `מתכון מהמאגר המקומי – ${result.contextLine}`,
-          reliability_score: "high",
-          spoonacular_verified: false,
-          source: "local",
-          used_count: result.usedCount,
-          missed_count: result.missedCount,
-          used_ingredient_names: result.usedIngredientNames,
-          showAIButton: false,
-          _finalScore: result.finalScore,
-        });
+      if (insertError) {
+        console.error(`Failed to save local recipe: ${insertError.message}`);
+        continue;
       }
+
+      allCandidates.push({
+        recipe: insertedRecipe,
+        badge: result.badge,
+        contextLine: result.contextLine,
+        why_it_works: `מתכון מהמאגר המקומי – ${result.contextLine}`,
+        reliability_score: "high",
+        spoonacular_verified: false,
+        source: "local",
+        used_count: result.matchCount,
+        missed_count: result.missingCount,
+        used_ingredient_names: result.usedIngredientNames,
+        showAIButton: false,
+        _score: result.score,
+      });
     }
 
-    // Step 2: Call Spoonacular API if best local score < 0.8
+    // Step 2: Call Spoonacular API if fewer than 10 local results
     const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
 
-    if (bestLocalScore < 0.8 && SPOONACULAR_API_KEY) {
-      console.log(`=== STEP 2: Spoonacular (best local score ${bestLocalScore.toFixed(3)} < 0.8) ===`);
+    if (localResults.length < 10 && SPOONACULAR_API_KEY) {
+      console.log(`=== Step 2: Spoonacular API (only ${localResults.length} local results < 10) ===`);
 
       if (!LOVABLE_API_KEY) {
         return new Response(
@@ -1278,11 +1038,11 @@ serve(async (req) => {
         if (findRes.ok) {
           const findData = await findRes.json();
           if (findData && findData.length > 0) {
-            const scored = scoreCandidatesWithChefLogic(findData, userCount, englishIngredients);
+            const scored = scoreSpoonacularCandidates(findData, userCount);
 
-            console.log("=== Spoonacular candidates (Chef Logic) ===");
+            console.log("=== Spoonacular candidates (simple scoring) ===");
             scored.forEach((c, i) =>
-              console.log(`  #${i + 1} "${c.title}" score=${c.finalScore.toFixed(3)} badge="${c.badge}" used=${c.usedIngredientCount} missed=${c.missedIngredientCount}`)
+              console.log(`  #${i + 1} "${c.title}" score=${c.score.toFixed(2)} badge="${c.badge}" used=${c.usedIngredientCount} missed=${c.missedIngredientCount}`)
             );
 
             for (const candidate of scored.slice(0, 5)) {
@@ -1329,7 +1089,7 @@ serve(async (req) => {
                   missed_count: processed.recipeData.missed_count || 0,
                   used_ingredient_names: processed.recipeData.used_ingredient_names || [],
                   showAIButton: false,
-                  _finalScore: candidate.finalScore,
+                  _score: candidate.score,
                 });
               }
             }
@@ -1340,17 +1100,16 @@ serve(async (req) => {
       } catch (err) {
         console.error("Spoonacular fetch error:", err);
       }
-    } else if (bestLocalScore >= 0.8) {
-      console.log(`=== STEP 2: Skipped (best local score ${bestLocalScore.toFixed(3)} >= 0.8) ===`);
+    } else if (localResults.length >= 10) {
+      console.log(`=== Step 2: Skipped (${localResults.length} local results >= 10) ===`);
     }
 
-    // Merge and sort all candidates by finalScore
-    allCandidates.sort((a, b) => (b._finalScore || 0) - (a._finalScore || 0));
+    // Merge and sort all candidates by score
+    allCandidates.sort((a, b) => (b._score || 0) - (a._score || 0));
     const mergedTop3 = allCandidates.slice(0, 3);
 
     if (mergedTop3.length > 0) {
-      // Clean up internal scoring field
-      const responseRecipes = mergedTop3.map(({ _finalScore, ...rest }) => rest);
+      const responseRecipes = mergedTop3.map(({ _score, ...rest }) => rest);
 
       const hasLocal = responseRecipes.some(r => r.source === "local");
       const hasSpoonacular = responseRecipes.some(r => r.source === "spoonacular");
@@ -1376,61 +1135,6 @@ serve(async (req) => {
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-    }
-
-    // ---- STEP 3: Local Fallback Inspiration ----
-    console.log("=== STEP 3: Local Fallback Inspiration ===");
-    if (library && library.length > 0) {
-      const fallback = findFallbackInspiration(ingredientNames, library);
-
-      if (fallback) {
-        console.log(`Step 3 fallback: "${fallback.recipe.title}" for user's anchor ingredient`);
-
-        const recipe = fallback.recipe;
-        const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, recipe.ingredient_names || []);
-
-        const { data: insertedRecipe, error: insertError } = await supabase
-          .from("recipes")
-          .insert({
-            title: recipe.title,
-            ingredients: recipe.ingredients,
-            instructions: recipe.instructions,
-            substitutions: dbSubstitutions.length > 0 ? dbSubstitutions : (recipe.substitutions || []),
-            cooking_time: recipe.cooking_time || null,
-            user_id: userId,
-          })
-          .select()
-          .single();
-
-        if (insertError) throw new Error(`Failed to save recipe: ${insertError.message}`);
-
-        await logAiUsage(supabaseAdmin, userId, "recipe_generation", 0, 0, "local_fallback");
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            recipes: [{
-              recipe: insertedRecipe,
-              badge: fallback.badge,
-              contextLine: fallback.contextLine,
-              why_it_works: `השראה מהמאגר המקומי – ${fallback.contextLine}`,
-              reliability_score: "medium",
-              spoonacular_verified: false,
-              source: "local",
-              used_count: fallback.usedCount,
-              missed_count: fallback.missedCount,
-              used_ingredient_names: fallback.usedIngredientNames,
-              showAIButton: true,
-            }],
-            recipe: insertedRecipe,
-            why_it_works: `השראה מהמאגר המקומי – ${fallback.contextLine}`,
-            reliability_score: "medium",
-            spoonacular_verified: false,
-            source: "local",
-          }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
     }
 
     // No results at all

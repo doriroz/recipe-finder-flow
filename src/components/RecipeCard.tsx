@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Clock, Users, ChefHat, Plus, Minus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SubstitutionSection from "@/components/SubstitutionSection";
 
 interface Substitution {
   original: string;
@@ -276,6 +277,19 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         </ul>
       </div>
 
+
+      {/* Smart Substitutions */}
+      {recipe.substitutions && recipe.substitutions.length > 0 && (
+        <div className="mb-6">
+          <SubstitutionSection
+            substitutions={recipe.substitutions}
+            ingredients={recipe.ingredients.map(ing =>
+              typeof ing === "string" ? ing : ingredientToString(ing)
+            )}
+            recipeTitle={recipe.title}
+          />
+        </div>
+      )}
 
       {/* Start Cooking Button */}
       <Button
