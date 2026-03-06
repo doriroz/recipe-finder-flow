@@ -181,12 +181,7 @@ const RecipeResult = () => {
           <RecipeCarousel
             recipeItems={recipeItems}
             onStartCooking={handleStartCooking}
-            onGenerateAI={userIngredientNames.length > 0 ? () => {
-              generateRecipe({
-                ingredients: userIngredientNames.map((name, i) => ({ id: i, name, emoji: "", category: "" })),
-                forceCreative: true,
-              });
-            } : undefined}
+            onGenerateAI={handleGenerateAI}
           />
           {isGeneratingAI && (
             <div className="flex flex-col items-center justify-center py-8">
