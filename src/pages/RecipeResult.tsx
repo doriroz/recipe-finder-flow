@@ -28,6 +28,11 @@ const RecipeResult = () => {
   const [recipeItems, setRecipeItems] = useState<RecipeResultItem[] | null>(null);
   const [userIngredientNames, setUserIngredientNames] = useState<string[]>([]);
 
+  // No-match state
+  const [noMatch, setNoMatch] = useState(false);
+  const [noMatchMessage, setNoMatchMessage] = useState("");
+  const [popularRecipes, setPopularRecipes] = useState<any[]>([]);
+
   // Legacy single-recipe state (backwards compat)
   const [whyItWorks, setWhyItWorks] = useState<string | undefined>();
   const [reliabilityScore, setReliabilityScore] = useState<"high" | "medium" | "creative">("medium");
@@ -41,6 +46,15 @@ const RecipeResult = () => {
   useEffect(() => {
     const state = location.state as any | null;
     if (!state) return;
+
+    // No-match format
+    if (state.noMatch) {
+      setNoMatch(true);
+      setNoMatchMessage(state.message || "לא נמצאו מתכונים מתאימים למצרכים שבחרת");
+      setPopularRecipes(state.popularRecipes || []);
+      if (state.ingredientNames) setUserIngredientNames(state.ingredientNames);
+      return;
+    }
 
     // New multi-recipe format
     if (state.recipes && Array.isArray(state.recipes) && state.recipes.length > 0) {
@@ -63,13 +77,80 @@ const RecipeResult = () => {
   const { data: specificRecipe, isLoading: loadingSpecific } = useRecipe(recipeId);
   const { data: userRecipes, isLoading: loadingRecipes } = useUserRecipes();
 
-  const isLoading = authLoading || (recipeItems === null && (loadingSpecific || loadingRecipes));
+  const isLoading = authLoading || (!noMatch && recipeItems === null && (loadingSpecific || loadingRecipes));
 
   const handleStartCooking = (selectedRecipeId: string) => {
     setCookingSessionActive(true);
     setLockedRecipeId(selectedRecipeId);
     navigate(`/cooking?id=${selectedRecipeId}`);
   };
+
+  const handleGenerateAI = userIngredientNames.length > 0 ? () => {
+    generateRecipe({
+      ingredients: userIngredientNames.map((name, i) => ({ id: i, name, emoji: "", category: "" })),
+      forceCreative: true,
+    });
+  } : undefined;
+
+  // No-match view
+  if (noMatch) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border sticky top-0 z-10">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" onClick={() => navigate("/ingredients")} className="flex items-center gap-2">
+                <ArrowRight className="w-5 h-5" />
+                חזרה
+              </Button>
+              <div className="flex items-center gap-2">
+                <ChefHat className="w-6 h-6 text-primary" />
+                <span className="font-bold text-foreground">מה שיש</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-8 pb-24">
+          <div className="text-center space-y-4 mb-8">
+            <div className="text-5xl">🍽️</div>
+            <h2 className="text-xl font-bold text-foreground">{noMatchMessage}</h2>
+            <p className="text-muted-foreground text-sm">נסו להוסיף עוד מצרכים או צרו מתכון עם AI</p>
+          </div>
+
+          {/* AI button */}
+          {handleGenerateAI && (
+            <div className="mb-8">
+              <Button
+                onClick={handleGenerateAI}
+                disabled={isGeneratingAI}
+                size="lg"
+                className="w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600 font-bold py-4 text-base rounded-xl shadow-lg"
+              >
+                <span className="ml-2">✨</span>
+                {isGeneratingAI ? "יוצר מתכון..." : "צור מתכון עם AI"}
+              </Button>
+            </div>
+          )}
+
+          {/* Popular recipes */}
+          {popularRecipes.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground text-center">מתכונים פופולריים שאולי יעניינו אותך</h3>
+              {popularRecipes.map((item: any, i: number) => (
+                <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
+                  <h4 className="font-bold text-foreground">{item.recipe?.title || "מתכון"}</h4>
+                  <div className="flex gap-3 text-xs text-muted-foreground">
+                    <span>✅ {item.used_count} מצרכים תואמים</span>
+                    <span>❌ {item.missed_count} חסרים</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
 
   // If we have multi-recipe items from navigation, render carousel
   if (recipeItems && recipeItems.length > 0) {
@@ -100,12 +181,7 @@ const RecipeResult = () => {
           <RecipeCarousel
             recipeItems={recipeItems}
             onStartCooking={handleStartCooking}
-            onGenerateAI={userIngredientNames.length > 0 ? () => {
-              generateRecipe({
-                ingredients: userIngredientNames.map((name, i) => ({ id: i, name, emoji: "", category: "" })),
-                forceCreative: true,
-              });
-            } : undefined}
+            onGenerateAI={handleGenerateAI}
           />
           {isGeneratingAI && (
             <div className="flex flex-col items-center justify-center py-8">

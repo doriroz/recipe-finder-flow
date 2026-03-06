@@ -93,6 +93,19 @@ export const useGenerateRecipe = () => {
       }
 
       if (data?.success) {
+        // Handle noMatch response
+        if (data.noMatch) {
+          navigate(`/recipe`, {
+            state: {
+              noMatch: true,
+              message: data.message || "לא נמצאו מתכונים מתאימים למצרכים שבחרת",
+              popularRecipes: data.popularRecipes || [],
+              ingredientNames: ingredients?.map(i => i.name) || [],
+            },
+          });
+          return;
+        }
+
         toast.success("המתכון נוצר בהצלחה!");
         
         // New multi-recipe format
