@@ -77,7 +77,7 @@ const RecipeResult = () => {
   const { data: specificRecipe, isLoading: loadingSpecific } = useRecipe(recipeId);
   const { data: userRecipes, isLoading: loadingRecipes } = useUserRecipes();
 
-  const isLoading = authLoading || (recipeItems === null && (loadingSpecific || loadingRecipes));
+  const isLoading = authLoading || (!noMatch && recipeItems === null && (loadingSpecific || loadingRecipes));
 
   const handleStartCooking = (selectedRecipeId: string) => {
     setCookingSessionActive(true);
