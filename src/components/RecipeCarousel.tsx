@@ -121,28 +121,10 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
   // Single recipe — render directly
   if (recipeItems.length === 1) {
     const display = toDisplayRecipe(recipeItems[0]);
-    const showAI = recipeItems[0].showAIButton && onGenerateAI;
-    const activeBadge = showAI ? "בסיס מצוין" : recipeItems[0].badge;
+    const activeBadge = recipeItems[0].badge;
 
     return (
       <div className="space-y-5">
-        {/* Friendly message for partial matches */}
-        {showAI && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center bg-teal-50 dark:bg-teal-950/50 rounded-xl p-4 border border-teal-200 dark:border-teal-800"
-          >
-            <p className="text-lg font-semibold text-teal-800 dark:text-teal-200">
-              🌟 מצאנו נקודת התחלה מצוינת בשבילך!
-            </p>
-            <p className="text-sm text-teal-600 dark:text-teal-400 mt-1">
-              הנה מתכון שמתאים למצרכים שבחרת
-            </p>
-          </motion.div>
-        )}
-
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -159,8 +141,8 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
           <RecipeCard recipe={display} onStartCooking={() => onStartCooking(recipeItems[0].recipe.id)} />
         </motion.div>
 
-        {/* Magic Chef Card */}
-        {showAI && onGenerateAI && (
+        {/* Magic Chef Card — always show when AI generation is available */}
+        {onGenerateAI && (
           <MagicChefCard onGenerateAI={onGenerateAI} />
         )}
       </div>
@@ -292,7 +274,7 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
 
         {/* Dots indicator */}
         <div className="flex justify-center gap-2 mt-4">
-          {recipeItems.map((_, i) => (
+        {recipeItems.map((_, i) => (
             <button
               key={i}
               onClick={() => setActiveIndex(i)}
@@ -303,6 +285,11 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
           ))}
         </div>
       </div>
+
+      {/* Magic Chef Card — always show when AI generation is available */}
+      {onGenerateAI && (
+        <MagicChefCard onGenerateAI={onGenerateAI} />
+      )}
     </div>
   );
 };
