@@ -28,6 +28,11 @@ const RecipeResult = () => {
   const [recipeItems, setRecipeItems] = useState<RecipeResultItem[] | null>(null);
   const [userIngredientNames, setUserIngredientNames] = useState<string[]>([]);
 
+  // No-match state
+  const [noMatch, setNoMatch] = useState(false);
+  const [noMatchMessage, setNoMatchMessage] = useState("");
+  const [popularRecipes, setPopularRecipes] = useState<any[]>([]);
+
   // Legacy single-recipe state (backwards compat)
   const [whyItWorks, setWhyItWorks] = useState<string | undefined>();
   const [reliabilityScore, setReliabilityScore] = useState<"high" | "medium" | "creative">("medium");
@@ -41,6 +46,15 @@ const RecipeResult = () => {
   useEffect(() => {
     const state = location.state as any | null;
     if (!state) return;
+
+    // No-match format
+    if (state.noMatch) {
+      setNoMatch(true);
+      setNoMatchMessage(state.message || "לא נמצאו מתכונים מתאימים למצרכים שבחרת");
+      setPopularRecipes(state.popularRecipes || []);
+      if (state.ingredientNames) setUserIngredientNames(state.ingredientNames);
+      return;
+    }
 
     // New multi-recipe format
     if (state.recipes && Array.isArray(state.recipes) && state.recipes.length > 0) {
