@@ -13,6 +13,9 @@ interface RecipeCarouselProps {
 }
 
 const badgeStyles: Record<string, string> = {
+  "מוכן לבישול": "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200 border-emerald-300",
+  "כמעט מוכן": "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 border-amber-300",
+  "חסרים 3 מצרכים": "bg-orange-100 text-orange-900 dark:bg-orange-900/40 dark:text-orange-200 border-orange-300",
   "המלצת השף": "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 border-amber-300",
   "התאמה מצוינת": "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200 border-emerald-300",
   "אפשרות יצירתית": "bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200 border-violet-300",
@@ -21,6 +24,9 @@ const badgeStyles: Record<string, string> = {
 };
 
 const badgeEmoji: Record<string, string> = {
+  "מוכן לבישול": "✅",
+  "כמעט מוכן": "🔶",
+  "חסרים 3 מצרכים": "📋",
   "המלצת השף": "⭐",
   "התאמה מצוינת": "✨",
   "אפשרות יצירתית": "🎨",

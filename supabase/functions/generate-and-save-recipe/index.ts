@@ -253,8 +253,8 @@ interface ScoredRecipe {
 }
 
 /**
- * Simple scoring: score = matchCount - (missingCount * 0.5)
- * Reject only if matchCount == 0
+ * Scoring: score = usedCount - missingCount
+ * Reject if matchCount == 0 or missingCount > 3 or totalIngredients > 10
  */
 function scoreLocalRecipes(
   userIngredients: string[],
@@ -266,8 +266,9 @@ function scoreLocalRecipes(
   for (const recipe of library) {
     const recipeIngs = recipe.ingredient_names || [];
     if (recipeIngs.length === 0) continue;
+    // Skip recipes with more than 10 total ingredients
+    if (recipeIngs.length > 10) continue;
 
-    // Count matches
     const usedNames: string[] = [];
     for (const recipeIng of recipeIngs) {
       for (const userIng of userSet) {
@@ -279,21 +280,23 @@ function scoreLocalRecipes(
     }
 
     const matchCount = usedNames.length;
-    // Reject only if zero matches
     if (matchCount === 0) continue;
 
     const missingCount = recipeIngs.length - matchCount;
-    const score = matchCount - (missingCount * 0.5);
+    // Reject if more than 3 missing
+    if (missingCount > 3) continue;
 
-    // Badge assignment
-    const badge = score >= 3.0 ? "המלצת השף" :
-                  score >= 1.5 ? "התאמה מצוינת" :
-                  "אפשרות יצירתית";
+    const score = matchCount - missingCount;
 
-    let contextLine = "";
-    if (matchCount >= 5) contextLine = `משתמש ב-${matchCount} מהמצרכים שבחרת`;
-    else if (missingCount <= 2) contextLine = `דורש רק ${missingCount} תוספות קטנות`;
-    else contextLine = `מבוסס על ${matchCount} מהמצרכים שלך`;
+    // Group-based badges
+    const badge = missingCount === 0 ? "מוכן לבישול" :
+                  missingCount <= 2 ? "כמעט מוכן" :
+                  "חסרים 3 מצרכים";
+
+    const contextLine = missingCount === 0 ? "כל המצרכים אצלך!" :
+                        missingCount === 1 ? "חסר רק מצרך אחד" :
+                        missingCount === 2 ? "חסרים 2 מצרכים" :
+                        "חסרים 3 מצרכים";
 
     results.push({
       recipe,
@@ -332,19 +335,24 @@ function scoreSpoonacularCandidates(findData: any[], userCount: number): ScoredS
   for (const c of findData) {
     const used = c.usedIngredientCount || 0;
     const missed = c.missedIngredientCount || 0;
+    const total = used + missed;
 
     if (used === 0) continue;
+    // Skip recipes with more than 10 total ingredients
+    if (total > 10) continue;
+    // Reject if more than 3 missing
+    if (missed > 3) continue;
 
-    const score = used - (missed * 0.5);
+    const score = used - missed;
 
-    const badge = score >= 3.0 ? "המלצת השף" :
-                  score >= 1.5 ? "התאמה מצוינת" :
-                  "אפשרות יצירתית";
+    const badge = missed === 0 ? "מוכן לבישול" :
+                  missed <= 2 ? "כמעט מוכן" :
+                  "חסרים 3 מצרכים";
 
-    let contextLine = "";
-    if (used >= 5) contextLine = `משתמש ב-${used} מהמצרכים שבחרת`;
-    else if (missed <= 2) contextLine = `דורש רק ${missed} תוספות קטנות`;
-    else contextLine = `מבוסס על ${used} מהמצרכים שלך`;
+    const contextLine = missed === 0 ? "כל המצרכים אצלך!" :
+                        missed === 1 ? "חסר רק מצרך אחד" :
+                        missed === 2 ? "חסרים 2 מצרכים" :
+                        "חסרים 3 מצרכים";
 
     scored.push({
       ...c,
@@ -1106,10 +1114,21 @@ serve(async (req) => {
 
     // Merge and sort all candidates by score
     allCandidates.sort((a, b) => (b._score || 0) - (a._score || 0));
-    const mergedTop3 = allCandidates.slice(0, 3);
 
-    if (mergedTop3.length > 0) {
-      const responseRecipes = mergedTop3.map(({ _score, ...rest }) => rest);
+    // Group by missingCount
+    const cookNow = allCandidates.filter(c => c.missed_count === 0).slice(0, 3);
+    const almostReady = allCandidates.filter(c => c.missed_count >= 1 && c.missed_count <= 2).slice(0, 3);
+    const needsThree = allCandidates.filter(c => c.missed_count === 3).slice(0, 3);
+
+    // Add group field
+    cookNow.forEach(c => c.group = "cookNow");
+    almostReady.forEach(c => c.group = "almostReady");
+    needsThree.forEach(c => c.group = "needsThree");
+
+    const grouped = [...cookNow, ...almostReady, ...needsThree];
+
+    if (grouped.length > 0) {
+      const responseRecipes = grouped.map(({ _score, ...rest }) => rest);
 
       const hasLocal = responseRecipes.some(r => r.source === "local");
       const hasSpoonacular = responseRecipes.some(r => r.source === "spoonacular");
@@ -1127,6 +1146,7 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           recipes: responseRecipes,
+          showAIButton: true,
           recipe: firstResult.recipe,
           why_it_works: firstResult.why_it_works,
           reliability_score: firstResult.reliability_score,
@@ -1137,10 +1157,45 @@ serve(async (req) => {
       );
     }
 
-    // No results at all
+    // No results – fallback with popular recipes (ignore missingCount > 3 filter)
+    const allUnfiltered = allCandidates.length > 0 ? allCandidates : [];
+    // Re-score ALL local recipes without missingCount filter for popular fallback
+    const popularCandidates: any[] = [];
+    if (library && library.length > 0) {
+      const userSet = new Set(ingredientNames.map(i => i.trim()));
+      for (const recipe of library) {
+        const recipeIngs = recipe.ingredient_names || [];
+        if (recipeIngs.length === 0 || recipeIngs.length > 10) continue;
+        const usedNames: string[] = [];
+        for (const recipeIng of recipeIngs) {
+          for (const userIng of userSet) {
+            if (userIng === recipeIng || userIng.includes(recipeIng) || recipeIng.includes(userIng)) {
+              usedNames.push(recipeIng);
+              break;
+            }
+          }
+        }
+        if (usedNames.length === 0) continue;
+        popularCandidates.push({
+          recipe: { id: recipe.id, title: recipe.title, ingredients: recipe.ingredients, instructions: recipe.instructions, substitutions: recipe.substitutions, cooking_time: recipe.cooking_time },
+          used_count: usedNames.length,
+          missed_count: recipeIngs.length - usedNames.length,
+          group: "popular",
+        });
+      }
+    }
+    popularCandidates.sort((a, b) => b.used_count - a.used_count || a.missed_count - b.missed_count);
+
     return new Response(
-      JSON.stringify({ error: "לא מצאנו מתכון מתאים למצרכים שבחרתם. נסו לשנות או להוסיף מצרכים" }),
-      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        success: true,
+        noMatch: true,
+        message: "לא נמצאו מתכונים מתאימים למצרכים שבחרת",
+        popularRecipes: popularCandidates.slice(0, 3),
+        showAIButton: true,
+        recipes: [],
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Edge function error:", error);

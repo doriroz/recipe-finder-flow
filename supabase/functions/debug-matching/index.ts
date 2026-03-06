@@ -63,6 +63,17 @@ function debugSimpleScoring(
     const recipeIngs = recipe.ingredient_names || [];
     if (recipeIngs.length === 0) continue;
 
+    // Skip recipes with > 10 ingredients
+    if (recipeIngs.length > 10) {
+      results.push({
+        title: recipe.title, recipeId: recipe.id, status: "rejected",
+        rejectionReason: "יותר מ-10 מצרכים", score: null, matchCount: 0,
+        missingCount: recipeIngs.length, usedIngredientNames: [],
+        recipeIngredientNames: recipeIngs, badge: null,
+      });
+      continue;
+    }
+
     const usedNames: string[] = [];
     for (const recipeIng of recipeIngs) {
       for (const userIng of userSet) {
@@ -78,36 +89,33 @@ function debugSimpleScoring(
 
     if (matchCount === 0) {
       results.push({
-        title: recipe.title,
-        recipeId: recipe.id,
-        status: "rejected",
-        rejectionReason: "אפס התאמות – אין חפיפה בין המצרכים",
-        score: null,
-        matchCount: 0,
-        missingCount: recipeIngs.length,
-        usedIngredientNames: [],
-        recipeIngredientNames: recipeIngs,
-        badge: null,
+        title: recipe.title, recipeId: recipe.id, status: "rejected",
+        rejectionReason: "אפס התאמות", score: null, matchCount: 0,
+        missingCount: recipeIngs.length, usedIngredientNames: [],
+        recipeIngredientNames: recipeIngs, badge: null,
       });
       continue;
     }
 
-    const score = matchCount - (missingCount * 0.5);
-    const badge = score >= 3.0 ? "המלצת השף" :
-                  score >= 1.5 ? "התאמה מצוינת" :
-                  "אפשרות יצירתית";
+    if (missingCount > 3) {
+      results.push({
+        title: recipe.title, recipeId: recipe.id, status: "rejected",
+        rejectionReason: `חסרים ${missingCount} מצרכים (מקסימום 3)`, score: null,
+        matchCount, missingCount, usedIngredientNames: usedNames,
+        recipeIngredientNames: recipeIngs, badge: null,
+      });
+      continue;
+    }
+
+    const score = matchCount - missingCount;
+    const badge = missingCount === 0 ? "מוכן לבישול" :
+                  missingCount <= 2 ? "כמעט מוכן" :
+                  "חסרים 3 מצרכים";
 
     results.push({
-      title: recipe.title,
-      recipeId: recipe.id,
-      status: "accepted",
-      rejectionReason: null,
-      score,
-      matchCount,
-      missingCount,
-      usedIngredientNames: usedNames,
-      recipeIngredientNames: recipeIngs,
-      badge,
+      title: recipe.title, recipeId: recipe.id, status: "accepted",
+      rejectionReason: null, score, matchCount, missingCount,
+      usedIngredientNames: usedNames, recipeIngredientNames: recipeIngs, badge,
     });
   }
 
@@ -167,42 +175,50 @@ async function liveStep2(userIngredientsHe: string[]): Promise<Step2LiveResult> 
   for (const c of rawCandidates) {
     const used = c.usedIngredientCount || 0;
     const missed = c.missedIngredientCount || 0;
+    const total = used + missed;
     const usedIngredients = c.usedIngredients || [];
     const usedNames = usedIngredients.map((i: any) => i.name || "");
     const missedNames = (c.missedIngredients || []).map((i: any) => i.name || "");
 
-    if (used === 0) {
+    if (total > 10) {
       afterScoring.push({
-        title: c.title || "Unknown",
-        recipeId: String(c.id || ""),
-        status: "rejected",
-        rejectionReason: "Zero matches – no ingredient overlap",
-        score: null,
-        matchCount: 0,
-        missingCount: missed,
-        usedIngredientNames: [],
-        recipeIngredientNames: [...usedNames, ...missedNames],
-        badge: null,
+        title: c.title || "Unknown", recipeId: String(c.id || ""), status: "rejected",
+        rejectionReason: "יותר מ-10 מצרכים", score: null, matchCount: used,
+        missingCount: missed, usedIngredientNames: usedNames,
+        recipeIngredientNames: [...usedNames, ...missedNames], badge: null,
       });
       continue;
     }
 
-    const score = used - (missed * 0.5);
-    const badge = score >= 3.0 ? "המלצת השף" :
-                  score >= 1.5 ? "התאמה מצוינת" :
-                  "אפשרות יצירתית";
+    if (used === 0) {
+      afterScoring.push({
+        title: c.title || "Unknown", recipeId: String(c.id || ""), status: "rejected",
+        rejectionReason: "אפס התאמות", score: null, matchCount: 0,
+        missingCount: missed, usedIngredientNames: [],
+        recipeIngredientNames: [...usedNames, ...missedNames], badge: null,
+      });
+      continue;
+    }
+
+    if (missed > 3) {
+      afterScoring.push({
+        title: c.title || "Unknown", recipeId: String(c.id || ""), status: "rejected",
+        rejectionReason: `חסרים ${missed} מצרכים (מקסימום 3)`, score: null,
+        matchCount: used, missingCount: missed, usedIngredientNames: usedNames,
+        recipeIngredientNames: [...usedNames, ...missedNames], badge: null,
+      });
+      continue;
+    }
+
+    const score = used - missed;
+    const badge = missed === 0 ? "מוכן לבישול" :
+                  missed <= 2 ? "כמעט מוכן" :
+                  "חסרים 3 מצרכים";
 
     afterScoring.push({
-      title: c.title || "Unknown",
-      recipeId: String(c.id || ""),
-      status: "accepted",
-      rejectionReason: null,
-      score,
-      matchCount: used,
-      missingCount: missed,
-      usedIngredientNames: usedNames,
-      recipeIngredientNames: [...usedNames, ...missedNames],
-      badge,
+      title: c.title || "Unknown", recipeId: String(c.id || ""), status: "accepted",
+      rejectionReason: null, score, matchCount: used, missingCount: missed,
+      usedIngredientNames: usedNames, recipeIngredientNames: [...usedNames, ...missedNames], badge,
     });
   }
 
@@ -309,11 +325,11 @@ serve(async (req) => {
           totalLibraryRecipes: library?.length || 0,
         },
         formula: {
-          description: "score = matchCount - (missingCount × 0.5). Reject only if matchCount == 0.",
+          description: "score = usedCount - missingCount. Reject if matchCount == 0, missingCount > 3, or totalIngredients > 10.",
           badges: {
-            "score >= 3.0": "המלצת השף",
-            "score >= 1.5": "התאמה מצוינת",
-            "else": "אפשרות יצירתית",
+            "missingCount == 0": "מוכן לבישול",
+            "missingCount <= 2": "כמעט מוכן",
+            "missingCount == 3": "חסרים 3 מצרכים",
           },
         },
         pipeline: {

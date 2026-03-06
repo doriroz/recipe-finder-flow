@@ -41,10 +41,10 @@ export interface RecipeDisplay extends Recipe {
   reliability_score?: "high" | "medium" | "creative";
 }
 
-// Badge labels for Smart Chef Selection
-export type RecipeBadge = "המלצת השף" | "התאמה מצוינת" | "אפשרות יצירתית" | "השראה למצרך שלך";
+// Badge labels for readiness groups
+export type RecipeBadge = "מוכן לבישול" | "כמעט מוכן" | "חסרים 3 מצרכים" | "המלצת השף" | "התאמה מצוינת" | "אפשרות יצירתית" | "השראה למצרך שלך";
 
-// A recipe result item from the backend (top 3 selection)
+// A recipe result item from the backend
 export interface RecipeResultItem {
   recipe: Recipe;
   badge: RecipeBadge;
@@ -57,6 +57,7 @@ export interface RecipeResultItem {
   missed_count: number;
   used_ingredient_names: string[];
   showAIButton?: boolean;
+  group?: "cookNow" | "almostReady" | "needsThree" | "popular";
 }
 
 // User gallery item matching Supabase schema
