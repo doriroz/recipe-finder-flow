@@ -15,6 +15,7 @@ import CookbookBuilder from "./pages/CookbookBuilder";
 import Login from "./pages/Login";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import DebugMatching from "./pages/DebugMatching";
+import CategorySelection from "./pages/CategorySelection";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/debug" element={<DebugMatching />} />
+          <Route path="/categories" element={<CategorySelection />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
