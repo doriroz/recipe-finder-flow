@@ -13,28 +13,52 @@ const CategorySelection = () => {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CuisineCategory | null>(null);
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
-  const { search, saveGeneratedRecipe } = useRecipeSearch();
 
   const handleRecipeClick = async (recipe: CategoryRecipe) => {
     if (loadingRecipe) return;
     setLoadingRecipe(recipe.title);
     try {
-      const results = await search(recipe.title);
-      if (!results || results.length === 0) {
-        toast({ title: "לא נמצא מתכון", description: "נסו לחפש מתכון אחר", variant: "destructive" });
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        toast({ title: "יש להתחבר כדי לשמור מתכון", variant: "destructive" });
         return;
       }
-      const savedId = await saveGeneratedRecipe(results[0]);
-      if (!savedId) {
+
+      const ingredients = recipe.ingredients.map((name) => ({
+        name,
+        amount: "",
+        unit: "",
+      }));
+
+      const instructions = [
+        `הכינו את כל המצרכים: ${recipe.ingredients.join(", ")}`,
+        `בשלו למשך ${recipe.cookingTime} דקות בערך`,
+        "הגישו וטעמו!",
+      ];
+
+      const { data, error } = await supabase
+        .from("recipes")
+        .insert({
+          title: recipe.title,
+          ingredients,
+          instructions,
+          cooking_time: recipe.cookingTime,
+          user_id: session.session.user.id,
+        })
+        .select("id")
+        .single();
+
+      if (error || !data?.id) {
         toast({ title: "שגיאה בשמירת המתכון", variant: "destructive" });
         return;
       }
+
       setSelectedCategory(null);
-      navigate(`/recipe?id=${savedId}`, {
-        state: { source: "spoonacular", spoonacular_verified: true, from: "/categories" },
+      navigate(`/recipe?id=${data.id}`, {
+        state: { source: "local", from: "/categories" },
       });
     } catch {
-      toast({ title: "שגיאה בחיפוש המתכון", variant: "destructive" });
+      toast({ title: "שגיאה בשמירת המתכון", variant: "destructive" });
     } finally {
       setLoadingRecipe(null);
     }
