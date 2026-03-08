@@ -1,17 +1,10 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowRight, X, Clock, ChefHat, Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CUISINE_CATEGORIES, CuisineCategory } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from "@/components/ui/drawer";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CategorySelection = () => {
   const navigate = useNavigate();
@@ -26,6 +19,24 @@ const CategorySelection = () => {
           cat.subtitle.includes(query.trim())
       )
     : CUISINE_CATEGORIES;
+
+  const closeModal = useCallback(() => setSelectedCategory(null), []);
+
+  useEffect(() => {
+    if (!selectedCategory) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") closeModal(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selectedCategory, closeModal]);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [selectedCategory]);
 
   return (
     <div className="min-h-screen bg-muted" dir="rtl">
@@ -42,7 +53,6 @@ const CategorySelection = () => {
             </button>
           </div>
 
-          {/* Search input */}
           <div className="relative">
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
             <input
@@ -93,12 +103,8 @@ const CategorySelection = () => {
             >
               <span className="text-4xl leading-none">{cat.emoji}</span>
               <div>
-                <p className="font-bold text-foreground text-sm leading-tight">
-                  {cat.nameHe}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {cat.subtitle}
-                </p>
+                <p className="font-bold text-foreground text-sm leading-tight">{cat.nameHe}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{cat.subtitle}</p>
               </div>
               <span className="text-[10px] text-muted-foreground/70">
                 {cat.recipes.length} מתכונים
@@ -108,42 +114,75 @@ const CategorySelection = () => {
         </div>
 
         {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground mt-8">
-            לא נמצאו קטגוריות תואמות
-          </p>
+          <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>
         )}
       </div>
 
-      {/* Recipe list drawer */}
-      <Drawer
-        open={!!selectedCategory}
-        onOpenChange={(open) => {
-          if (!open) setSelectedCategory(null);
-        }}
-      >
-        <DrawerContent className="max-h-[85vh]" dir="rtl">
+      {/* Floating modal — portal */}
+      {createPortal(
+        <AnimatePresence>
           {selectedCategory && (
             <>
-              <DrawerHeader className="text-center pb-2">
-                <DrawerTitle className="text-2xl">
-                  {selectedCategory.emoji} {selectedCategory.nameHe}
-                </DrawerTitle>
-                <DrawerDescription>
-                  {selectedCategory.subtitle} · {selectedCategory.recipes.length} מתכונים
-                </DrawerDescription>
-              </DrawerHeader>
+              <motion.div
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={closeModal}
+              />
+              <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-label={selectedCategory.nameHe}
+                dir="rtl"
+                className="fixed z-50 inset-x-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[440px] top-[8%] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                style={{
+                  background: `hsl(${selectedCategory.hue})`,
+                  maxHeight: "80vh",
+                }}
+                initial={{ scale: 0.82, opacity: 0, y: 28 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.88, opacity: 0, y: 16 }}
+                transition={{ type: "spring", stiffness: 340, damping: 28 }}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl leading-none">{selectedCategory.emoji}</span>
+                    <div className="text-right">
+                      <p className="font-bold text-foreground text-lg leading-tight">{selectedCategory.nameHe}</p>
+                      <p className="text-xs text-muted-foreground">{selectedCategory.subtitle}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={closeModal}
+                    autoFocus
+                    className="rounded-full p-2 hover:bg-black/10 transition-colors text-foreground/70 hover:text-foreground"
+                    aria-label="סגור"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-              <ScrollArea className="px-4 pb-6 max-h-[60vh]">
-                <div className="flex flex-col gap-3">
+                <div
+                  className="h-px mx-5 shrink-0"
+                  style={{
+                    background: `hsl(${selectedCategory.hue.split(" ")[0]} ${selectedCategory.hue.split(" ")[1]} 65%)`,
+                  }}
+                />
+
+                {/* Recipe list */}
+                <div className="overflow-y-auto flex-1 px-4 py-3 space-y-1">
                   {selectedCategory.recipes.map((recipe, i) => (
                     <motion.div
                       key={recipe.title}
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={{ opacity: 0, x: 8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.06 }}
-                      className="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 cursor-pointer hover:shadow-md transition-shadow"
+                      transition={{ delay: i * 0.06, duration: 0.18 }}
+                      className="w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-white/30 hover:bg-white/50 border border-transparent transition-all duration-150 text-right cursor-pointer"
                     >
-                      <p className="font-bold text-foreground">{recipe.title}</p>
+                      <p className="font-bold text-foreground text-sm">{recipe.title}</p>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
@@ -161,11 +200,12 @@ const CategorySelection = () => {
                     </motion.div>
                   ))}
                 </div>
-              </ScrollArea>
+              </motion.div>
             </>
           )}
-        </DrawerContent>
-      </Drawer>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };
