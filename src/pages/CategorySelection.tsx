@@ -12,6 +12,33 @@ const CategorySelection = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CuisineCategory | null>(null);
+  const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
+  const { search, saveGeneratedRecipe } = useRecipeSearch();
+
+  const handleRecipeClick = async (recipe: CategoryRecipe) => {
+    if (loadingRecipe) return;
+    setLoadingRecipe(recipe.title);
+    try {
+      const results = await search(recipe.title);
+      if (!results || results.length === 0) {
+        toast({ title: "לא נמצא מתכון", description: "נסו לחפש מתכון אחר", variant: "destructive" });
+        return;
+      }
+      const savedId = await saveGeneratedRecipe(results[0]);
+      if (!savedId) {
+        toast({ title: "שגיאה בשמירת המתכון", variant: "destructive" });
+        return;
+      }
+      setSelectedCategory(null);
+      navigate(`/recipe?id=${savedId}`, {
+        state: { source: "spoonacular", spoonacular_verified: true },
+      });
+    } catch {
+      toast({ title: "שגיאה בחיפוש המתכון", variant: "destructive" });
+    } finally {
+      setLoadingRecipe(null);
+    }
+  };
 
   const filtered = query.trim()
     ? CUISINE_CATEGORIES.filter(
