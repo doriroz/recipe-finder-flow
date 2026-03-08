@@ -164,7 +164,7 @@ const RecipeResult = () => {
               {!cookingSessionActive && (
                 <Button
                   variant="ghost"
-                  onClick={() => navigate("/ingredients")}
+                  onClick={() => navigate(backPath)}
                   className="flex items-center gap-2"
                 >
                   <ArrowRight className="w-5 h-5" />
