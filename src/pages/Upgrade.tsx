@@ -1,9 +1,38 @@
-import { ArrowRight, Sparkles, BookOpen, Zap, Crown } from "lucide-react";
+import { ArrowRight, Sparkles, BookOpen, Zap, Crown, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const Upgrade = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
+  const { user } = useAuth();
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetTries = async () => {
+    if (!user) return;
+    setResetting(true);
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { error } = await supabase
+        .from("ai_usage_logs" as any)
+        .delete()
+        .eq("user_id", user.id)
+        .eq("action_type", "recipe_generation")
+        .gte("created_at", today.toISOString());
+      if (error) throw error;
+      toast.success("הניסיונות אופסו בהצלחה!");
+    } catch {
+      toast.error("שגיאה באיפוס");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-background">
@@ -126,6 +155,23 @@ const Upgrade = () => {
             </Button>
           </div>
         </div>
+
+        {/* Admin: Reset tries (testing only) */}
+        {isAdmin && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-4 text-center space-y-2">
+            <p className="text-xs text-destructive font-medium">🔧 Admin Only — Testing</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetTries}
+              disabled={resetting}
+              className="border-destructive/50 text-destructive hover:bg-destructive/10"
+            >
+              <RotateCcw className={`w-4 h-4 ${resetting ? "animate-spin" : ""}`} />
+              {resetting ? "מאפס..." : "איפוס ניסיונות יומיים"}
+            </Button>
+          </div>
+        )}
 
         {/* Back to cooking */}
         <div className="text-center pt-4">
