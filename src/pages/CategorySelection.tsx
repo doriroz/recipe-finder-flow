@@ -30,11 +30,13 @@ const CategorySelection = () => {
         unit: "",
       }));
 
-      const instructions = [
-        `הכינו את כל המצרכים: ${recipe.ingredients.join(", ")}`,
-        `בשלו למשך ${recipe.cookingTime} דקות בערך`,
-        "הגישו וטעמו!",
-      ];
+      const instructions = recipe.instructions && recipe.instructions.length > 0
+        ? recipe.instructions
+        : [
+            `הכינו את כל המצרכים: ${recipe.ingredients.join(", ")}`,
+            `בשלו למשך ${recipe.cookingTime} דקות בערך`,
+            "הגישו וטעמו!",
+          ];
 
       const { data, error } = await supabase
         .from("recipes")
