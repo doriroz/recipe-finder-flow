@@ -180,6 +180,12 @@ const RecipeResult = () => {
         </header>
 
         <main className="container mx-auto px-4 py-8 pb-24">
+          {/* AI Disclaimer */}
+          <div className="mb-6 bg-accent/50 border border-primary/20 rounded-xl px-4 py-3 text-center animate-fade-in">
+            <p className="text-sm text-muted-foreground">
+              🤖 המתכון נוצר באמצעות בינה מלאכותית — ייתכנו שינויים קלים בכמויות או בשלבים
+            </p>
+          </div>
           <RecipeCarousel
             recipeItems={recipeItems}
             onStartCooking={handleStartCooking}
