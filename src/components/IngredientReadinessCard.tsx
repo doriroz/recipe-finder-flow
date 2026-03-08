@@ -66,20 +66,21 @@ const IngredientReadinessCard = ({ ingredients }: IngredientReadinessCardProps) 
               const isChecked = !!checked[index];
 
               return (
-                <label
+                <div
                   key={index}
                   className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 hover:bg-accent/50 border ${
                     isChecked
                       ? "border-green-200/60 bg-green-50/30 dark:border-green-800/40 dark:bg-green-900/10"
                       : "border-transparent bg-accent/20"
                   }`}
-                  onClick={() => toggle(index)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle(index);
+                  }}
                 >
                   <Checkbox
                     checked={isChecked}
-                    onCheckedChange={() => toggle(index)}
-                    className="h-4.5 w-4.5"
-                    onClick={(e) => e.stopPropagation()}
+                    className="h-4.5 w-4.5 pointer-events-none"
                   />
                   <span
                     className={`text-sm transition-all duration-200 ${
