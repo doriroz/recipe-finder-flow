@@ -284,10 +284,8 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
         </div>
       </div>
 
-      {/* Magic Chef Card — always show when AI generation is available */}
-      {onGenerateAI && (
-        <MagicChefCard onGenerateAI={onGenerateAI} />
-      )}
+
+
     </div>
   );
 };
