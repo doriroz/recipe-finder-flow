@@ -156,6 +156,23 @@ const Upgrade = () => {
           </div>
         </div>
 
+        {/* Admin: Reset tries (testing only) */}
+        {isAdmin && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-4 text-center space-y-2">
+            <p className="text-xs text-destructive font-medium">🔧 Admin Only — Testing</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetTries}
+              disabled={resetting}
+              className="border-destructive/50 text-destructive hover:bg-destructive/10"
+            >
+              <RotateCcw className={`w-4 h-4 ${resetting ? "animate-spin" : ""}`} />
+              {resetting ? "מאפס..." : "איפוס ניסיונות יומיים"}
+            </Button>
+          </div>
+        )}
+
         {/* Back to cooking */}
         <div className="text-center pt-4">
           <p className="text-sm text-muted-foreground mb-3">
