@@ -964,236 +964,119 @@ serve(async (req) => {
       );
     }
 
-    // ---- SIMPLE PIPELINE: Local + API merged ----
-    console.log("=== Step 1: Local DB matching (simple scoring) ===");
-    const { data: library, error: libError } = await supabaseAdmin
-      .from("recipe_library")
-      .select("*");
+    // ---- AI-ONLY PIPELINE ----
+    console.log("=== AI-Only Recipe Generation ===");
 
-    if (libError) {
-      console.error("Failed to load recipe library:", libError);
-    }
+    // Check daily tries (3 free per day)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    let allCandidates: any[] = [];
+    const { count: dailyCount } = await supabaseAdmin
+      .from("ai_usage_logs")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", today.toISOString())
+      .eq("user_id", userId)
+      .eq("action_type", "recipe_generation");
 
-    // Step 1: Score local recipes
-    const localResults = (library && library.length > 0) ? scoreLocalRecipes(ingredientNames, library) : [];
-    console.log(`Local: ${localResults.length} recipes with matchCount > 0 out of ${library?.length || 0} total`);
-
-    // Insert local results as candidates
-    for (const result of localResults.slice(0, 10)) {
-      const recipe = result.recipe;
-      const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, recipe.ingredient_names || []);
-
-      const { data: insertedRecipe, error: insertError } = await supabase
-        .from("recipes")
-        .insert({
-          title: recipe.title,
-          ingredients: recipe.ingredients,
-          instructions: recipe.instructions,
-          substitutions: dbSubstitutions.length > 0 ? dbSubstitutions : (recipe.substitutions || []),
-          cooking_time: recipe.cooking_time || null,
-          user_id: userId,
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error(`Failed to save local recipe: ${insertError.message}`);
-        continue;
-      }
-
-      allCandidates.push({
-        recipe: insertedRecipe,
-        badge: result.badge,
-        contextLine: result.contextLine,
-        why_it_works: `מתכון מהמאגר המקומי – ${result.contextLine}`,
-        reliability_score: "high",
-        spoonacular_verified: false,
-        source: "local",
-        used_count: result.matchCount,
-        missed_count: result.missingCount,
-        used_ingredient_names: result.usedIngredientNames,
-        showAIButton: false,
-        _score: result.score,
-      });
-    }
-
-    // Step 2: Call Spoonacular API if fewer than 10 local results
-    const SPOONACULAR_API_KEY = Deno.env.get("SPOONACULAR_API_KEY");
-
-    if (localResults.length < 10 && SPOONACULAR_API_KEY) {
-      console.log(`=== Step 2: Spoonacular API (only ${localResults.length} local results < 10) ===`);
-
-      if (!LOVABLE_API_KEY) {
-        return new Response(
-          JSON.stringify({ error: "שגיאת תצורה פנימית" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      try {
-        const rawTranslated = await translateEachHeToEn(ingredientNames);
-        const englishIngredients = rawTranslated.map(t =>
-          t.trim().replace(/[.,;:!?]+$/, '').replace(/\s{2,}/g, ' ').trim()
-        );
-        console.log("Translated ingredients for Spoonacular:", englishIngredients);
-
-        const userCount = ingredientNames.length;
-        const findUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(englishIngredients.join(","))}&number=10&ranking=1&ignorePantry=true&apiKey=${SPOONACULAR_API_KEY}`;
-        const findRes = await fetch(findUrl);
-
-        if (findRes.ok) {
-          const findData = await findRes.json();
-          if (findData && findData.length > 0) {
-            const scored = scoreSpoonacularCandidates(findData, userCount);
-
-            console.log("=== Spoonacular candidates (simple scoring) ===");
-            scored.forEach((c, i) =>
-              console.log(`  #${i + 1} "${c.title}" score=${c.score.toFixed(2)} badge="${c.badge}" used=${c.usedIngredientCount} missed=${c.missedIngredientCount}`)
-            );
-
-            for (const candidate of scored.slice(0, 5)) {
-              const processed = await processOneCandidate(
-                candidate, ingredientNames, englishIngredients,
-                LOVABLE_API_KEY, supabaseAdmin, SPOONACULAR_API_KEY
-              );
-              if (processed) {
-                await saveSpoonacularToLibrary(supabaseAdmin, processed.recipeData);
-
-                const hebrewIngNames = processed.recipeData.ingredients.map((i: any) => i.name);
-                const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, hebrewIngNames);
-                if (dbSubstitutions.length > 0) {
-                  processed.recipeData.substitutions = dbSubstitutions;
-                }
-
-                const { data: insertedRecipe, error: insertError } = await supabase
-                  .from("recipes")
-                  .insert({
-                    title: processed.recipeData.title,
-                    ingredients: processed.recipeData.ingredients,
-                    instructions: processed.recipeData.instructions,
-                    substitutions: processed.recipeData.substitutions || [],
-                    cooking_time: processed.recipeData.cooking_time || null,
-                    user_id: userId,
-                  })
-                  .select()
-                  .single();
-
-                if (insertError) {
-                  console.error(`Failed to save recipe: ${insertError.message}`);
-                  continue;
-                }
-
-                allCandidates.push({
-                  recipe: insertedRecipe,
-                  badge: processed.badge,
-                  contextLine: processed.contextLine,
-                  why_it_works: processed.recipeData.why_it_works,
-                  reliability_score: processed.recipeData.reliability_score,
-                  spoonacular_verified: true,
-                  source: "spoonacular",
-                  used_count: processed.recipeData.used_count || 0,
-                  missed_count: processed.recipeData.missed_count || 0,
-                  used_ingredient_names: processed.recipeData.used_ingredient_names || [],
-                  showAIButton: false,
-                  _score: candidate.score,
-                });
-              }
-            }
-          }
-        } else {
-          console.error("Spoonacular findByIngredients error:", findRes.status);
-        }
-      } catch (err) {
-        console.error("Spoonacular fetch error:", err);
-      }
-    } else if (localResults.length >= 10) {
-      console.log(`=== Step 2: Skipped (${localResults.length} local results >= 10) ===`);
-    }
-
-    // Merge and sort all candidates by score
-    allCandidates.sort((a, b) => (b._score || 0) - (a._score || 0));
-
-    // Group by missingCount
-    const cookNow = allCandidates.filter(c => c.missed_count === 0).slice(0, 3);
-    const almostReady = allCandidates.filter(c => c.missed_count >= 1 && c.missed_count <= 2).slice(0, 3);
-    const needsThree = allCandidates.filter(c => c.missed_count === 3).slice(0, 3);
-
-    // Add group field
-    cookNow.forEach(c => c.group = "cookNow");
-    almostReady.forEach(c => c.group = "almostReady");
-    needsThree.forEach(c => c.group = "needsThree");
-
-    const grouped = [...cookNow, ...almostReady, ...needsThree];
-
-    if (grouped.length > 0) {
-      const responseRecipes = grouped.map(({ _score, ...rest }) => rest);
-
-      const hasLocal = responseRecipes.some(r => r.source === "local");
-      const hasSpoonacular = responseRecipes.some(r => r.source === "spoonacular");
-
-      if (hasLocal) {
-        await logAiUsage(supabaseAdmin, userId, "recipe_generation", 0, 0, "local");
-        await incrementLocalMatchCount(supabaseAdmin, userId);
-      }
-      if (hasSpoonacular) {
-        await logAiUsage(supabaseAdmin, userId, "recipe_generation", 400, 0, "spoonacular");
-      }
-
-      const firstResult = responseRecipes[0];
+    if ((dailyCount || 0) >= 3) {
       return new Response(
         JSON.stringify({
-          success: true,
-          recipes: responseRecipes,
-          showAIButton: true,
-          recipe: firstResult.recipe,
-          why_it_works: firstResult.why_it_works,
-          reliability_score: firstResult.reliability_score,
-          spoonacular_verified: firstResult.spoonacular_verified,
-          source: firstResult.source,
+          error: "ניצלתם את 3 הניסיונות היומיים. שדרגו לעוד מתכונים!",
+          tries_exhausted: true,
+          redirect: "/upgrade",
         }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // No results – fallback with popular recipes (ignore missingCount > 3 filter)
-    const allUnfiltered = allCandidates.length > 0 ? allCandidates : [];
-    // Re-score ALL local recipes without missingCount filter for popular fallback
-    const popularCandidates: any[] = [];
-    if (library && library.length > 0) {
-      const userSet = new Set(ingredientNames.map(i => i.trim()));
-      for (const recipe of library) {
-        const recipeIngs = recipe.ingredient_names || [];
-        if (recipeIngs.length === 0 || recipeIngs.length > 10) continue;
-        const usedNames: string[] = [];
-        for (const recipeIng of recipeIngs) {
-          for (const userIng of userSet) {
-            if (userIng === recipeIng || userIng.includes(recipeIng) || recipeIng.includes(userIng)) {
-              usedNames.push(recipeIng);
-              break;
-            }
-          }
-        }
-        if (usedNames.length === 0) continue;
-        popularCandidates.push({
-          recipe: { id: recipe.id, title: recipe.title, ingredients: recipe.ingredients, instructions: recipe.instructions, substitutions: recipe.substitutions, cooking_time: recipe.cooking_time },
-          used_count: usedNames.length,
-          missed_count: recipeIngs.length - usedNames.length,
-          group: "popular",
-        });
-      }
+    // Global rate limit check
+    const { data: globalCap } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "ai_daily_global_cap")
+      .single();
+
+    const globalLimit = parseInt(String(globalCap?.value || "500"));
+    const { count: globalToday } = await supabaseAdmin
+      .from("ai_usage_logs")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", today.toISOString())
+      .eq("source", "ai");
+
+    if ((globalToday || 0) >= globalLimit) {
+      return new Response(
+        JSON.stringify({ error: "המערכת עמוסה כרגע, נסו שוב מאוחר יותר" }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-    popularCandidates.sort((a, b) => b.used_count - a.used_count || a.missed_count - b.missed_count);
+
+    if (!LOVABLE_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "שגיאת תצורה פנימית" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Translate Hebrew ingredients to English
+    const rawTranslated = await translateEachHeToEn(ingredientNames);
+    const englishIngredients = rawTranslated.map(t =>
+      t.trim().replace(/[.,;:!?]+$/, '').replace(/\s{2,}/g, ' ').trim()
+    );
+    console.log("Translated ingredients:", englishIngredients);
+
+    // Generate recipe with AI
+    const aiRecipe = await generateCreativeFallback(englishIngredients, ingredientNames, LOVABLE_API_KEY);
+    if (!aiRecipe) {
+      return new Response(
+        JSON.stringify({ error: "לא הצלחנו ליצור מתכון. נסו שוב." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Log usage
+    await logAiUsage(supabaseAdmin, userId, "recipe_generation", 1024, 0, "ai");
+
+    // Find DB substitutions
+    const hebrewIngNames = aiRecipe.ingredients.map((i: any) => i.name);
+    const dbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, hebrewIngNames);
+
+    // Save to recipes table
+    const { data: insertedRecipe, error: insertError } = await supabase
+      .from("recipes")
+      .insert({
+        title: aiRecipe.title,
+        ingredients: aiRecipe.ingredients,
+        instructions: aiRecipe.instructions,
+        substitutions: dbSubstitutions.length > 0 ? dbSubstitutions : [],
+        cooking_time: aiRecipe.cooking_time || null,
+        user_id: userId,
+      })
+      .select()
+      .single();
+
+    if (insertError) throw new Error(`Failed to save recipe: ${insertError.message}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        noMatch: true,
-        message: "לא נמצאו מתכונים מתאימים למצרכים שבחרת",
-        popularRecipes: popularCandidates.slice(0, 3),
-        showAIButton: true,
-        recipes: [],
+        recipes: [{
+          recipe: insertedRecipe,
+          badge: "מתכון AI ✨",
+          contextLine: `מתכון יצירתי מבוסס על ${ingredientNames.length} המצרכים שלך`,
+          why_it_works: aiRecipe.why_it_works,
+          reliability_score: "creative",
+          spoonacular_verified: false,
+          source: "ai",
+          used_count: aiRecipe.used_count || 0,
+          missed_count: 0,
+          used_ingredient_names: aiRecipe.used_ingredient_names || [],
+          showAIButton: false,
+        }],
+        recipe: insertedRecipe,
+        why_it_works: aiRecipe.why_it_works,
+        reliability_score: "creative",
+        spoonacular_verified: false,
+        source: "ai",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
