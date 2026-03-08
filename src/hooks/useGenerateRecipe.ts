@@ -20,16 +20,6 @@ export const useGenerateRecipe = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
 
-  const showCreditError = (message: string) => {
-    toast.error(message, {
-      action: {
-        label: "חידוש קרדיטים",
-        onClick: () => navigate("/profile"),
-      },
-      duration: 8000,
-    });
-  };
-
   const generateRecipe = async ({ ingredients, imageBase64, forceCreative }: GenerateRecipeOptions) => {
     setIsGenerating(true);
 
@@ -63,29 +53,66 @@ export const useGenerateRecipe = () => {
       if (error) {
         console.error("Edge function error:", error);
         let errorMessage = "שגיאה ביצירת המתכון. נסו שוב.";
+        let isTriesExhausted = false;
         try {
           if (error.context && typeof error.context.json === "function") {
             const errorBody = await error.context.json();
             if (errorBody?.error) errorMessage = errorBody.error;
+            if (errorBody?.tries_exhausted) isTriesExhausted = true;
           }
         } catch (e) {
-          // Response body may already be consumed
           if (error.message && error.message !== "Edge Function returned a non-2xx status code") {
             errorMessage = error.message;
           }
         }
 
+        if (isTriesExhausted) {
+          toast.error("ניצלתם את 3 הניסיונות היומיים 🎯", {
+            action: {
+              label: "שדרוג",
+              onClick: () => navigate("/upgrade"),
+            },
+            duration: 8000,
+          });
+          navigate("/upgrade");
+          return;
+        }
+
         if (errorMessage.includes("קרדיטים")) {
-          showCreditError(errorMessage);
+          toast.error(errorMessage, {
+            action: {
+              label: "שדרוג",
+              onClick: () => navigate("/upgrade"),
+            },
+            duration: 8000,
+          });
         } else {
           toast.error(errorMessage);
         }
         return;
       }
 
+      if (data?.tries_exhausted) {
+        toast.error("ניצלתם את 3 הניסיונות היומיים 🎯", {
+          action: {
+            label: "שדרוג",
+            onClick: () => navigate("/upgrade"),
+          },
+          duration: 8000,
+        });
+        navigate("/upgrade");
+        return;
+      }
+
       if (data?.error) {
         if (typeof data.error === "string" && data.error.includes("קרדיטים")) {
-          showCreditError(data.error);
+          toast.error(data.error, {
+            action: {
+              label: "שדרוג",
+              onClick: () => navigate("/upgrade"),
+            },
+            duration: 8000,
+          });
         } else {
           toast.error(data.error);
         }
@@ -93,7 +120,6 @@ export const useGenerateRecipe = () => {
       }
 
       if (data?.success) {
-        // Handle noMatch response
         if (data.noMatch) {
           navigate(`/recipe`, {
             state: {
@@ -108,7 +134,6 @@ export const useGenerateRecipe = () => {
 
         toast.success("המתכון נוצר בהצלחה!");
         
-        // New multi-recipe format
         if (data.recipes && Array.isArray(data.recipes) && data.recipes.length > 0) {
           navigate(`/recipe`, {
             state: {
@@ -117,7 +142,6 @@ export const useGenerateRecipe = () => {
             },
           });
         } else if (data.recipe) {
-          // Backwards compatibility - single recipe
           navigate(`/recipe?id=${data.recipe.id}`, {
             state: {
               why_it_works: data.why_it_works,

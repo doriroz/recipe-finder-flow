@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ingredients as mockIngredients, type Ingredient } from "@/data/mockData";
 import { useCustomIngredients } from "@/hooks/useCustomIngredients";
 import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
+import { useDailyTries } from "@/hooks/useDailyTries";
 import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import ImageUpload from "@/components/ImageUpload";
 import CreditCounter from "@/components/CreditCounter";
@@ -21,8 +22,8 @@ const IngredientInput = () => {
   const [showPhoto, setShowPhoto] = useState(false);
   const { customIngredients, addCustomIngredient } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
+  const { remaining: remainingTries } = useDailyTries();
 
-  // Merge mock + custom, deduplicate by id
   const allIngredients = useMemo<Ingredient[]>(() => {
     const custom = customIngredients.map((c) => ({
       ...c,
@@ -83,7 +84,6 @@ const IngredientInput = () => {
             <div className="flex items-center gap-2">
               <CreditCounter />
               <span className="font-bold text-foreground">מה שיש 🍳</span>
-              {/* Camera toggle moved into header */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -105,13 +105,13 @@ const IngredientInput = () => {
           onRemove={remove}
           onGenerate={handleGenerate}
           isGenerating={isGenerating}
+          remainingTries={remainingTries}
         />
       )}
 
       <main className="container mx-auto px-4 py-4 space-y-4 pb-8">
 
         {showPhoto ? (
-          /* Photo mode */
           <div className="max-w-md mx-auto space-y-4">
             <ImageUpload onImageSelect={setImageBase64} disabled={isGenerating} />
             {imageBase64 && (
@@ -127,7 +127,6 @@ const IngredientInput = () => {
           </div>
         ) : (
           <>
-            {/* Smart Search */}
             <IngredientSearchInput
               allIngredients={allIngredients}
               selected={selected}
@@ -135,14 +134,12 @@ const IngredientInput = () => {
               onAddCustom={handleAddCustom}
             />
 
-            {/* Quick Picks */}
             <QuickPicksSection
               ingredients={allIngredients}
               selected={selected}
               onToggle={toggle}
             />
 
-            {/* Category browser — modal handles both mobile & desktop */}
             <CategoryBrowser
               ingredients={allIngredients}
               selected={selected}
