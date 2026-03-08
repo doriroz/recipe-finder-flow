@@ -141,10 +141,8 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
           <RecipeCard recipe={display} onStartCooking={() => onStartCooking(recipeItems[0].recipe.id)} />
         </motion.div>
 
-        {/* Magic Chef Card — always show when AI generation is available */}
-        {onGenerateAI && (
-          <MagicChefCard onGenerateAI={onGenerateAI} />
-        )}
+
+
       </div>
     );
   }
@@ -286,10 +284,8 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
         </div>
       </div>
 
-      {/* Magic Chef Card — always show when AI generation is available */}
-      {onGenerateAI && (
-        <MagicChefCard onGenerateAI={onGenerateAI} />
-      )}
+
+
     </div>
   );
 };
