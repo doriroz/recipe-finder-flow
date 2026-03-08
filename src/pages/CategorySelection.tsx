@@ -133,7 +133,7 @@ const CategorySelection = () => {
 
       {/* Category grid */}
       <div className="max-w-lg mx-auto px-4 pb-8 pt-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {filtered.map((cat, idx) => (
             <motion.button
               key={cat.id}
