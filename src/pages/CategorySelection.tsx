@@ -1,13 +1,22 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, ArrowRight, X } from "lucide-react";
+import { Search, ArrowRight, X, Clock, ChefHat, Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CUISINE_CATEGORIES } from "@/data/categoryRecipes";
+import { CUISINE_CATEGORIES, CuisineCategory } from "@/data/categoryRecipes";
+import { useNavigate } from "react-router-dom";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CategorySelection = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<CuisineCategory | null>(null);
 
   const filtered = query.trim()
     ? CUISINE_CATEGORIES.filter(
@@ -74,9 +83,7 @@ const CategorySelection = () => {
                 y: { duration: 0.22, delay: idx * 0.04 },
                 scale: { type: "spring", stiffness: 400, damping: 25 },
               }}
-              onClick={() =>
-                navigate("/ingredients", { state: { category: cat } })
-              }
+              onClick={() => setSelectedCategory(cat)}
               className="rounded-2xl overflow-hidden cursor-pointer select-none flex flex-col items-center justify-center text-center p-5 gap-2 relative"
               style={{
                 background: `hsl(${cat.hue})`,
@@ -106,6 +113,59 @@ const CategorySelection = () => {
           </p>
         )}
       </div>
+
+      {/* Recipe list drawer */}
+      <Drawer
+        open={!!selectedCategory}
+        onOpenChange={(open) => {
+          if (!open) setSelectedCategory(null);
+        }}
+      >
+        <DrawerContent className="max-h-[85vh]" dir="rtl">
+          {selectedCategory && (
+            <>
+              <DrawerHeader className="text-center pb-2">
+                <DrawerTitle className="text-2xl">
+                  {selectedCategory.emoji} {selectedCategory.nameHe}
+                </DrawerTitle>
+                <DrawerDescription>
+                  {selectedCategory.subtitle} · {selectedCategory.recipes.length} מתכונים
+                </DrawerDescription>
+              </DrawerHeader>
+
+              <ScrollArea className="px-4 pb-6 max-h-[60vh]">
+                <div className="flex flex-col gap-3">
+                  {selectedCategory.recipes.map((recipe, i) => (
+                    <motion.div
+                      key={recipe.title}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.06 }}
+                      className="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 cursor-pointer hover:shadow-md transition-shadow"
+                    >
+                      <p className="font-bold text-foreground">{recipe.title}</p>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {recipe.cookingTime} דק׳
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ChefHat className="w-3.5 h-3.5" />
+                          {recipe.difficulty}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Leaf className="w-3.5 h-3.5" />
+                          {recipe.ingredients.length} מצרכים
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };
