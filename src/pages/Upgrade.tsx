@@ -9,6 +9,30 @@ import { useState } from "react";
 
 const Upgrade = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
+  const { user } = useAuth();
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetTries = async () => {
+    if (!user) return;
+    setResetting(true);
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { error } = await supabase
+        .from("ai_usage_logs" as any)
+        .delete()
+        .eq("user_id", user.id)
+        .eq("action_type", "recipe_generation")
+        .gte("created_at", today.toISOString());
+      if (error) throw error;
+      toast.success("הניסיונות אופסו בהצלחה!");
+    } catch {
+      toast.error("שגיאה באיפוס");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-background">
