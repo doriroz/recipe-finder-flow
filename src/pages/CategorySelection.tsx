@@ -31,7 +31,7 @@ const CategorySelection = () => {
       }
       setSelectedCategory(null);
       navigate(`/recipe?id=${savedId}`, {
-        state: { source: "spoonacular", spoonacular_verified: true },
+        state: { source: "spoonacular", spoonacular_verified: true, from: "/categories" },
       });
     } catch {
       toast({ title: "שגיאה בחיפוש המתכון", variant: "destructive" });
