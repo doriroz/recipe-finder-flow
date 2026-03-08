@@ -26,9 +26,9 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "32 65% 82%",
     type: "cuisine",
     recipes: [
-      { title: "Pasta Carbonara", ingredients: ["ספגטי", "ביצים", "גבינת פרמזן", "בייקון", "שמן זית", "פלפל שחור"], cookingTime: 25, difficulty: "קל" },
-      { title: "Margherita Pizza", ingredients: ["בצק פיצה", "רוטב עגבניות", "מוצרלה", "בזיליקום", "שמן זית"], cookingTime: 30, difficulty: "בינוני" },
-      { title: "Bruschetta", ingredients: ["לחם צרפתי", "עגבניות", "שום", "בזיליקום", "שמן זית", "מלח"], cookingTime: 15, difficulty: "קל" },
+      { title: "פסטה קרבונרה", ingredients: ["ספגטי", "ביצים", "גבינת פרמזן", "בייקון", "שמן זית", "פלפל שחור"], cookingTime: 25, difficulty: "קל" },
+      { title: "פיצה מרגריטה", ingredients: ["בצק פיצה", "רוטב עגבניות", "מוצרלה", "בזיליקום", "שמן זית"], cookingTime: 30, difficulty: "בינוני" },
+      { title: "ברוסקטה", ingredients: ["לחם צרפתי", "עגבניות", "שום", "בזיליקום", "שמן זית", "מלח"], cookingTime: 15, difficulty: "קל" },
     ],
   },
   {
