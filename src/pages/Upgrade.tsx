@@ -1,6 +1,11 @@
-import { ArrowRight, Sparkles, BookOpen, Zap, Crown } from "lucide-react";
+import { ArrowRight, Sparkles, BookOpen, Zap, Crown, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const Upgrade = () => {
   const navigate = useNavigate();
