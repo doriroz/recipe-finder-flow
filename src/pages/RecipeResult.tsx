@@ -264,11 +264,18 @@ const RecipeResult = () => {
           </div>
         ) : (
           <>
+            {/* AI Disclaimer */}
+            <div className="mb-6 bg-accent/50 border border-primary/20 rounded-xl px-4 py-3 text-center animate-fade-in">
+              <p className="text-sm text-muted-foreground">
+                🤖 המתכון נוצר באמצעות בינה מלאכותית — ייתכנו שינויים קלים בכמויות או בשלבים
+              </p>
+            </div>
+
             <div className="text-center mb-8 animate-fade-in">
               <div className="inline-flex items-center gap-2 bg-sage-light text-sage-dark px-4 py-2 rounded-full mb-4">
                 <span>✨</span>
                 <span className="font-medium">
-                  {recipe ? "מצאנו מתכון מושלם!" : "מתכון לדוגמה"}
+                  {recipe ? "יצרנו לכם מתכון עם AI!" : "מתכון לדוגמה"}
                 </span>
               </div>
               {!user && (

@@ -1,4 +1,4 @@
-import { X, ChefHat } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ interface SelectedIngredientsBarProps {
   onRemove: (id: number) => void;
   onGenerate: () => void;
   isGenerating: boolean;
+  remainingTries?: number;
 }
 
 const SelectedIngredientsBar = ({
@@ -22,10 +23,10 @@ const SelectedIngredientsBar = ({
   onRemove,
   onGenerate,
   isGenerating,
+  remainingTries,
 }: SelectedIngredientsBarProps) => {
   const canGenerate = selected.length >= 2;
 
-  // Empty state: slim single-line hint, no CTA
   if (selected.length === 0) {
     return (
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border">
@@ -72,14 +73,23 @@ const SelectedIngredientsBar = ({
           disabled={!canGenerate || isGenerating}
           onClick={onGenerate}
         >
-          <ChefHat className="w-5 h-5" />
-          {isGenerating ? "יוצר מתכון..." : "מצא לי מתכון"}
+          <Sparkles className="w-5 h-5" />
+          {isGenerating ? "יוצר מתכון עם AI..." : "✨ מצא לי מתכון עם AI"}
           {canGenerate && !isGenerating && (
             <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs">
               {selected.length}
             </span>
           )}
         </Button>
+
+        {/* Remaining tries */}
+        {remainingTries !== undefined && (
+          <p className="text-xs text-muted-foreground text-center">
+            {remainingTries > 0
+              ? `נותרו ${remainingTries} ניסיונות חינמיים היום`
+              : "ניצלתם את הניסיונות היומיים"}
+          </p>
+        )}
       </div>
     </div>
   );
