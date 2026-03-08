@@ -5,7 +5,7 @@ import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2 } from "lucide-rea
 import { cn } from "@/lib/utils";
 import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
-import { useRecipeSearch } from "@/hooks/useRecipeSearch";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const CategorySelection = () => {
