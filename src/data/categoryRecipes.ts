@@ -54,10 +54,10 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "142 45% 82%",
     type: "cuisine",
     recipes: [
-      { title: "Greek Salad", ingredients: ["מלפפון", "עגבניות", "גבינת פטה", "זיתים", "בצל סגול", "שמן זית"], cookingTime: 10, difficulty: "קל" },
-      { title: "Falafel", ingredients: ["חומוס", "פטרוזיליה", "בצל", "שום", "כמון", "שמן לטיגון"], cookingTime: 35, difficulty: "בינוני" },
-      { title: "Hummus Bowl", ingredients: ["חומוס", "טחינה", "שום", "לימון", "שמן זית", "פפריקה"], cookingTime: 15, difficulty: "קל" },
-      { title: "Shakshuka", ingredients: ["ביצים", "עגבניות", "פלפל", "בצל", "שום", "כמון", "פפריקה"], cookingTime: 25, difficulty: "קל" },
+      { title: "סלט יווני", ingredients: ["מלפפון", "עגבניות", "גבינת פטה", "זיתים", "בצל סגול", "שמן זית"], cookingTime: 10, difficulty: "קל" },
+      { title: "פלאפל", ingredients: ["חומוס", "פטרוזיליה", "בצל", "שום", "כמון", "שמן לטיגון"], cookingTime: 35, difficulty: "בינוני" },
+      { title: "חומוס ביתי", ingredients: ["חומוס", "טחינה", "שום", "לימון", "שמן זית", "פפריקה"], cookingTime: 15, difficulty: "קל" },
+      { title: "שקשוקה", ingredients: ["ביצים", "עגבניות", "פלפל", "בצל", "שום", "כמון", "פפריקה"], cookingTime: 25, difficulty: "קל" },
     ],
   },
   {
