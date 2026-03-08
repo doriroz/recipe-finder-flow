@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowRight, X, Clock, ChefHat, Leaf } from "lucide-react";
+import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CUISINE_CATEGORIES, CuisineCategory } from "@/data/categoryRecipes";
+import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
+import { useRecipeSearch } from "@/hooks/useRecipeSearch";
+import { toast } from "@/hooks/use-toast";
 
 const CategorySelection = () => {
   const navigate = useNavigate();
