@@ -123,11 +123,12 @@ const LandingPage = () => {
         </div>
 
         {/* Features with staggered entrance */}
-        <div className="grid md:grid-cols-3 gap-6 mt-20 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-6 mt-20 max-w-5xl mx-auto">
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="bg-card rounded-2xl shadow-card p-6 text-center border border-border/30 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 animate-slide-up"
+              onClick={() => feature.link && navigate(feature.link)}
+              className={`bg-card rounded-2xl shadow-card p-6 text-center border border-border/30 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 animate-slide-up ${feature.link ? "cursor-pointer" : ""}`}
               style={{ animationDelay: `${0.4 + index * 0.1}s`, animationFillMode: "both" }}
             >
               <span className="text-5xl mb-4 block">{feature.icon}</span>
