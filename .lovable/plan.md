@@ -1,12 +1,18 @@
-## Completed: Grouped Scoring with Ingredient Limits
 
-### What was done
 
-1. **New scoring formula**: `score = usedCount - missingCount` (no 0.5 multiplier)
-2. **10-ingredient limit**: Skip any recipe with more than 10 total ingredients
-3. **missingCount > 3 filter**: Reject recipes missing more than 3 ingredients
-4. **Grouped output**: Recipes grouped into Cook Now (0 missing), Almost Ready (1-2 missing), Needs Three (3 missing) — top 3 per group
-5. **New badges**: "מוכן לבישול", "כמעט מוכן", "חסרים 3 מצרכים"
-6. **Fallback**: When no recipes pass filters, return friendly message + 3 popular recipes + showAIButton
-7. **Always include** `showAIButton: true` in response
-8. **Synced** debug-matching with same logic
+## Plan: Fix Navigation Stack (Back Button Pushes Instead of Going Back)
+
+### Problem
+When pressing "Back" on the Recipe page, `navigate("/categories")` **pushes** a new history entry instead of going back. This creates the stack: `Landing → Categories → Recipe → Categories(new)`. Then pressing back on Categories returns to Recipe — an infinite loop.
+
+### Fix
+
+**`src/pages/RecipeResult.tsx`** — All three back buttons currently do `navigate(backPath)`. Change to `navigate(-1)` so the browser history pops correctly instead of pushing a duplicate entry.
+
+This affects back buttons in:
+- No-match view (~line 102)
+- Multi-recipe carousel view (~line 134)
+- Legacy single-recipe view (~line 195)
+
+**`src/pages/CategorySelection.tsx`** — Already uses `navigate(-1)`, no change needed.
+
