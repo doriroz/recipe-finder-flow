@@ -69,9 +69,9 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "48 70% 81%",
     type: "cuisine",
     recipes: [
-      { title: "Classic Burger", ingredients: ["בשר טחון", "לחמניה", "חסה", "עגבנייה", "בצל", "גבינה צהובה", "קטשופ"], cookingTime: 20, difficulty: "קל" },
-      { title: "Mac & Cheese", ingredients: ["פסטה", "גבינה צהובה", "חלב", "חמאה", "קמח", "מלח"], cookingTime: 25, difficulty: "קל" },
-      { title: "Grilled Cheese", ingredients: ["לחם לבן", "גבינה צהובה", "חמאה"], cookingTime: 10, difficulty: "קל" },
+      { title: "המבורגר קלאסי", ingredients: ["בשר טחון", "לחמניה", "חסה", "עגבנייה", "בצל", "גבינה צהובה", "קטשופ"], cookingTime: 20, difficulty: "קל" },
+      { title: "מק אנד צ׳יז", ingredients: ["פסטה", "גבינה צהובה", "חלב", "חמאה", "קמח", "מלח"], cookingTime: 25, difficulty: "קל" },
+      { title: "טוסט גבינה", ingredients: ["לחם לבן", "גבינה צהובה", "חמאה"], cookingTime: 10, difficulty: "קל" },
     ],
   },
   {
