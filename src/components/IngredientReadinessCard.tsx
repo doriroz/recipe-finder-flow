@@ -89,7 +89,7 @@ const IngredientReadinessCard = ({ ingredients }: IngredientReadinessCardProps) 
                   >
                     {label}
                   </span>
-                </label>
+                </div>
               );
             })}
           </div>
