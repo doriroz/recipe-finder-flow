@@ -1,12 +1,28 @@
-## Completed: Grouped Scoring with Ingredient Limits
 
-### What was done
 
-1. **New scoring formula**: `score = usedCount - missingCount` (no 0.5 multiplier)
-2. **10-ingredient limit**: Skip any recipe with more than 10 total ingredients
-3. **missingCount > 3 filter**: Reject recipes missing more than 3 ingredients
-4. **Grouped output**: Recipes grouped into Cook Now (0 missing), Almost Ready (1-2 missing), Needs Three (3 missing) — top 3 per group
-5. **New badges**: "מוכן לבישול", "כמעט מוכן", "חסרים 3 מצרכים"
-6. **Fallback**: When no recipes pass filters, return friendly message + 3 popular recipes + showAIButton
-7. **Always include** `showAIButton: true` in response
-8. **Synced** debug-matching with same logic
+## Plan: Dynamic Back Button on Recipe Result Page
+
+### Problem
+The "חזרה" (back) button on `/recipe` always navigates to `/ingredients`, even when the user came from `/categories`. 
+
+### Solution
+Pass `from` in navigation state from both `/ingredients` and `/categories`. In `RecipeResult.tsx`, read `state.from` and use it for the back button destination. Default to `/ingredients` for backward compatibility.
+
+### Changes
+
+**`src/pages/CategorySelection.tsx`** — Add `from: "/categories"` to navigation state:
+```ts
+navigate(`/recipe?id=${savedId}`, {
+  state: { source: "spoonacular", spoonacular_verified: true, from: "/categories" },
+});
+```
+
+**`src/pages/RecipeResult.tsx`** — 3 back buttons all hardcode `/ingredients`. Change all three to use a dynamic `backPath`:
+1. Parse `from` from `location.state` (default: `"/ingredients"`)
+2. Replace all `navigate("/ingredients")` calls with `navigate(backPath)`
+
+This affects the back button in:
+- No-match view (line 102)
+- Multi-recipe carousel view (line 165)  
+- Legacy single-recipe view (line 243)
+
