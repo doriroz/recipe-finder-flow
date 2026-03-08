@@ -175,9 +175,6 @@ const Upgrade = () => {
 
         {/* Back to cooking */}
         <div className="text-center pt-4">
-          <p className="text-sm text-muted-foreground mb-3">
-            הניסיונות החינמיים מתחדשים כל יום 🌅
-          </p>
           <Button variant="ghost" onClick={() => navigate("/")}>
             חזרה לדף הבית
           </Button>
