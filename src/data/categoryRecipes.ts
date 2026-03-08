@@ -26,9 +26,9 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "32 65% 82%",
     type: "cuisine",
     recipes: [
-      { title: "Pasta Carbonara", ingredients: ["ספגטי", "ביצים", "גבינת פרמזן", "בייקון", "שמן זית", "פלפל שחור"], cookingTime: 25, difficulty: "קל" },
-      { title: "Margherita Pizza", ingredients: ["בצק פיצה", "רוטב עגבניות", "מוצרלה", "בזיליקום", "שמן זית"], cookingTime: 30, difficulty: "בינוני" },
-      { title: "Bruschetta", ingredients: ["לחם צרפתי", "עגבניות", "שום", "בזיליקום", "שמן זית", "מלח"], cookingTime: 15, difficulty: "קל" },
+      { title: "פסטה קרבונרה", ingredients: ["ספגטי", "ביצים", "גבינת פרמזן", "בייקון", "שמן זית", "פלפל שחור"], cookingTime: 25, difficulty: "קל" },
+      { title: "פיצה מרגריטה", ingredients: ["בצק פיצה", "רוטב עגבניות", "מוצרלה", "בזיליקום", "שמן זית"], cookingTime: 30, difficulty: "בינוני" },
+      { title: "ברוסקטה", ingredients: ["לחם צרפתי", "עגבניות", "שום", "בזיליקום", "שמן זית", "מלח"], cookingTime: 15, difficulty: "קל" },
     ],
   },
   {
@@ -40,9 +40,9 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "355 55% 82%",
     type: "cuisine",
     recipes: [
-      { title: "Fried Rice", ingredients: ["אורז", "ביצים", "בצל ירוק", "שמן שומשום", "סויה", "ירקות מעורבים"], cookingTime: 20, difficulty: "קל" },
-      { title: "Teriyaki Chicken", ingredients: ["חזה עוף", "סויה", "דבש", "שום", "ג'ינג'ר", "שמן שומשום", "אורז"], cookingTime: 30, difficulty: "בינוני" },
-      { title: "Pad Thai", ingredients: ["אטריות אורז", "ביצים", "בוטנים", "בצל ירוק", "סויה", "ליים", "טופו"], cookingTime: 25, difficulty: "בינוני" },
+      { title: "אורז מוקפץ", ingredients: ["אורז", "ביצים", "בצל ירוק", "שמן שומשום", "סויה", "ירקות מעורבים"], cookingTime: 20, difficulty: "קל" },
+      { title: "עוף טריאקי", ingredients: ["חזה עוף", "סויה", "דבש", "שום", "ג'ינג'ר", "שמן שומשום", "אורז"], cookingTime: 30, difficulty: "בינוני" },
+      { title: "פאד תאי", ingredients: ["אטריות אורז", "ביצים", "בוטנים", "בצל ירוק", "סויה", "ליים", "טופו"], cookingTime: 25, difficulty: "בינוני" },
     ],
   },
   {
@@ -54,10 +54,10 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "142 45% 82%",
     type: "cuisine",
     recipes: [
-      { title: "Greek Salad", ingredients: ["מלפפון", "עגבניות", "גבינת פטה", "זיתים", "בצל סגול", "שמן זית"], cookingTime: 10, difficulty: "קל" },
-      { title: "Falafel", ingredients: ["חומוס", "פטרוזיליה", "בצל", "שום", "כמון", "שמן לטיגון"], cookingTime: 35, difficulty: "בינוני" },
-      { title: "Hummus Bowl", ingredients: ["חומוס", "טחינה", "שום", "לימון", "שמן זית", "פפריקה"], cookingTime: 15, difficulty: "קל" },
-      { title: "Shakshuka", ingredients: ["ביצים", "עגבניות", "פלפל", "בצל", "שום", "כמון", "פפריקה"], cookingTime: 25, difficulty: "קל" },
+      { title: "סלט יווני", ingredients: ["מלפפון", "עגבניות", "גבינת פטה", "זיתים", "בצל סגול", "שמן זית"], cookingTime: 10, difficulty: "קל" },
+      { title: "פלאפל", ingredients: ["חומוס", "פטרוזיליה", "בצל", "שום", "כמון", "שמן לטיגון"], cookingTime: 35, difficulty: "בינוני" },
+      { title: "חומוס ביתי", ingredients: ["חומוס", "טחינה", "שום", "לימון", "שמן זית", "פפריקה"], cookingTime: 15, difficulty: "קל" },
+      { title: "שקשוקה", ingredients: ["ביצים", "עגבניות", "פלפל", "בצל", "שום", "כמון", "פפריקה"], cookingTime: 25, difficulty: "קל" },
     ],
   },
   {
@@ -69,9 +69,9 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "48 70% 81%",
     type: "cuisine",
     recipes: [
-      { title: "Classic Burger", ingredients: ["בשר טחון", "לחמניה", "חסה", "עגבנייה", "בצל", "גבינה צהובה", "קטשופ"], cookingTime: 20, difficulty: "קל" },
-      { title: "Mac & Cheese", ingredients: ["פסטה", "גבינה צהובה", "חלב", "חמאה", "קמח", "מלח"], cookingTime: 25, difficulty: "קל" },
-      { title: "Grilled Cheese", ingredients: ["לחם לבן", "גבינה צהובה", "חמאה"], cookingTime: 10, difficulty: "קל" },
+      { title: "המבורגר קלאסי", ingredients: ["בשר טחון", "לחמניה", "חסה", "עגבנייה", "בצל", "גבינה צהובה", "קטשופ"], cookingTime: 20, difficulty: "קל" },
+      { title: "מק אנד צ׳יז", ingredients: ["פסטה", "גבינה צהובה", "חלב", "חמאה", "קמח", "מלח"], cookingTime: 25, difficulty: "קל" },
+      { title: "טוסט גבינה", ingredients: ["לחם לבן", "גבינה צהובה", "חמאה"], cookingTime: 10, difficulty: "קל" },
     ],
   },
   {
@@ -83,9 +83,9 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "18 60% 81%",
     type: "cuisine",
     recipes: [
-      { title: "Beef Tacos", ingredients: ["בשר טחון", "טורטייה", "חסה", "עגבנייה", "גבינה", "סלסה", "שמנת חמוצה"], cookingTime: 25, difficulty: "קל" },
-      { title: "Quesadilla", ingredients: ["טורטייה", "גבינה צהובה", "פלפל", "בצל", "שמנת חמוצה"], cookingTime: 15, difficulty: "קל" },
-      { title: "Guacamole", ingredients: ["אבוקדו", "בצל", "עגבנייה", "כוסברה", "ליים", "מלח"], cookingTime: 10, difficulty: "קל" },
+      { title: "טאקו בקר", ingredients: ["בשר טחון", "טורטייה", "חסה", "עגבנייה", "גבינה", "סלסה", "שמנת חמוצה"], cookingTime: 25, difficulty: "קל" },
+      { title: "קסדייה", ingredients: ["טורטייה", "גבינה צהובה", "פלפל", "בצל", "שמנת חמוצה"], cookingTime: 15, difficulty: "קל" },
+      { title: "גוואקמולי", ingredients: ["אבוקדו", "בצל", "עגבנייה", "כוסברה", "ליים", "מלח"], cookingTime: 10, difficulty: "קל" },
     ],
   },
   {
@@ -97,10 +97,10 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "270 45% 82%",
     type: "meal",
     recipes: [
-      { title: "Classic Pancakes", ingredients: ["קמח", "ביצים", "חלב", "סוכר", "אבקת אפייה", "חמאה"], cookingTime: 20, difficulty: "קל" },
-      { title: "Scrambled Eggs", ingredients: ["ביצים", "חמאה", "מלח", "פלפל"], cookingTime: 10, difficulty: "קל" },
-      { title: "French Toast", ingredients: ["לחם", "ביצים", "חלב", "קינמון", "סוכר", "חמאה"], cookingTime: 15, difficulty: "קל" },
-      { title: "Avocado Toast", ingredients: ["לחם", "אבוקדו", "ליים", "מלח", "פלפל", "ביצה"], cookingTime: 10, difficulty: "קל" },
+      { title: "פנקייק קלאסי", ingredients: ["קמח", "ביצים", "חלב", "סוכר", "אבקת אפייה", "חמאה"], cookingTime: 20, difficulty: "קל" },
+      { title: "ביצה מקושקשת", ingredients: ["ביצים", "חמאה", "מלח", "פלפל"], cookingTime: 10, difficulty: "קל" },
+      { title: "פרנץ׳ טוסט", ingredients: ["לחם", "ביצים", "חלב", "קינמון", "סוכר", "חמאה"], cookingTime: 15, difficulty: "קל" },
+      { title: "טוסט אבוקדו", ingredients: ["לחם", "אבוקדו", "ליים", "מלח", "פלפל", "ביצה"], cookingTime: 10, difficulty: "קל" },
     ],
   },
 ];
