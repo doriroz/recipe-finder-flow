@@ -281,7 +281,11 @@ const RecipeResult = () => {
               <div className="inline-flex items-center gap-2 bg-sage-light text-sage-dark px-4 py-2 rounded-full mb-4">
                 <span>✨</span>
                 <span className="font-medium">
-                  {recipe ? "יצרנו לכם מתכון עם AI!" : "מתכון לדוגמה"}
+                  {!recipe
+                    ? "מתכון לדוגמה"
+                    : backPath === "/categories"
+                      ? "מצאנו לכם מתכון מהספרייה!"
+                      : "יצרנו לכם מתכון עם AI!"}
                 </span>
               </div>
               {!user && (
