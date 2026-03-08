@@ -96,10 +96,10 @@ const CategorySelection = () => {
       {/* Header */}
       <div className="bg-gradient-to-b from-primary/10 to-muted px-4 pt-6 pb-4">
         <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-4">
+          <div className="relative flex items-center justify-center mb-4">
             <button
               onClick={() => navigate(-1)}
-              className="rounded-full p-2 hover:bg-accent transition-colors text-muted-foreground"
+              className="absolute left-0 rounded-full p-2 hover:bg-accent transition-colors text-muted-foreground"
             >
               <ArrowRight className="w-5 h-5" />
             </button>
