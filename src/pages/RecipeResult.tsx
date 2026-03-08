@@ -101,7 +101,7 @@ const RecipeResult = () => {
         <header className="bg-card border-b border-border sticky top-0 z-10">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <Button variant="ghost" onClick={() => navigate(backPath)} className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
                 <ArrowRight className="w-5 h-5" />
                 חזרה
               </Button>
