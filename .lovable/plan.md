@@ -1,12 +1,33 @@
-## Completed: Grouped Scoring with Ingredient Limits
 
-### What was done
 
-1. **New scoring formula**: `score = usedCount - missingCount` (no 0.5 multiplier)
-2. **10-ingredient limit**: Skip any recipe with more than 10 total ingredients
-3. **missingCount > 3 filter**: Reject recipes missing more than 3 ingredients
-4. **Grouped output**: Recipes grouped into Cook Now (0 missing), Almost Ready (1-2 missing), Needs Three (3 missing) — top 3 per group
-5. **New badges**: "מוכן לבישול", "כמעט מוכן", "חסרים 3 מצרכים"
-6. **Fallback**: When no recipes pass filters, return friendly message + 3 popular recipes + showAIButton
-7. **Always include** `showAIButton: true` in response
-8. **Synced** debug-matching with same logic
+## Plan: Recipe Card Click → Spoonacular Search → Recipe Result Page
+
+### Approach
+Reuse the existing `search-recipe` edge function (which already queries Spoonacular, translates to Hebrew, and returns full recipe data) by searching with the clicked recipe's title. Then save the result and navigate to `/recipe`.
+
+### Changes
+
+**File: `src/pages/CategorySelection.tsx`**
+
+1. Import `useRecipeSearch` hook and `useNavigate`
+2. Add loading state (`loadingRecipe: string | null`) to track which recipe is being fetched
+3. On recipe card click:
+   - Set loading state (show spinner on that card)
+   - Call `search(recipe.title)` from `useRecipeSearch`
+   - If results found: call `saveGeneratedRecipe(results[0])` to persist to DB
+   - Navigate to `/recipe?id={savedId}` with state matching existing pattern (`why_it_works`, `reliability_score`, `source: "spoonacular"`, etc.)
+   - If no results or error: show toast error in Hebrew
+4. Disable clicks on other recipe cards while one is loading
+
+**No edge function changes** — `search-recipe` already handles Spoonacular search + Hebrew translation + substitution lookup.
+
+**No new files** — uses existing `useRecipeSearch` hook which wraps the edge function.
+
+### Navigation State
+Matches the existing legacy single-recipe format used by `RecipeResult.tsx`:
+```
+navigate(`/recipe?id=${savedId}`, {
+  state: { source: "spoonacular", spoonacular_verified: true }
+})
+```
+
