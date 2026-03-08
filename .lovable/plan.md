@@ -1,23 +1,12 @@
+## Completed: Grouped Scoring with Ingredient Limits
 
+### What was done
 
-## Plan: Category Card Opens Floating Recipe List
-
-### Problem
-Clicking a category card navigates to `/ingredients` — user wants it to open a floating card (modal/sheet) showing that category's mock recipes instead.
-
-### Solution
-Add a Drawer (bottom sheet) to `CategorySelection.tsx` that opens when a category card is clicked, displaying the selected category's recipes in a scrollable list.
-
-### Changes — single file: `src/pages/CategorySelection.tsx`
-
-1. **Remove** the `navigate("/ingredients", ...)` onClick
-2. **Add state**: `selectedCategory: CuisineCategory | null`
-3. **onClick**: set `selectedCategory` to the clicked category
-4. **Add a Drawer** (using existing `vaul` Drawer component) that shows when `selectedCategory` is set:
-   - Drawer header: category emoji + Hebrew name
-   - Scrollable list of recipes, each showing: recipe title, cooking time, difficulty, ingredient count
-   - Each recipe card is clickable (for now just visual, future: navigate to recipe detail)
-   - Close button / swipe to dismiss
-
-No new files. No route changes.
-
+1. **New scoring formula**: `score = usedCount - missingCount` (no 0.5 multiplier)
+2. **10-ingredient limit**: Skip any recipe with more than 10 total ingredients
+3. **missingCount > 3 filter**: Reject recipes missing more than 3 ingredients
+4. **Grouped output**: Recipes grouped into Cook Now (0 missing), Almost Ready (1-2 missing), Needs Three (3 missing) — top 3 per group
+5. **New badges**: "מוכן לבישול", "כמעט מוכן", "חסרים 3 מצרכים"
+6. **Fallback**: When no recipes pass filters, return friendly message + 3 popular recipes + showAIButton
+7. **Always include** `showAIButton: true` in response
+8. **Synced** debug-matching with same logic
