@@ -3,6 +3,7 @@ import { ChefHat, Sparkles, Heart, Search, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-fridge.jpg";
+import cookbookIcon from "@/assets/cookbook-icon.png";
 import UserMenu from "@/components/UserMenu";
 import RecipeSearchOverlay from "@/components/RecipeSearchOverlay";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
@@ -18,7 +19,7 @@ const LandingPage = () => {
     { icon: "🤖", title: "מתכונים עם AI", description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם", link: null },
     { icon: "💡", title: "החלפות חכמות", description: "אין לכם מצרך? יש לנו פתרון", link: null },
     { icon: "👨‍🍳", title: "מצב בישול", description: "הוראות צעד אחר צעד", link: null },
-    { icon: "📚", title: "צרו ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי", link: "/cookbook" },
+    { icon: "", title: "צרו ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי", link: "/cookbook", image: cookbookIcon },
   ];
 
   return (
@@ -131,7 +132,11 @@ const LandingPage = () => {
               className={`bg-card rounded-2xl shadow-card p-6 text-center border border-border/30 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 animate-slide-up ${feature.link ? "cursor-pointer" : ""}`}
               style={{ animationDelay: `${0.4 + index * 0.1}s`, animationFillMode: "both" }}
             >
-              <span className="text-5xl mb-4 block">{feature.icon}</span>
+              {feature.image ? (
+                <img src={feature.image} alt={feature.title} className="w-16 h-16 mx-auto mb-4 object-contain" />
+              ) : (
+                <span className="text-5xl mb-4 block">{feature.icon}</span>
+              )}
               <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.description}</p>
             </div>
