@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { ArrowRight, Camera } from "lucide-react";
+import { ArrowRight, Camera, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ingredients as mockIngredients, type Ingredient } from "@/data/mockData";
@@ -19,7 +19,7 @@ const IngredientInput = () => {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<Ingredient[]>([]);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [showPhoto, setShowPhoto] = useState(false);
+  const [activeTab, setActiveTab] = useState<"ingredients" | "photo">("ingredients");
   const { customIngredients, addCustomIngredient } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
   const { remaining: remainingTries } = useDailyTries();
@@ -57,7 +57,7 @@ const IngredientInput = () => {
   );
 
   const handleGenerate = async () => {
-    if (imageBase64) {
+    if (activeTab === "photo" && imageBase64) {
       await generateRecipe({ imageBase64 });
     } else if (selected.length >= 2) {
       await generateRecipe({ ingredients: selected });
@@ -84,22 +84,41 @@ const IngredientInput = () => {
             <div className="flex items-center gap-2">
               <CreditCounter />
               <span className="font-bold text-foreground">מה שיש 🍳</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowPhoto((v) => !v)}
-                className={showPhoto ? "text-primary" : "text-muted-foreground hover:text-primary"}
-                title={showPhoto ? "חזרה לבחירת מצרכים" : "העלאת תמונה מהמקרר"}
-              >
-                <Camera className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Fixed selected bar + CTA */}
-      {!showPhoto && (
+      {/* Tabs */}
+      <div className="sticky top-0 z-30 bg-background border-b border-border">
+        <div className="container mx-auto px-4 flex">
+          <button
+            onClick={() => setActiveTab("ingredients")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors ${
+              activeTab === "ingredients"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <ChefHat className="w-4 h-4" />
+            בחירת מצרכים
+          </button>
+          <button
+            onClick={() => setActiveTab("photo")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors ${
+              activeTab === "photo"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Camera className="w-4 h-4" />
+            📸 צילום המקרר
+          </button>
+        </div>
+      </div>
+
+      {/* Fixed selected bar + CTA (ingredients tab only) */}
+      {activeTab === "ingredients" && (
         <SelectedIngredientsBar
           selected={selected}
           onRemove={remove}
@@ -110,9 +129,12 @@ const IngredientInput = () => {
       )}
 
       <main className="container mx-auto px-4 py-4 space-y-4 pb-8">
-
-        {showPhoto ? (
+        {activeTab === "photo" ? (
           <div className="max-w-md mx-auto space-y-4">
+            <div className="text-center space-y-1 py-2">
+              <p className="text-lg font-semibold text-foreground">צלמו את המקרר שלכם 📸</p>
+              <p className="text-sm text-muted-foreground">נזהה את המצרכים ונמצא לכם מתכון מושלם</p>
+            </div>
             <ImageUpload onImageSelect={setImageBase64} disabled={isGenerating} />
             {imageBase64 && (
               <Button
@@ -121,7 +143,7 @@ const IngredientInput = () => {
                 onClick={handleGenerate}
                 disabled={isGenerating}
               >
-                יצירת מתכון מהתמונה
+                יצירת מתכון מהתמונה ✨
               </Button>
             )}
           </div>
