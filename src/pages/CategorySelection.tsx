@@ -99,7 +99,7 @@ const CategorySelection = () => {
           <div className="relative flex items-center justify-center mb-4">
             <button
               onClick={() => navigate(-1)}
-              className="absolute left-0 rounded-full p-2 hover:bg-accent transition-colors text-muted-foreground"
+              className="absolute right-0 rounded-full p-2 hover:bg-accent transition-colors text-muted-foreground"
             >
               <ArrowRight className="w-5 h-5" />
             </button>
