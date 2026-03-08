@@ -981,11 +981,12 @@ serve(async (req) => {
     if ((dailyCount || 0) >= 3) {
       return new Response(
         JSON.stringify({
+          success: false,
           error: "ניצלתם את 3 הניסיונות היומיים. שדרגו לעוד מתכונים!",
           tries_exhausted: true,
           redirect: "/upgrade",
         }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
