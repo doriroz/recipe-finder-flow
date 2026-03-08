@@ -3,6 +3,7 @@ import { ChefHat, Sparkles, Heart, Search, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-fridge.jpg";
+import cookbookIcon from "@/assets/cookbook-icon.png";
 import UserMenu from "@/components/UserMenu";
 import RecipeSearchOverlay from "@/components/RecipeSearchOverlay";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
