@@ -242,7 +242,7 @@ const RecipeResult = () => {
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
-              onClick={() => navigate(backPath)}
+              onClick={() => navigate(-1)}
               className="flex items-center gap-2"
             >
               <ArrowRight className="w-5 h-5" />
