@@ -83,9 +83,9 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "18 60% 81%",
     type: "cuisine",
     recipes: [
-      { title: "Beef Tacos", ingredients: ["בשר טחון", "טורטייה", "חסה", "עגבנייה", "גבינה", "סלסה", "שמנת חמוצה"], cookingTime: 25, difficulty: "קל" },
-      { title: "Quesadilla", ingredients: ["טורטייה", "גבינה צהובה", "פלפל", "בצל", "שמנת חמוצה"], cookingTime: 15, difficulty: "קל" },
-      { title: "Guacamole", ingredients: ["אבוקדו", "בצל", "עגבנייה", "כוסברה", "ליים", "מלח"], cookingTime: 10, difficulty: "קל" },
+      { title: "טאקו בקר", ingredients: ["בשר טחון", "טורטייה", "חסה", "עגבנייה", "גבינה", "סלסה", "שמנת חמוצה"], cookingTime: 25, difficulty: "קל" },
+      { title: "קסדייה", ingredients: ["טורטייה", "גבינה צהובה", "פלפל", "בצל", "שמנת חמוצה"], cookingTime: 15, difficulty: "קל" },
+      { title: "גוואקמולי", ingredients: ["אבוקדו", "בצל", "עגבנייה", "כוסברה", "ליים", "מלח"], cookingTime: 10, difficulty: "קל" },
     ],
   },
   {
