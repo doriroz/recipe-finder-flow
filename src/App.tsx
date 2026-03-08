@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import DebugMatching from "./pages/DebugMatching";
 import CategorySelection from "./pages/CategorySelection";
+import Upgrade from "./pages/Upgrade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
