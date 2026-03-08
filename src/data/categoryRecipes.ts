@@ -97,10 +97,10 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "270 45% 82%",
     type: "meal",
     recipes: [
-      { title: "Classic Pancakes", ingredients: ["קמח", "ביצים", "חלב", "סוכר", "אבקת אפייה", "חמאה"], cookingTime: 20, difficulty: "קל" },
-      { title: "Scrambled Eggs", ingredients: ["ביצים", "חמאה", "מלח", "פלפל"], cookingTime: 10, difficulty: "קל" },
-      { title: "French Toast", ingredients: ["לחם", "ביצים", "חלב", "קינמון", "סוכר", "חמאה"], cookingTime: 15, difficulty: "קל" },
-      { title: "Avocado Toast", ingredients: ["לחם", "אבוקדו", "ליים", "מלח", "פלפל", "ביצה"], cookingTime: 10, difficulty: "קל" },
+      { title: "פנקייק קלאסי", ingredients: ["קמח", "ביצים", "חלב", "סוכר", "אבקת אפייה", "חמאה"], cookingTime: 20, difficulty: "קל" },
+      { title: "ביצה מקושקשת", ingredients: ["ביצים", "חמאה", "מלח", "פלפל"], cookingTime: 10, difficulty: "קל" },
+      { title: "פרנץ׳ טוסט", ingredients: ["לחם", "ביצים", "חלב", "קינמון", "סוכר", "חמאה"], cookingTime: 15, difficulty: "קל" },
+      { title: "טוסט אבוקדו", ingredients: ["לחם", "אבוקדו", "ליים", "מלח", "פלפל", "ביצה"], cookingTime: 10, difficulty: "קל" },
     ],
   },
 ];
