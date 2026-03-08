@@ -1,12 +1,22 @@
-## Completed: Grouped Scoring with Ingredient Limits
 
-### What was done
 
-1. **New scoring formula**: `score = usedCount - missingCount` (no 0.5 multiplier)
-2. **10-ingredient limit**: Skip any recipe with more than 10 total ingredients
-3. **missingCount > 3 filter**: Reject recipes missing more than 3 ingredients
-4. **Grouped output**: Recipes grouped into Cook Now (0 missing), Almost Ready (1-2 missing), Needs Three (3 missing) — top 3 per group
-5. **New badges**: "מוכן לבישול", "כמעט מוכן", "חסרים 3 מצרכים"
-6. **Fallback**: When no recipes pass filters, return friendly message + 3 popular recipes + showAIButton
-7. **Always include** `showAIButton: true` in response
-8. **Synced** debug-matching with same logic
+## Add 3 New Categories for a 3×3 Grid
+
+### Current 6 categories
+Italian 🍝, Asian 🥢, Mediterranean 🫒, American 🍔, Mexican 🌮, Breakfast 🥞
+
+### 3 New Daily-Life Categories
+1. **🍰 קינוחים (Desserts)** — "מתוק לסיום" — cakes, cookies, simple sweets
+2. **🥗 סלטים וקלילים (Salads & Light)** — "בריא ומהיר" — everyday salads and light meals
+3. **🍲 מרקים (Soups)** — "חם ונעים" — daily comfort soups
+
+### Changes
+
+**`src/data/categoryRecipes.ts`**:
+- Add 3 new `CuisineCategory` entries with 3-4 recipes each (simple, daily-life recipes with ≤8 ingredients)
+- Types: Desserts and Salads as `"meal"`, Soups as `"meal"`
+
+**`src/pages/CategorySelection.tsx`**:
+- Update grid from `grid-cols-2` to `grid-cols-3` so all 9 categories display in a clean 3×3 layout
+- Adjust card sizing/padding if needed for the tighter grid
+
