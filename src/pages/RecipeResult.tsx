@@ -42,6 +42,8 @@ const RecipeResult = () => {
   const [missedCount, setMissedCount] = useState<number | undefined>();
   const [usedIngredientNames, setUsedIngredientNames] = useState<string[] | undefined>();
 
+  const backPath = (location.state as any)?.from || "/ingredients";
+
   // Parse navigation state
   useEffect(() => {
     const state = location.state as any | null;
