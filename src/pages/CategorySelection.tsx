@@ -1,15 +1,44 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowRight, X, Clock, ChefHat, Leaf } from "lucide-react";
+import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CUISINE_CATEGORIES, CuisineCategory } from "@/data/categoryRecipes";
+import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
+import { useRecipeSearch } from "@/hooks/useRecipeSearch";
+import { toast } from "@/hooks/use-toast";
 
 const CategorySelection = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CuisineCategory | null>(null);
+  const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
+  const { search, saveGeneratedRecipe } = useRecipeSearch();
+
+  const handleRecipeClick = async (recipe: CategoryRecipe) => {
+    if (loadingRecipe) return;
+    setLoadingRecipe(recipe.title);
+    try {
+      const results = await search(recipe.title);
+      if (!results || results.length === 0) {
+        toast({ title: "לא נמצא מתכון", description: "נסו לחפש מתכון אחר", variant: "destructive" });
+        return;
+      }
+      const savedId = await saveGeneratedRecipe(results[0]);
+      if (!savedId) {
+        toast({ title: "שגיאה בשמירת המתכון", variant: "destructive" });
+        return;
+      }
+      setSelectedCategory(null);
+      navigate(`/recipe?id=${savedId}`, {
+        state: { source: "spoonacular", spoonacular_verified: true },
+      });
+    } catch {
+      toast({ title: "שגיאה בחיפוש המתכון", variant: "destructive" });
+    } finally {
+      setLoadingRecipe(null);
+    }
+  };
 
   const filtered = query.trim()
     ? CUISINE_CATEGORIES.filter(
@@ -180,9 +209,18 @@ const CategorySelection = () => {
                       initial={{ opacity: 0, x: 8 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.06, duration: 0.18 }}
-                      className="w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-white/30 hover:bg-white/50 border border-transparent transition-all duration-150 text-right cursor-pointer"
+                      onClick={() => handleRecipeClick(recipe)}
+                      className={cn(
+                        "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-white/30 hover:bg-white/50 border border-transparent transition-all duration-150 text-right cursor-pointer",
+                        loadingRecipe && loadingRecipe !== recipe.title && "opacity-50 pointer-events-none"
+                      )}
                     >
-                      <p className="font-bold text-foreground text-sm">{recipe.title}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-foreground text-sm">{recipe.title}</p>
+                        {loadingRecipe === recipe.title && (
+                          <Loader2 className="w-4 h-4 animate-spin text-foreground/70" />
+                        )}
+                      </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
