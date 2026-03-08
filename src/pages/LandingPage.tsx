@@ -15,7 +15,7 @@ const LandingPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const features = [
-    { icon: "🥘", title: "מתכונים מהמקרר", description: "הכניסו את מה שיש והקסם יקרה" },
+    { icon: "🤖", title: "מתכונים עם AI", description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם" },
     { icon: "💡", title: "החלפות חכמות", description: "אין לכם מצרך? יש לנו פתרון" },
     { icon: "👨‍🍳", title: "מצב בישול", description: "הוראות צעד אחר צעד" },
   ];
