@@ -93,7 +93,7 @@ const LandingPage = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => setIsSearchOpen(true)}
+                  onClick={() => navigate("/categories")}
                   className="text-lg px-6 py-6 h-auto rounded-full transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-soft group"
                 >
                   <Search className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
