@@ -1,12 +1,15 @@
-## Completed: Grouped Scoring with Ingredient Limits
 
-### What was done
 
-1. **New scoring formula**: `score = usedCount - missingCount` (no 0.5 multiplier)
-2. **10-ingredient limit**: Skip any recipe with more than 10 total ingredients
-3. **missingCount > 3 filter**: Reject recipes missing more than 3 ingredients
-4. **Grouped output**: Recipes grouped into Cook Now (0 missing), Almost Ready (1-2 missing), Needs Three (3 missing) — top 3 per group
-5. **New badges**: "מוכן לבישול", "כמעט מוכן", "חסרים 3 מצרכים"
-6. **Fallback**: When no recipes pass filters, return friendly message + 3 popular recipes + showAIButton
-7. **Always include** `showAIButton: true` in response
-8. **Synced** debug-matching with same logic
+## Add "Create a Cookbook" Feature Card to Landing Page
+
+### What
+Add a 4th feature card to the landing page's features grid, promoting the cookbook builder. It will match the existing card style with an emoji icon, title, and description.
+
+### Changes
+
+**`src/pages/LandingPage.tsx`**:
+1. Add a 4th item to the `features` array:
+   - `{ icon: "📖", title: "צרו ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי" }`
+2. Update the grid from `md:grid-cols-3` to `md:grid-cols-4` so all four cards fit in one row.
+3. Optionally make the cookbook card clickable, navigating to `/cookbook`.
+
