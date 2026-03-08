@@ -40,9 +40,9 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     hue: "355 55% 82%",
     type: "cuisine",
     recipes: [
-      { title: "Fried Rice", ingredients: ["אורז", "ביצים", "בצל ירוק", "שמן שומשום", "סויה", "ירקות מעורבים"], cookingTime: 20, difficulty: "קל" },
-      { title: "Teriyaki Chicken", ingredients: ["חזה עוף", "סויה", "דבש", "שום", "ג'ינג'ר", "שמן שומשום", "אורז"], cookingTime: 30, difficulty: "בינוני" },
-      { title: "Pad Thai", ingredients: ["אטריות אורז", "ביצים", "בוטנים", "בצל ירוק", "סויה", "ליים", "טופו"], cookingTime: 25, difficulty: "בינוני" },
+      { title: "אורז מוקפץ", ingredients: ["אורז", "ביצים", "בצל ירוק", "שמן שומשום", "סויה", "ירקות מעורבים"], cookingTime: 20, difficulty: "קל" },
+      { title: "עוף טריאקי", ingredients: ["חזה עוף", "סויה", "דבש", "שום", "ג'ינג'ר", "שמן שומשום", "אורז"], cookingTime: 30, difficulty: "בינוני" },
+      { title: "פאד תאי", ingredients: ["אטריות אורז", "ביצים", "בוטנים", "בצל ירוק", "סויה", "ליים", "טופו"], cookingTime: 25, difficulty: "בינוני" },
     ],
   },
   {
