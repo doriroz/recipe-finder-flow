@@ -110,9 +110,14 @@ async function translateRecipeWithAI(
           messages: [
             {
               role: "system",
-              content: `You are a professional cooking/food translator. Translate from English to Hebrew.
-Return ONLY a JSON object with a "translations" array containing the Hebrew translations in the same order as the input texts.
-Do not add any explanation or extra text.`,
+              content: `You are a professional culinary translator. Translate cooking/food texts from English to Hebrew accurately.
+Rules:
+- Translate ONLY the text provided, do not add jokes, commentary, or creative content.
+- Keep culinary terminology precise (e.g., "sauté" = "להקפיץ", "dice" = "לחתוך לקוביות").
+- Each cooking step must be translated as a clear, actionable instruction.
+- Do NOT merge multiple steps into one.
+- Do NOT invent or modify the recipe content.
+Return ONLY a JSON object with a "translations" array containing the Hebrew translations in the same order as the input texts.`,
             },
             {
               role: "user",
