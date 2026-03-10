@@ -160,7 +160,8 @@ const CategorySelection = () => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="חפשו מטבח או מתכון..."
+              onKeyDown={handleKeyDown}
+              placeholder="חפשו מתכון... (הקישו Enter לחיפוש)"
               className={cn(
                 "w-full bg-card border border-border rounded-full py-4 pr-12 pl-12 text-foreground",
                 "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
@@ -169,7 +170,7 @@ const CategorySelection = () => {
             />
             {query && (
               <button
-                onClick={() => setQuery("")}
+                onClick={handleClearQuery}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="w-4 h-4" />
@@ -178,6 +179,74 @@ const CategorySelection = () => {
           </div>
         </div>
       </div>
+
+      {/* Search results section */}
+      {(isSearching || (hasSearched && !isSearching)) && (
+        <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
+          {isSearching && (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <p className="text-muted-foreground text-sm">מחפש מתכונים...</p>
+            </div>
+          )}
+
+          {!isSearching && hasSearched && error && (
+            <div className="text-center py-6">
+              <p className="text-destructive text-sm">{error}</p>
+            </div>
+          )}
+
+          {!isSearching && hasSearched && !error && results.length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-8">
+              <SearchX className="w-10 h-10 text-muted-foreground/50" />
+              <p className="text-foreground font-medium">לא מצאנו מתכונים עבור "{query}" 😕</p>
+              <p className="text-muted-foreground text-sm">נסו מילים אחרות או חפשו בקטגוריות למטה</p>
+            </div>
+          )}
+
+          {!isSearching && hasSearched && results.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground mb-3">נמצאו {results.length} תוצאות:</p>
+              {results.map((result, i) => (
+                <motion.div
+                  key={result.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06, duration: 0.18 }}
+                  onClick={() => handleResultClick(result)}
+                  className={cn(
+                    "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-sm transition-all duration-150 text-right cursor-pointer",
+                    savingResult && savingResult !== result.id && "opacity-50 pointer-events-none"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold text-foreground text-sm">{result.title}</p>
+                    {savingResult === result.id && (
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    {result.cooking_time && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {result.cooking_time} דק׳
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <ChefHat className="w-3.5 h-3.5" />
+                      {result.difficulty || "בינוני"}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Leaf className="w-3.5 h-3.5" />
+                      {result.ingredients.length} מצרכים
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Category grid */}
       <div className="max-w-lg mx-auto px-4 pb-8 pt-4">
