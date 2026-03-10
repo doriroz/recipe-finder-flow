@@ -110,16 +110,21 @@ async function translateRecipeWithAI(
           messages: [
             {
               role: "system",
-              content: `You are a professional cooking/food translator. Translate from English to Hebrew.
-Return ONLY a JSON object with a "translations" array containing the Hebrew translations in the same order as the input texts.
-Do not add any explanation or extra text.`,
+              content: `You are a professional culinary translator. Translate cooking/food texts from English to Hebrew accurately.
+Rules:
+- Translate ONLY the text provided, do not add jokes, commentary, or creative content.
+- Keep culinary terminology precise (e.g., "sauté" = "להקפיץ", "dice" = "לחתוך לקוביות").
+- Each cooking step must be translated as a clear, actionable instruction.
+- Do NOT merge multiple steps into one.
+- Do NOT invent or modify the recipe content.
+Return ONLY a JSON object with a "translations" array containing the Hebrew translations in the same order as the input texts.`,
             },
             {
               role: "user",
               content: JSON.stringify({ texts: misses }),
             },
           ],
-          temperature: 0.2,
+          temperature: 0.1,
           max_tokens: 2048,
         }),
       });
@@ -357,14 +362,24 @@ serve(async (req) => {
                 console.error("Substitution lookup error:", subErr);
               }
 
+              // Clean up instructions - split if single blob, filter empty
+              let finalSteps = translated.steps.length > 0 ? translated.steps : ["No instructions available"];
+              if (finalSteps.length === 1 && finalSteps[0].length > 200) {
+                // Single long blob - try splitting by sentence patterns
+                finalSteps = finalSteps[0]
+                  .split(/(?<=\.)\s+/)
+                  .filter((s: string) => s.trim().length > 5);
+                if (finalSteps.length === 0) finalSteps = ["No instructions available"];
+              }
+
               results.push({
                 id: `generated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 title: translated.title,
                 ingredients,
-                instructions: translated.steps.length > 0 ? translated.steps : ["No instructions available"],
+                instructions: finalSteps,
                 substitutions: searchSubstitutions,
                 cooking_time: cookingTime,
-                difficulty,
+                difficulty: estimateDifficulty(cookingTime, finalSteps.length),
                 source: "generated",
               });
             }
