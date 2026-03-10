@@ -124,7 +124,7 @@ Return ONLY a JSON object with a "translations" array containing the Hebrew tran
               content: JSON.stringify({ texts: misses }),
             },
           ],
-          temperature: 0.2,
+          temperature: 0.1,
           max_tokens: 2048,
         }),
       });
