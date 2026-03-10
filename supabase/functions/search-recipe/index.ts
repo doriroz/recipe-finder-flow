@@ -362,14 +362,24 @@ serve(async (req) => {
                 console.error("Substitution lookup error:", subErr);
               }
 
+              // Clean up instructions - split if single blob, filter empty
+              let finalSteps = translated.steps.length > 0 ? translated.steps : ["No instructions available"];
+              if (finalSteps.length === 1 && finalSteps[0].length > 200) {
+                // Single long blob - try splitting by sentence patterns
+                finalSteps = finalSteps[0]
+                  .split(/(?<=\.)\s+/)
+                  .filter((s: string) => s.trim().length > 5);
+                if (finalSteps.length === 0) finalSteps = ["No instructions available"];
+              }
+
               results.push({
                 id: `generated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 title: translated.title,
                 ingredients,
-                instructions: translated.steps.length > 0 ? translated.steps : ["No instructions available"],
+                instructions: finalSteps,
                 substitutions: searchSubstitutions,
                 cooking_time: cookingTime,
-                difficulty,
+                difficulty: estimateDifficulty(cookingTime, finalSteps.length),
                 source: "generated",
               });
             }
