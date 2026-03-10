@@ -1,18 +1,64 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2 } from "lucide-react";
+import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useRecipeSearch, SearchRecipeResult } from "@/hooks/useRecipeSearch";
 
 const CategorySelection = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CuisineCategory | null>(null);
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [savingResult, setSavingResult] = useState<string | null>(null);
+  const { search, saveGeneratedRecipe, clearResults, isSearching, results, error } = useRecipeSearch();
+
+  const handleSearch = async () => {
+    if (!query.trim() || query.trim().length < 2) return;
+    setHasSearched(true);
+    await search(query.trim());
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
+  const handleClearQuery = () => {
+    setQuery("");
+    setHasSearched(false);
+    clearResults();
+  };
+
+  const handleResultClick = async (result: SearchRecipeResult) => {
+    if (savingResult) return;
+    setSavingResult(result.id);
+    try {
+      let recipeId = result.id;
+      if (result.source === "generated") {
+        const savedId = await saveGeneratedRecipe(result);
+        if (!savedId) {
+          toast({ title: "שגיאה בשמירת המתכון", variant: "destructive" });
+          return;
+        }
+        recipeId = savedId;
+      }
+      navigate(`/recipe?id=${recipeId}`, {
+        state: { source: "local", from: "/categories" },
+      });
+    } catch {
+      toast({ title: "שגיאה בשמירת המתכון", variant: "destructive" });
+    } finally {
+      setSavingResult(null);
+    }
+  };
 
   const handleRecipeClick = async (recipe: CategoryRecipe) => {
     if (loadingRecipe) return;
