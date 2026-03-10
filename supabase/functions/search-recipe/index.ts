@@ -222,19 +222,24 @@ serve(async (req) => {
 
     const searchTerm = query.trim();
     const results: RecipeResult[] = [];
+    const seenTitles = new Set<string>();
 
-    // Step 1: Search existing user recipes
+    // Step 1: Search existing user recipes (deduplicate by title)
     const { data: existingRecipes, error: searchError } = await supabase
       .from("recipes")
       .select("*")
       .eq("user_id", userId)
       .ilike("title", `%${searchTerm}%`)
-      .limit(5);
+      .order("created_at", { ascending: false })
+      .limit(10);
 
     if (searchError) {
       console.error("Search error:", searchError);
     } else if (existingRecipes && existingRecipes.length > 0) {
       for (const recipe of existingRecipes) {
+        const normalizedTitle = recipe.title.trim();
+        if (seenTitles.has(normalizedTitle)) continue;
+        seenTitles.add(normalizedTitle);
         const instructions = recipe.instructions || [];
         results.push({
           id: recipe.id,
@@ -246,6 +251,34 @@ serve(async (req) => {
           difficulty: estimateDifficulty(recipe.cooking_time, instructions.length),
           source: "existing",
         });
+      }
+    }
+
+    // Step 1b: Search recipe_library for more variety
+    if (results.length < 5) {
+      const { data: libraryRecipes } = await supabaseAdmin
+        .from("recipe_library")
+        .select("*")
+        .ilike("title", `%${searchTerm}%`)
+        .limit(5);
+
+      if (libraryRecipes) {
+        for (const recipe of libraryRecipes) {
+          const normalizedTitle = recipe.title.trim();
+          if (seenTitles.has(normalizedTitle)) continue;
+          seenTitles.add(normalizedTitle);
+          const instructions = recipe.instructions || [];
+          results.push({
+            id: recipe.id,
+            title: recipe.title,
+            ingredients: recipe.ingredients as any[],
+            instructions,
+            substitutions: recipe.substitutions as any[] | null,
+            cooking_time: recipe.cooking_time,
+            difficulty: recipe.difficulty || estimateDifficulty(recipe.cooking_time, instructions.length),
+            source: "existing",
+          });
+        }
       }
     }
 
