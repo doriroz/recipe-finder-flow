@@ -439,6 +439,7 @@ serve(async (req) => {
                 difficulty: estimateDifficulty(cookingTime, finalSteps.length),
                 source: "generated",
               });
+              addedFromSpoon++;
             }
           } else {
             console.error("Spoonacular error:", spoonRes.status, await spoonRes.text());
