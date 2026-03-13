@@ -350,7 +350,7 @@ serve(async (req) => {
           const needed = 3 - results.length;
           const spoonUrl = new URL("https://api.spoonacular.com/recipes/complexSearch");
           spoonUrl.searchParams.set("query", englishQuery);
-          spoonUrl.searchParams.set("number", String(needed));
+          spoonUrl.searchParams.set("number", String(needed + 3)); // request extra in case some are rejected
           spoonUrl.searchParams.set("addRecipeInformation", "true");
           spoonUrl.searchParams.set("fillIngredients", "true");
           spoonUrl.searchParams.set("instructionsRequired", "true");
@@ -360,13 +360,22 @@ serve(async (req) => {
           if (spoonRes.ok) {
             const spoonData = await spoonRes.json();
             const spoonRecipes = spoonData.results || [];
+            let addedFromSpoon = 0;
 
             for (const sr of spoonRecipes) {
+              if (addedFromSpoon >= needed) break;
+
               const ingredientData = (sr.extendedIngredients || []).map((i: any) => ({
                 name: i.name || i.originalName || "",
                 unit: i.unit || "",
               }));
               const steps: string[] = (sr.analyzedInstructions?.[0]?.steps || []).map((s: any) => s.step || "");
+
+              // Validate BEFORE translation to avoid caching nonsense
+              if (isNonsenseInstructions(steps)) {
+                console.log(`Skipping nonsense recipe: "${sr.title}"`);
+                continue;
+              }
 
               // AI translate with DB cache
               const translated = await translateRecipeWithAI(
