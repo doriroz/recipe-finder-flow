@@ -34,6 +34,54 @@ function getDifficultyOrder(difficulty: string): number {
   }
 }
 
+// ============ INSTRUCTION VALIDATION (pre-translation) ============
+
+const TROLL_KEYWORDS = [
+  "sorry", "apologize", "apologise", "fevicol", "fevikol", "glue",
+  "message kijiye", "kijiye", "chipka", "sohlaiye", "phod dijiye",
+  "joke", "prank", "lol", "haha", "just kidding",
+];
+
+const NON_LATIN_COOKING_REGEX = /[\u0900-\u097F\u0600-\u06FF\u0980-\u09FF\u0A00-\u0A7F]/; // Hindi, Arabic, Bengali, Gurmukhi
+
+function isNonsenseInstructions(steps: string[]): boolean {
+  if (!steps || steps.length === 0) return true;
+
+  const allText = steps.join(" ").toLowerCase();
+
+  // Too short total text — not a real recipe
+  if (allText.length < 50) return true;
+
+  // Contains non-Latin scripts (Hindi/Urdu/Arabic in supposedly English text)
+  if (NON_LATIN_COOKING_REGEX.test(allText)) {
+    console.log("Rejected recipe: contains non-Latin script in English instructions");
+    return true;
+  }
+
+  // Contains troll keywords
+  for (const keyword of TROLL_KEYWORDS) {
+    if (allText.includes(keyword)) {
+      console.log(`Rejected recipe: contains troll keyword "${keyword}"`);
+      return true;
+    }
+  }
+
+  // Excessive dots (4+ in a row) — sign of troll/spam text
+  if (/\.{4,}/.test(allText)) {
+    console.log("Rejected recipe: excessive dots pattern");
+    return true;
+  }
+
+  // Average step length too short
+  const avgLen = allText.length / steps.length;
+  if (avgLen < 10) {
+    console.log("Rejected recipe: average step length too short");
+    return true;
+  }
+
+  return false;
+}
+
 // MyMemory for Hebrew→English only (short search terms)
 async function translateText(text: string, langpair: string): Promise<string> {
   try {
