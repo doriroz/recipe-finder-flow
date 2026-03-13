@@ -200,11 +200,11 @@ async function findSubstitutionsFromDB(
 
     const matched: { original: string; alternative: string; reason: string }[] = [];
     for (const ingName of ingredientNames) {
+      const normalizedIng = ingName.trim();
       for (const sub of allSubs) {
-        if (
-          ingName.includes(sub.original_ingredient) ||
-          sub.original_ingredient.includes(ingName)
-        ) {
+        const normalizedSub = sub.original_ingredient.trim();
+        // Exact match only — avoid false positives like "חלב שקדים" matching "חלב"
+        if (normalizedIng === normalizedSub) {
           matched.push({
             original: sub.original_ingredient,
             alternative: sub.alternative_ingredient,

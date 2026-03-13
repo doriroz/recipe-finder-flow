@@ -406,8 +406,10 @@ serve(async (req) => {
                 if (allSubs && allSubs.length > 0) {
                   const matched: any[] = [];
                   for (const ingName of hebrewIngNames) {
+                    const normalizedIng = ingName.trim();
                     for (const sub of allSubs) {
-                      if (ingName.includes(sub.original_ingredient) || sub.original_ingredient.includes(ingName)) {
+                      // Exact match only — avoid false positives like "חלב שקדים" matching "חלב"
+                      if (normalizedIng === sub.original_ingredient.trim()) {
                         matched.push({ original: sub.original_ingredient, alternative: sub.alternative_ingredient, reason: sub.reason });
                       }
                     }
