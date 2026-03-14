@@ -86,6 +86,44 @@ export type Database = {
         }
         Relationships: []
       }
+      fridge_challenges: {
+        Row: {
+          created_at: string
+          id: string
+          ingredient_emojis: string[]
+          ingredient_names: string[]
+          recipe_id: string | null
+          recipe_title: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ingredient_emojis?: string[]
+          ingredient_names?: string[]
+          recipe_id?: string | null
+          recipe_title?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ingredient_emojis?: string[]
+          ingredient_names?: string[]
+          recipe_id?: string | null
+          recipe_title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fridge_challenges_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ingredient_substitutions: {
         Row: {
           alternative_ingredient: string
