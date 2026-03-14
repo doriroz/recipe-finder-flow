@@ -87,7 +87,7 @@ const LandingPage = () => {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 h-auto rounded-full shadow-elevated hover:shadow-card transition-all duration-300 flex-row-reverse hover:scale-105 hover:-translate-y-1 group"
               >
                 <Sparkles className="w-6 h-6 transition-transform duration-300 group-hover:rotate-12" />
-                ✨ בואו נבשל עם AI
+                ✨ אתגר המקרר עם AI
               </Button>
 
               {user && (
