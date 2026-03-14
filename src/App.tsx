@@ -42,6 +42,7 @@ const App = () => (
           <Route path="/debug" element={<DebugMatching />} />
           <Route path="/categories" element={<CategorySelection />} />
           <Route path="/upgrade" element={<Upgrade />} />
+          <Route path="/challenges" element={<FridgeChallenges />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
