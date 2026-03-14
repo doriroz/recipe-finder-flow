@@ -17,8 +17,8 @@ const LandingPage = () => {
   const features = [
     { icon: "🤖", title: "מתכונים עם AI", description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם", link: null },
     { icon: "💡", title: "החלפות חכמות", description: "אין לכם מצרך? יש לנו פתרון", link: null },
-    { icon: "👨‍🍳", title: "מצב בישול", description: "הוראות צעד אחר צעד", link: null },
-    { icon: "📚", title: "צרו ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי", link: "/cookbook" },
+    { icon: "🧊", title: "אתגרי המקרר", description: "חזרו לשילובים שניסיתם בעבר", link: "/challenges" },
+    { icon: "📚", title: "ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי", link: "/cookbook" },
   ];
 
   return (
