@@ -17,6 +17,7 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import DebugMatching from "./pages/DebugMatching";
 import CategorySelection from "./pages/CategorySelection";
 import Upgrade from "./pages/Upgrade";
+import FridgeChallenges from "./pages/FridgeChallenges";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/debug" element={<DebugMatching />} />
           <Route path="/categories" element={<CategorySelection />} />
           <Route path="/upgrade" element={<Upgrade />} />
+          <Route path="/challenges" element={<FridgeChallenges />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

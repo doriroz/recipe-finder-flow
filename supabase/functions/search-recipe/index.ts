@@ -408,8 +408,11 @@ serve(async (req) => {
                   for (const ingName of hebrewIngNames) {
                     const normalizedIng = ingName.trim();
                     for (const sub of allSubs) {
-                      // Exact match only — avoid false positives like "חלב שקדים" matching "חלב"
-                      if (normalizedIng === sub.original_ingredient.trim()) {
+                      const normalizedSub = sub.original_ingredient.trim();
+                      // Close match for Hebrew plurals (e.g. ביצים/ביצה) but not compound ingredients (חלב שקדים/חלב)
+                      const lenDiff = Math.abs(normalizedIng.length - normalizedSub.length);
+                      const isClose = lenDiff <= 3 && (normalizedIng.includes(normalizedSub) || normalizedSub.includes(normalizedIng));
+                      if (normalizedIng === normalizedSub || isClose) {
                         matched.push({ original: sub.original_ingredient, alternative: sub.alternative_ingredient, reason: sub.reason });
                       }
                     }

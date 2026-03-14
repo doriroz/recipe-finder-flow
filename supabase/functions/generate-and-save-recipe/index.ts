@@ -186,6 +186,15 @@ Do not add any explanation or extra text.`,
 
 // ============ DB-BASED SUBSTITUTIONS ============
 
+// Check if two Hebrew strings are close enough (handles plurals like ביצים/ביצה)
+function isCloseHebrewMatch(a: string, b: string): boolean {
+  if (a === b) return true;
+  // One must contain the other, and length diff <= 3 chars (plural suffixes)
+  const lenDiff = Math.abs(a.length - b.length);
+  if (lenDiff > 3) return false;
+  return a.includes(b) || b.includes(a);
+}
+
 async function findSubstitutionsFromDB(
   supabaseAdmin: any,
   ingredientNames: string[]
@@ -203,8 +212,9 @@ async function findSubstitutionsFromDB(
       const normalizedIng = ingName.trim();
       for (const sub of allSubs) {
         const normalizedSub = sub.original_ingredient.trim();
-        // Exact match only — avoid false positives like "חלב שקדים" matching "חלב"
-        if (normalizedIng === normalizedSub) {
+        // Exact match first, then close match for Hebrew plurals
+        // Avoids false positives like "חלב שקדים" (6 chars) matching "חלב" (3 chars)
+        if (isCloseHebrewMatch(normalizedIng, normalizedSub)) {
           matched.push({
             original: sub.original_ingredient,
             alternative: sub.alternative_ingredient,

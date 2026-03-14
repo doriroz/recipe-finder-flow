@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { saveFridgeChallenge } from "./useFridgeChallenge";
 
 interface Ingredient {
   id: number;
@@ -135,6 +136,17 @@ export const useGenerateRecipe = () => {
         toast.success("המתכון נוצר בהצלחה!");
         
         if (data.recipes && Array.isArray(data.recipes) && data.recipes.length > 0) {
+          // Save fridge challenge
+          const firstRecipe = data.recipes[0];
+          if (ingredients && ingredients.length > 0) {
+            saveFridgeChallenge({
+              ingredientNames: ingredients.map(i => i.name),
+              ingredientEmojis: ingredients.map(i => i.emoji),
+              recipeId: firstRecipe?.recipe?.id,
+              recipeTitle: firstRecipe?.recipe?.title,
+            });
+          }
+
           navigate(`/recipe`, {
             state: {
               recipes: data.recipes,
@@ -142,6 +154,16 @@ export const useGenerateRecipe = () => {
             },
           });
         } else if (data.recipe) {
+          // Save fridge challenge for single recipe
+          if (ingredients && ingredients.length > 0) {
+            saveFridgeChallenge({
+              ingredientNames: ingredients.map(i => i.name),
+              ingredientEmojis: ingredients.map(i => i.emoji),
+              recipeId: data.recipe.id,
+              recipeTitle: data.recipe.title,
+            });
+          }
+
           navigate(`/recipe?id=${data.recipe.id}`, {
             state: {
               why_it_works: data.why_it_works,
