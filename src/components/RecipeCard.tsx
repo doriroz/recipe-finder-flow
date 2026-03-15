@@ -34,6 +34,7 @@ export interface RecipeCardData {
   used_count?: number;
   missed_count?: number;
   used_ingredient_names?: string[];
+  user_ingredient_count?: number;
 }
 
 interface RecipeCardProps {
