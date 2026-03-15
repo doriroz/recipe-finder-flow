@@ -122,7 +122,7 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI, userIngredi
 
   // Single recipe — render directly
   if (recipeItems.length === 1) {
-    const display = toDisplayRecipe(recipeItems[0]);
+    const display = toDisplayRecipe(recipeItems[0], userIngredientCount);
     const activeBadge = recipeItems[0].badge;
 
     return (
