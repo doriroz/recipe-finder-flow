@@ -10,6 +10,7 @@ interface RecipeCarouselProps {
   recipeItems: RecipeResultItem[];
   onStartCooking: (recipeId: string) => void;
   onGenerateAI?: () => void;
+  userIngredientCount?: number;
 }
 
 const badgeStyles: Record<string, string> = {
