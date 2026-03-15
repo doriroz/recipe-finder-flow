@@ -200,8 +200,8 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
           }
         );
         const strictUsedCount = strictUsedNames.length;
-        const total = strictUsedCount + recipe.missed_count;
-        const coverage = total > 0 ? strictUsedCount / total : 0;
+        const totalUserIngredients = recipe.user_ingredient_count || strictUsedCount;
+        const coverage = totalUserIngredients > 0 ? strictUsedCount / totalUserIngredients : 0;
         const colorClass = coverage >= 0.8 ?
         "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
         coverage >= 0.5 ?
