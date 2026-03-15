@@ -35,7 +35,7 @@ const badgeEmoji: Record<string, string> = {
   "בסיס מצוין": "🌟",
 };
 
-function toDisplayRecipe(item: RecipeResultItem): RecipeCardData {
+function toDisplayRecipe(item: RecipeResultItem, userIngredientCount?: number): RecipeCardData {
   const recipe = item.recipe;
   const computedDifficulty = calculateDifficulty(
     recipe.instructions.length,
@@ -62,6 +62,7 @@ function toDisplayRecipe(item: RecipeResultItem): RecipeCardData {
     used_count: item.used_count,
     missed_count: item.missed_count,
     used_ingredient_names: item.used_ingredient_names,
+    user_ingredient_count: userIngredientCount,
   };
 }
 
