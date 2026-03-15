@@ -22,7 +22,7 @@ export const useGenerateRecipe = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
 
-  const generateRecipe = async ({ ingredients, imageBase64, forceCreative }: GenerateRecipeOptions) => {
+  const generateRecipe = async ({ ingredients, imageBase64, forceCreative, skipChallengeSave }: GenerateRecipeOptions) => {
     setIsGenerating(true);
 
     try {
