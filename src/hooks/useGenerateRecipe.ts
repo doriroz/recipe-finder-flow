@@ -156,7 +156,7 @@ export const useGenerateRecipe = () => {
           });
         } else if (data.recipe) {
           // Save fridge challenge for single recipe
-          if (ingredients && ingredients.length > 0) {
+          if (ingredients && ingredients.length > 0 && !skipChallengeSave) {
             saveFridgeChallenge({
               ingredientNames: ingredients.map(i => i.name),
               ingredientEmojis: ingredients.map(i => i.emoji),

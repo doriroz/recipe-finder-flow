@@ -67,7 +67,7 @@ const FridgeChallenges = () => {
       emoji: challenge.ingredient_emojis[i] || "🥗",
       category: "אחר",
     }));
-    await generateRecipe({ ingredients });
+    await generateRecipe({ ingredients, skipChallengeSave: true });
   };
 
   const handleShare = (challenge: FridgeChallenge) => {
