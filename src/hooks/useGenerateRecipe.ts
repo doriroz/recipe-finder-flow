@@ -139,7 +139,7 @@ export const useGenerateRecipe = () => {
         if (data.recipes && Array.isArray(data.recipes) && data.recipes.length > 0) {
           // Save fridge challenge
           const firstRecipe = data.recipes[0];
-          if (ingredients && ingredients.length > 0) {
+          if (ingredients && ingredients.length > 0 && !skipChallengeSave) {
             saveFridgeChallenge({
               ingredientNames: ingredients.map(i => i.name),
               ingredientEmojis: ingredients.map(i => i.emoji),
