@@ -15,13 +15,14 @@ interface GenerateRecipeOptions {
   ingredients?: Ingredient[];
   imageBase64?: string;
   forceCreative?: boolean;
+  skipChallengeSave?: boolean;
 }
 
 export const useGenerateRecipe = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
 
-  const generateRecipe = async ({ ingredients, imageBase64, forceCreative }: GenerateRecipeOptions) => {
+  const generateRecipe = async ({ ingredients, imageBase64, forceCreative, skipChallengeSave }: GenerateRecipeOptions) => {
     setIsGenerating(true);
 
     try {
@@ -138,7 +139,7 @@ export const useGenerateRecipe = () => {
         if (data.recipes && Array.isArray(data.recipes) && data.recipes.length > 0) {
           // Save fridge challenge
           const firstRecipe = data.recipes[0];
-          if (ingredients && ingredients.length > 0) {
+          if (ingredients && ingredients.length > 0 && !skipChallengeSave) {
             saveFridgeChallenge({
               ingredientNames: ingredients.map(i => i.name),
               ingredientEmojis: ingredients.map(i => i.emoji),
@@ -155,7 +156,7 @@ export const useGenerateRecipe = () => {
           });
         } else if (data.recipe) {
           // Save fridge challenge for single recipe
-          if (ingredients && ingredients.length > 0) {
+          if (ingredients && ingredients.length > 0 && !skipChallengeSave) {
             saveFridgeChallenge({
               ingredientNames: ingredients.map(i => i.name),
               ingredientEmojis: ingredients.map(i => i.emoji),
