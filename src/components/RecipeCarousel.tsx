@@ -98,7 +98,7 @@ function MagicChefCard({ onGenerateAI }: { onGenerateAI: () => void }) {
   );
 }
 
-const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCarouselProps) => {
+const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI, userIngredientCount }: RecipeCarouselProps) => {
   const [viewMode, setViewMode] = useState<"carousel" | "recipeDetail">("carousel");
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
