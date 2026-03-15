@@ -15,6 +15,7 @@ interface GenerateRecipeOptions {
   ingredients?: Ingredient[];
   imageBase64?: string;
   forceCreative?: boolean;
+  skipChallengeSave?: boolean;
 }
 
 export const useGenerateRecipe = () => {
