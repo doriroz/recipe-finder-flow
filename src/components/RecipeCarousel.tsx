@@ -152,7 +152,7 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI, userIngredi
   // Detail view
   if (viewMode === "recipeDetail") {
     const item = recipeItems[selectedIndex];
-    const display = toDisplayRecipe(item);
+    const display = toDisplayRecipe(item, userIngredientCount);
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
