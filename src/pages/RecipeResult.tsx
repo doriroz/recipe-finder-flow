@@ -229,6 +229,7 @@ const RecipeResult = () => {
         used_count: usedCount,
         missed_count: missedCount,
         used_ingredient_names: usedIngredientNames,
+        user_ingredient_count: userIngredientNames.length,
       }
     : {
         id: mockRecipe.id,
