@@ -10,6 +10,7 @@ interface RecipeCarouselProps {
   recipeItems: RecipeResultItem[];
   onStartCooking: (recipeId: string) => void;
   onGenerateAI?: () => void;
+  userIngredientCount?: number;
 }
 
 const badgeStyles: Record<string, string> = {
@@ -34,7 +35,7 @@ const badgeEmoji: Record<string, string> = {
   "בסיס מצוין": "🌟",
 };
 
-function toDisplayRecipe(item: RecipeResultItem): RecipeCardData {
+function toDisplayRecipe(item: RecipeResultItem, userIngredientCount?: number): RecipeCardData {
   const recipe = item.recipe;
   const computedDifficulty = calculateDifficulty(
     recipe.instructions.length,
@@ -61,6 +62,7 @@ function toDisplayRecipe(item: RecipeResultItem): RecipeCardData {
     used_count: item.used_count,
     missed_count: item.missed_count,
     used_ingredient_names: item.used_ingredient_names,
+    user_ingredient_count: userIngredientCount,
   };
 }
 
@@ -96,7 +98,7 @@ function MagicChefCard({ onGenerateAI }: { onGenerateAI: () => void }) {
   );
 }
 
-const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCarouselProps) => {
+const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI, userIngredientCount }: RecipeCarouselProps) => {
   const [viewMode, setViewMode] = useState<"carousel" | "recipeDetail">("carousel");
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -120,7 +122,7 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
 
   // Single recipe — render directly
   if (recipeItems.length === 1) {
-    const display = toDisplayRecipe(recipeItems[0]);
+    const display = toDisplayRecipe(recipeItems[0], userIngredientCount);
     const activeBadge = recipeItems[0].badge;
 
     return (
@@ -150,7 +152,7 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI }: RecipeCar
   // Detail view
   if (viewMode === "recipeDetail") {
     const item = recipeItems[selectedIndex];
-    const display = toDisplayRecipe(item);
+    const display = toDisplayRecipe(item, userIngredientCount);
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}

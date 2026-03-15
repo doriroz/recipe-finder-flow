@@ -190,6 +190,7 @@ const RecipeResult = () => {
             recipeItems={recipeItems}
             onStartCooking={handleStartCooking}
             onGenerateAI={handleGenerateAI}
+            userIngredientCount={userIngredientNames.length}
           />
           {isGeneratingAI && (
             <div className="flex flex-col items-center justify-center py-8">
@@ -228,6 +229,7 @@ const RecipeResult = () => {
         used_count: usedCount,
         missed_count: missedCount,
         used_ingredient_names: usedIngredientNames,
+        user_ingredient_count: userIngredientNames.length,
       }
     : {
         id: mockRecipe.id,

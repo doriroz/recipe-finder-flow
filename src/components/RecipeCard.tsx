@@ -34,6 +34,7 @@ export interface RecipeCardData {
   used_count?: number;
   missed_count?: number;
   used_ingredient_names?: string[];
+  user_ingredient_count?: number;
 }
 
 interface RecipeCardProps {
@@ -199,8 +200,8 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
           }
         );
         const strictUsedCount = strictUsedNames.length;
-        const total = strictUsedCount + recipe.missed_count;
-        const coverage = total > 0 ? strictUsedCount / total : 0;
+        const totalUserIngredients = recipe.user_ingredient_count || strictUsedCount;
+        const coverage = totalUserIngredients > 0 ? strictUsedCount / totalUserIngredients : 0;
         const colorClass = coverage >= 0.8 ?
         "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" :
         coverage >= 0.5 ?
@@ -211,7 +212,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-medium">
-                  {strictUsedCount} מתוך {total} מהמרכיבים שבחרת נמצאים במתכון
+                  {strictUsedCount} מתוך {totalUserIngredients} מהמרכיבים שבחרת נמצאים במתכון
                 </span>
               </div>
               {strictUsedNames.length > 0 &&
