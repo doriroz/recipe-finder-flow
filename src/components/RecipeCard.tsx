@@ -212,7 +212,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-medium">
-                  {strictUsedCount} מתוך {total} מהמרכיבים שבחרת נמצאים במתכון
+                  {strictUsedCount} מתוך {totalUserIngredients} מהמרכיבים שבחרת נמצאים במתכון
                 </span>
               </div>
               {strictUsedNames.length > 0 &&
