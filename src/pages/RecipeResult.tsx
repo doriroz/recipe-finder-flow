@@ -190,6 +190,7 @@ const RecipeResult = () => {
             recipeItems={recipeItems}
             onStartCooking={handleStartCooking}
             onGenerateAI={handleGenerateAI}
+            userIngredientCount={userIngredientNames.length}
           />
           {isGeneratingAI && (
             <div className="flex flex-col items-center justify-center py-8">
