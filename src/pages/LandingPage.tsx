@@ -7,6 +7,7 @@ import UserMenu from "@/components/UserMenu";
 import RecipeSearchOverlay from "@/components/RecipeSearchOverlay";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const LandingPage = () => {
   const navigate = useNavigate();
