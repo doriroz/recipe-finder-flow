@@ -141,7 +141,7 @@ const UserProfile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-8 animate-slide-up">
+            <div className="grid grid-cols-2 gap-4 mb-8 animate-slide-up">
               {stats.map((stat, index) => (
                 <div 
                   key={index}
