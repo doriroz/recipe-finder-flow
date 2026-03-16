@@ -1,4 +1,4 @@
-import { ArrowRight, ChefHat, BookOpen, Award, Settings, Loader2, Zap, RefreshCw } from "lucide-react";
+import { ArrowRight, ChefHat, BookOpen, Award, Loader2, Zap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DishCard, { Dish } from "@/components/DishCard";
