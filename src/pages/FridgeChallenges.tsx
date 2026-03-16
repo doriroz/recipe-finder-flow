@@ -44,6 +44,7 @@ const FridgeChallenges = () => {
   const { generateRecipe, isGenerating } = useGenerateRecipe();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareChallenge, setShareChallenge] = useState<FridgeChallenge | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: challenges = [], isLoading } = useQuery({
     queryKey: ["fridge-challenges", user?.id],
