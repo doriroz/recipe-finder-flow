@@ -1,4 +1,4 @@
-import { ArrowRight, ChefHat, BookOpen, Award, Settings, Loader2, Zap, RefreshCw } from "lucide-react";
+import { ArrowRight, ChefHat, BookOpen, Award, Loader2, Zap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DishCard, { Dish } from "@/components/DishCard";
@@ -53,7 +53,6 @@ const UserProfile = () => {
   const stats = [
     { icon: "🍳", label: "מתכונים שבושלו", value: userDishes.length },
     { icon: "📖", label: "מתכונים שמורים", value: recipes?.length || 0 },
-    { icon: "⭐", label: "דירוג ממוצע", value: "4.5" },
   ];
 
   if (!user && !authLoading) {
@@ -113,9 +112,7 @@ const UserProfile = () => {
               <ChefHat className="w-6 h-6 text-primary" />
               <span className="font-bold text-foreground">מה שיש</span>
             </div>
-            <Button variant="ghost" size="icon">
-              <Settings className="w-5 h-5" />
-            </Button>
+            <div className="w-10" />
           </div>
         </div>
       </header>
@@ -144,7 +141,7 @@ const UserProfile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-8 animate-slide-up">
+            <div className="grid grid-cols-2 gap-4 mb-8 animate-slide-up">
               {stats.map((stat, index) => (
                 <div 
                   key={index}

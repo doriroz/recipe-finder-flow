@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ChefHat, Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const redirectTo = location.state?.from?.pathname || "/ingredients";
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,7 +46,7 @@ const Login = () => {
           title: "ברוכים הבאים! 🎉",
           description: "התחברת בהצלחה",
         });
-        navigate("/ingredients");
+        navigate(redirectTo, { replace: true });
       } else {
         const { error } = await supabase.auth.signUp({
           email,

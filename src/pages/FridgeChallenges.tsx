@@ -16,6 +16,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface FridgeChallenge {
   id: string;
@@ -34,6 +44,7 @@ const FridgeChallenges = () => {
   const { generateRecipe, isGenerating } = useGenerateRecipe();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareChallenge, setShareChallenge] = useState<FridgeChallenge | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: challenges = [], isLoading } = useQuery({
     queryKey: ["fridge-challenges", user?.id],
@@ -50,14 +61,16 @@ const FridgeChallenges = () => {
     enabled: !!user,
   });
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("fridge_challenges").delete().eq("id", id);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    const { error } = await supabase.from("fridge_challenges").delete().eq("id", deleteId);
     if (error) {
       toast.error("שגיאה במחיקת האתגר");
     } else {
       toast.success("האתגר נמחק");
       queryClient.invalidateQueries({ queryKey: ["fridge-challenges"] });
     }
+    setDeleteId(null);
   };
 
   const handleRetry = async (challenge: FridgeChallenge) => {
@@ -176,7 +189,7 @@ const FridgeChallenges = () => {
                       🧊 אתגר מקרר
                     </span>
                     <button
-                      onClick={() => handleDelete(challenge.id)}
+                      onClick={() => setDeleteId(challenge.id)}
                       className="text-muted-foreground hover:text-destructive transition-colors p-1"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -288,6 +301,27 @@ const FridgeChallenges = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>למחוק אתגר?</AlertDialogTitle>
+            <AlertDialogDescription>
+              פעולה זו תמחק את האתגר לצמיתות. לא ניתן לשחזר אותו.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              מחק
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

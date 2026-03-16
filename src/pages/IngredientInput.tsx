@@ -90,7 +90,7 @@ const IngredientInput = () => {
       </header>
 
       {/* Tabs */}
-      <div className="sticky top-0 z-30 bg-background border-b border-border">
+      <div className="sticky top-0 z-30 bg-background border-b border-border" style={{ height: '48px' }}>
         <div className="container mx-auto px-4 flex">
           <button
             onClick={() => setActiveTab("ingredients")}

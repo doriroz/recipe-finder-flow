@@ -7,6 +7,7 @@ import UserMenu from "@/components/UserMenu";
 import RecipeSearchOverlay from "@/components/RecipeSearchOverlay";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -15,8 +16,8 @@ const LandingPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const features = [
-    { icon: "🤖", title: "מתכונים עם AI", description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם", link: null },
-    { icon: "💡", title: "החלפות חכמות", description: "אין לכם מצרך? יש לנו פתרון", link: null },
+    { icon: "🤖", title: "מתכונים עם AI", description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם", link: "/ingredients" },
+    { icon: "💡", title: "החלפות חכמות", description: "אין לכם מצרך? יש לנו פתרון", link: "/ingredients" },
     { icon: "🧊", title: "אתגרי המקרר", description: "חזרו לשילובים שניסיתם בעבר", link: "/challenges" },
     { icon: "📚", title: "ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי", link: "/cookbook" },
   ];
@@ -90,17 +91,22 @@ const LandingPage = () => {
                 ✨ אתגר המקרר עם AI
               </Button>
 
-              {user && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => navigate("/categories")}
-                  className="text-lg px-6 py-6 h-auto rounded-full transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-soft group"
-                >
-                  <Search className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
-                  חפשו מתכון
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  if (user) {
+                    navigate("/categories");
+                  } else {
+                    toast("יש להתחבר כדי לחפש מתכונים 🔐");
+                    navigate("/login", { state: { from: { pathname: "/categories" } } });
+                  }
+                }}
+                className="text-lg px-6 py-6 h-auto rounded-full transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-soft group"
+              >
+                <Search className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                חפשו מתכון
+              </Button>
             </div>
           </div>
 
