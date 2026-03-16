@@ -10,7 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const redirectTo = location.state?.from?.pathname || "/ingredients";
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
