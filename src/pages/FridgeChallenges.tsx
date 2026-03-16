@@ -61,14 +61,16 @@ const FridgeChallenges = () => {
     enabled: !!user,
   });
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("fridge_challenges").delete().eq("id", id);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    const { error } = await supabase.from("fridge_challenges").delete().eq("id", deleteId);
     if (error) {
       toast.error("שגיאה במחיקת האתגר");
     } else {
       toast.success("האתגר נמחק");
       queryClient.invalidateQueries({ queryKey: ["fridge-challenges"] });
     }
+    setDeleteId(null);
   };
 
   const handleRetry = async (challenge: FridgeChallenge) => {
