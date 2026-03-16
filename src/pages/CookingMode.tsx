@@ -51,11 +51,7 @@ const CookingMode = () => {
 
   const handleExit = () => {
     if (confirm("בטוח שאתם רוצים לצאת מהבישול?")) {
-      if (recipeId && recipeId !== 'mock') {
-        navigate(`/recipe?id=${recipeId}`, { replace: true });
-      } else {
-        navigate("/", { replace: true });
-      }
+      navigate(-1);
     }
   };
 
