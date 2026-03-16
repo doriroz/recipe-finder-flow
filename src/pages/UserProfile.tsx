@@ -53,7 +53,6 @@ const UserProfile = () => {
   const stats = [
     { icon: "🍳", label: "מתכונים שבושלו", value: userDishes.length },
     { icon: "📖", label: "מתכונים שמורים", value: recipes?.length || 0 },
-    { icon: "⭐", label: "דירוג ממוצע", value: "4.5" },
   ];
 
   if (!user && !authLoading) {
