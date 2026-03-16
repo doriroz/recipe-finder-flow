@@ -189,7 +189,7 @@ const FridgeChallenges = () => {
                       🧊 אתגר מקרר
                     </span>
                     <button
-                      onClick={() => handleDelete(challenge.id)}
+                      onClick={() => setDeleteId(challenge.id)}
                       className="text-muted-foreground hover:text-destructive transition-colors p-1"
                     >
                       <Trash2 className="w-4 h-4" />
