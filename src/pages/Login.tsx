@@ -46,7 +46,7 @@ const Login = () => {
           title: "ברוכים הבאים! 🎉",
           description: "התחברת בהצלחה",
         });
-        navigate("/ingredients");
+        navigate(redirectTo, { replace: true });
       } else {
         const { error } = await supabase.auth.signUp({
           email,
