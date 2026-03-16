@@ -112,9 +112,7 @@ const UserProfile = () => {
               <ChefHat className="w-6 h-6 text-primary" />
               <span className="font-bold text-foreground">מה שיש</span>
             </div>
-            <Button variant="ghost" size="icon">
-              <Settings className="w-5 h-5" />
-            </Button>
+            <div className="w-10" />
           </div>
         </div>
       </header>
