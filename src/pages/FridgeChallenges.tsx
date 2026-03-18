@@ -143,7 +143,7 @@ const FridgeChallenges = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {isGenerating && <GeneratingRecipeLoader />}
+      
 
       {/* Header */}
       <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
