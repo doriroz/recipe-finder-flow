@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Trash2, ChefHat, Share2, Calendar, Copy } from "lucide-react";
+import { ArrowRight, Trash2, ChefHat, Sparkles, Share2, Calendar, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
