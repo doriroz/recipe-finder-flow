@@ -91,8 +91,21 @@ const FridgeChallenges = () => {
     return `🍳 אתגר המקרר שלי:\n${ingList}\n\nמה הייתם מבשלים מזה?\n\nhttps://recipe-finder-flow.lovable.app`;
   };
 
-  const handleCopyLink = (challenge: FridgeChallenge) => {
-    navigator.clipboard.writeText(getShareText(challenge));
+  const handleCopyLink = async (challenge: FridgeChallenge) => {
+    const text = getShareText(challenge);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Fallback for iframe/non-HTTPS
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
     toast.success("הטקסט הועתק!");
     setShareDialogOpen(false);
   };
