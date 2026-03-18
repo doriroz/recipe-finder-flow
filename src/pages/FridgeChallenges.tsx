@@ -70,17 +70,16 @@ const FridgeChallenges = () => {
     setDeleteId(null);
   };
 
-  const handleRetry = async (challenge: FridgeChallenge) => {
-    const ingredients = challenge.ingredient_names.map((name, i) => ({
-      id: Date.now() + i,
-      name,
-      emoji: challenge.ingredient_emojis[i] || "🥗",
-      category: "אחר",
-    }));
-    await generateRecipe({ ingredients, skipChallengeSave: true });
-  };
-
-  const handleShare = (challenge: FridgeChallenge) => {
+  const handleShare = async (challenge: FridgeChallenge) => {
+    const text = getShareText(challenge);
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch (e) {
+        // User cancelled or share failed, fall back to dialog
+      }
+    }
     setShareChallenge(challenge);
     setShareDialogOpen(true);
   };
