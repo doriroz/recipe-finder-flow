@@ -39,7 +39,6 @@ const FridgeChallenges = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { generateRecipe, isGenerating } = useGenerateRecipe();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareChallenge, setShareChallenge] = useState<FridgeChallenge | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
