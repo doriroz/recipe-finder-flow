@@ -232,19 +232,9 @@ const FridgeChallenges = () => {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-1">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="flex-1 text-xs"
-                      onClick={() => handleRetry(challenge)}
-                      disabled={isGenerating}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      מתכון חדש
-                    </Button>
                     {challenge.recipe_id && (
                       <Button
-                        variant="secondary"
+                        variant="default"
                         size="sm"
                         className="flex-1 text-xs"
                         onClick={() => navigate(`/recipe?id=${challenge.recipe_id}`)}
