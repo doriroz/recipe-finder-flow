@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Trash2, ChefHat, Sparkles, Share2, Calendar, Copy, ExternalLink } from "lucide-react";
+import { ArrowRight, Trash2, ChefHat, Sparkles, Share2, Calendar, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -7,8 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
-import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import CreditCounter from "@/components/CreditCounter";
 import {
   Dialog,
@@ -41,7 +39,6 @@ const FridgeChallenges = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { generateRecipe, isGenerating } = useGenerateRecipe();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareChallenge, setShareChallenge] = useState<FridgeChallenge | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -73,17 +70,16 @@ const FridgeChallenges = () => {
     setDeleteId(null);
   };
 
-  const handleRetry = async (challenge: FridgeChallenge) => {
-    const ingredients = challenge.ingredient_names.map((name, i) => ({
-      id: Date.now() + i,
-      name,
-      emoji: challenge.ingredient_emojis[i] || "🥗",
-      category: "אחר",
-    }));
-    await generateRecipe({ ingredients, skipChallengeSave: true });
-  };
-
-  const handleShare = (challenge: FridgeChallenge) => {
+  const handleShare = async (challenge: FridgeChallenge) => {
+    const text = getShareText(challenge);
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch (e) {
+        // User cancelled or share failed, fall back to dialog
+      }
+    }
     setShareChallenge(challenge);
     setShareDialogOpen(true);
   };
@@ -95,8 +91,21 @@ const FridgeChallenges = () => {
     return `🍳 אתגר המקרר שלי:\n${ingList}\n\nמה הייתם מבשלים מזה?\n\nhttps://recipe-finder-flow.lovable.app`;
   };
 
-  const handleCopyLink = (challenge: FridgeChallenge) => {
-    navigator.clipboard.writeText(getShareText(challenge));
+  const handleCopyLink = async (challenge: FridgeChallenge) => {
+    const text = getShareText(challenge);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Fallback for iframe/non-HTTPS
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
     toast.success("הטקסט הועתק!");
     setShareDialogOpen(false);
   };
@@ -134,7 +143,7 @@ const FridgeChallenges = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {isGenerating && <GeneratingRecipeLoader />}
+      
 
       {/* Header */}
       <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
@@ -223,19 +232,9 @@ const FridgeChallenges = () => {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-1">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="flex-1 text-xs"
-                      onClick={() => handleRetry(challenge)}
-                      disabled={isGenerating}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      מתכון חדש
-                    </Button>
                     {challenge.recipe_id && (
                       <Button
-                        variant="secondary"
+                        variant="default"
                         size="sm"
                         className="flex-1 text-xs"
                         onClick={() => navigate(`/recipe?id=${challenge.recipe_id}`)}
