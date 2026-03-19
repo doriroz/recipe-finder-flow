@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, ChefHat, LogIn, BookOpen, BarChart3, Search, History } from "lucide-react";
+import { User, LogOut, ChefHat, LogIn, BookOpen, BarChart3, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,11 +16,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserMenuProps {
-  onOpenSearch?: () => void;
   onOpenHistory?: () => void;
 }
 
-const UserMenu = ({ onOpenSearch, onOpenHistory }: UserMenuProps) => {
+const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { isAdmin } = useIsAdmin();
@@ -122,15 +121,6 @@ const UserMenu = ({ onOpenSearch, onOpenHistory }: UserMenuProps) => {
           <ChefHat className="ml-2 h-4 w-4" />
           בישול חדש
         </DropdownMenuItem>
-        {onOpenSearch && (
-          <DropdownMenuItem
-            onClick={onOpenSearch}
-            className="cursor-pointer"
-          >
-            <Search className="ml-2 h-4 w-4" />
-            חיפוש מתכון
-          </DropdownMenuItem>
-        )}
         {onOpenHistory && (
           <DropdownMenuItem
             onClick={onOpenHistory}
