@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, ChefHat, LogIn, BookOpen, BarChart3 } from "lucide-react";
+import { User, LogOut, ChefHat, LogIn, BookOpen, BarChart3, Search, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +15,12 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const UserMenu = () => {
+interface UserMenuProps {
+  onOpenSearch?: () => void;
+  onOpenHistory?: () => void;
+}
+
+const UserMenu = ({ onOpenSearch, onOpenHistory }: UserMenuProps) => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { isAdmin } = useIsAdmin();
@@ -79,7 +84,7 @@ const UserMenu = () => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-56" align="start" forceMount>
         <div className="flex items-center gap-2 p-2">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -117,6 +122,24 @@ const UserMenu = () => {
           <ChefHat className="ml-2 h-4 w-4" />
           בישול חדש
         </DropdownMenuItem>
+        {onOpenSearch && (
+          <DropdownMenuItem
+            onClick={onOpenSearch}
+            className="cursor-pointer"
+          >
+            <Search className="ml-2 h-4 w-4" />
+            חיפוש מתכון
+          </DropdownMenuItem>
+        )}
+        {onOpenHistory && (
+          <DropdownMenuItem
+            onClick={onOpenHistory}
+            className="cursor-pointer"
+          >
+            <History className="ml-2 h-4 w-4" />
+            מתכונים אחרונים
+          </DropdownMenuItem>
+        )}
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
