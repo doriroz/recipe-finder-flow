@@ -84,13 +84,13 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56 [&>*]:text-right" align="start" forceMount>
-        <div className="flex items-center gap-2 p-2">
+        <div className="flex items-center gap-2 p-2 flex-row-reverse">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="bg-primary/10 text-primary text-sm">
               {userInitial}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col space-y-1">
+          <div className="flex flex-col space-y-1 text-right">
             <p className="text-sm font-medium leading-none text-foreground">
               שלום! 👋
             </p>
