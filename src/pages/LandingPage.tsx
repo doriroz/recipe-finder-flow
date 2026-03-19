@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChefHat, Sparkles, Heart, Search, History } from "lucide-react";
+import { ChefHat, Sparkles, Heart, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-fridge.jpg";
