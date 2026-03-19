@@ -288,10 +288,11 @@ const FridgeChallenges = () => {
                       </div>
 
                       {/* Ingredients - fixed height area */}
-                      <div className="flex flex-wrap gap-1.5 min-h-[52px] mb-2">
+                      {/* Ingredients - fixed height area */}
+                      <div className="flex flex-wrap gap-1.5 h-[56px] overflow-hidden content-start mb-2">
                         {challenge.ingredient_names.map((name, i) => (
-                          <span key={i} className="bg-accent text-accent-foreground px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1">
-                            <span className="text-sm">{challenge.ingredient_emojis[i] || "🥗"}</span>
+                          <span key={i} className="bg-accent text-accent-foreground px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 h-[26px]">
+                            <span className="text-sm leading-none">{challenge.ingredient_emojis[i] || "🥗"}</span>
                             {name}
                           </span>
                         ))}
