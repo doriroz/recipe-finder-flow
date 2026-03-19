@@ -83,7 +83,7 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="start" forceMount>
+      <DropdownMenuContent className="w-56 text-right" align="start" forceMount>
         <div className="flex items-center gap-2 p-2">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="bg-primary/10 text-primary text-sm">
