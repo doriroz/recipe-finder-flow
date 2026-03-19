@@ -264,7 +264,7 @@ const FridgeChallenges = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-stretch">
                 {filteredChallenges.map((challenge) => (
                   <Card key={challenge.id} className="overflow-hidden border-primary/10 hover:border-primary/30 transition-all duration-200 hover:shadow-elevated h-full">
                     <CardContent className="p-3 flex flex-col h-full">
