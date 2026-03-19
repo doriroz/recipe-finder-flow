@@ -19,7 +19,7 @@ interface UserMenuProps {
   onOpenHistory?: () => void;
 }
 
-const UserMenu = ({ onOpenSearch, onOpenHistory }: UserMenuProps) => {
+const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { isAdmin } = useIsAdmin();
