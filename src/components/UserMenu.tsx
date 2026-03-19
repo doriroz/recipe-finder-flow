@@ -122,15 +122,6 @@ const UserMenu = ({ onOpenSearch, onOpenHistory }: UserMenuProps) => {
           <ChefHat className="ml-2 h-4 w-4" />
           בישול חדש
         </DropdownMenuItem>
-        {onOpenSearch && (
-          <DropdownMenuItem
-            onClick={onOpenSearch}
-            className="cursor-pointer"
-          >
-            <Search className="ml-2 h-4 w-4" />
-            חיפוש מתכון
-          </DropdownMenuItem>
-        )}
         {onOpenHistory && (
           <DropdownMenuItem
             onClick={onOpenHistory}
