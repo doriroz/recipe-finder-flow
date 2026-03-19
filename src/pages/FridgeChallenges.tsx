@@ -266,10 +266,10 @@ const FridgeChallenges = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {filteredChallenges.map((challenge) => (
-                  <Card key={challenge.id} className="overflow-hidden border-primary/10 hover:border-primary/30 transition-all duration-200 hover:shadow-elevated">
-                    <CardContent className="p-3 space-y-2">
+                  <Card key={challenge.id} className="overflow-hidden border-primary/10 hover:border-primary/30 transition-all duration-200 hover:shadow-elevated h-full">
+                    <CardContent className="p-3 flex flex-col h-full">
                       {/* Top row: badge + date + delete */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                             🧊 אתגר
@@ -288,7 +288,7 @@ const FridgeChallenges = () => {
                       </div>
 
                       {/* Ingredients - fixed height area */}
-                      <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+                      <div className="flex flex-wrap gap-1.5 min-h-[52px] mb-2">
                         {challenge.ingredient_names.map((name, i) => (
                           <span key={i} className="bg-accent text-accent-foreground px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1">
                             <span className="text-sm">{challenge.ingredient_emojis[i] || "🥗"}</span>
@@ -298,18 +298,21 @@ const FridgeChallenges = () => {
                       </div>
 
                       {/* Recipe title - fixed height */}
-                      <div className="h-8 flex items-center">
+                      <div className="h-8 flex items-center mb-2">
                         {challenge.recipe_title ? (
-                          <p className="text-xs font-medium text-foreground truncate w-full bg-secondary/10 rounded px-2 py-1">
+                          <p className="text-xs font-medium text-foreground truncate w-full bg-secondary/10 rounded px-2 py-1 text-right">
                             🍽️ {challenge.recipe_title}
                           </p>
                         ) : (
-                          <p className="text-xs text-muted-foreground italic">ללא מתכון מקושר</p>
+                          <p className="text-xs text-muted-foreground italic text-right w-full">ללא מתכון מקושר</p>
                         )}
                       </div>
 
-                      {/* Actions - aligned bottom */}
-                      <div className="flex items-center gap-1.5 pt-0.5">
+                      {/* Spacer to push buttons to bottom */}
+                      <div className="flex-1" />
+
+                      {/* Actions - pinned to bottom */}
+                      <div className="flex items-center gap-1.5 pt-1">
                         {challenge.recipe_id && (
                           <Button
                             variant="default"
