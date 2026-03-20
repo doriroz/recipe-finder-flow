@@ -22,6 +22,12 @@ const CookbookBuilder = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const cameFrom = (location.state as { from?: string })?.from || "/gallery";
+  const backToOriginLabel = (() => {
+    if (cameFrom === "/" || cameFrom === "/home") return "לדף הבית";
+    if (cameFrom === "/gallery") return "לגלריה";
+    if (cameFrom === "/upgrade") return "לשדרוג";
+    return "חזרה";
+  })();
   const { user, loading: authLoading } = useAuth();
   const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
   const cookbook = useCookbook(user?.id);
@@ -124,7 +130,7 @@ const CookbookBuilder = () => {
               className="flex items-center gap-2"
             >
               <ArrowRight className="w-5 h-5" />
-              {cookbook.step === "select" ? "לגלריה" : "חזרה"}
+              {cookbook.step === "select" ? backToOriginLabel : "חזרה"}
             </Button>
             <div className="flex items-center gap-2">
               <BookMarked className="w-6 h-6 text-primary" />
