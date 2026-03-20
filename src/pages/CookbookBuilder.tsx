@@ -20,6 +20,8 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 
 const CookbookBuilder = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const cameFrom = (location.state as { from?: string })?.from || "/gallery";
   const { user, loading: authLoading } = useAuth();
   const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
   const cookbook = useCookbook(user?.id);
