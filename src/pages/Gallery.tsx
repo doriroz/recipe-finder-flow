@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, ChefHat, Loader2, BookOpen, Download, BookMarked } from "lucide-react";
+import { ArrowRight, ChefHat, Loader2, BookOpen, BookMarked } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useUserGallery, useDeleteGalleryItem } from "@/hooks/useUserGallery";
