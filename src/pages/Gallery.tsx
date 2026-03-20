@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, ChefHat, Loader2, BookOpen, Download, BookMarked } from "lucide-react";
+import { ArrowRight, ChefHat, Loader2, BookOpen, BookMarked } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useUserGallery, useDeleteGalleryItem } from "@/hooks/useUserGallery";
@@ -53,21 +53,6 @@ const Gallery = () => {
     }
   };
 
-  const handleExportCookbook = () => {
-    if (!galleryItems || galleryItems.length === 0) {
-      toast({
-        title: "הגלריה ריקה",
-        description: "אין מנות ליצירת ספר מתכונים",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "בקרוב!",
-      description: "תכונת יצוא ספר מתכונים תהיה זמינה בקרוב",
-    });
-  };
 
   if (!user && !authLoading) {
     return (
@@ -125,26 +110,15 @@ const Gallery = () => {
               <BookOpen className="w-6 h-6 text-primary" />
               <span className="font-bold text-foreground">הגלריה שלי</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigate("/cookbook", { state: { from: "/gallery" } })}
-                className="border-primary/30"
-                title="יצירת ספר מתכונים"
-              >
-                <BookMarked className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleExportCookbook}
-                className="border-primary/30"
-                title="ייצוא לספר מתכונים"
-              >
-                <Download className="w-5 h-5" />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate("/cookbook", { state: { from: "/gallery" } })}
+              className="border-primary/30"
+              title="יצירת ספר מתכונים"
+            >
+              <BookMarked className="w-5 h-5" />
+            </Button>
           </div>
         </div>
       </header>
@@ -180,18 +154,6 @@ const Gallery = () => {
               ))}
             </div>
 
-            {galleryItems.length >= 5 && (
-              <div className="mt-12 text-center">
-                <Button
-                  variant="hero"
-                  size="lg"
-                  onClick={handleExportCookbook}
-                >
-                  <Download className="w-5 h-5" />
-                  ייצוא לספר מתכונים
-                </Button>
-              </div>
-            )}
           </>
         ) : (
           <div className="text-center py-12">
