@@ -169,18 +169,6 @@ const Gallery = () => {
               ))}
             </div>
 
-            {galleryItems.length >= 5 && (
-              <div className="mt-12 text-center">
-                <Button
-                  variant="hero"
-                  size="lg"
-                  onClick={handleExportCookbook}
-                >
-                  <Download className="w-5 h-5" />
-                  ייצוא לספר מתכונים
-                </Button>
-              </div>
-            )}
           </>
         ) : (
           <div className="text-center py-12">

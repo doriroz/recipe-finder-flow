@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ChefHat, Clock, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { ChefHat, Clock, ChevronDown, ChevronUp, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 import type { UserGalleryItem } from "@/types/recipe";
 
 interface GalleryItemCardProps {
@@ -15,6 +16,27 @@ const GalleryItemCard = ({ item, index, onDelete }: GalleryItemCardProps) => {
   const recipe = item.recipe;
   const hasRecipeDetails = recipe && (recipe.ingredients?.length > 0 || recipe.instructions?.length > 0);
 
+  const handleDownloadImage = async () => {
+    try {
+      const response = await fetch(item.image_url);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recipe?.title || "recipe"}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast({
+        title: "שגיאה",
+        description: "לא הצלחנו להוריד את התמונה",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div
       className="card-warm group overflow-hidden animate-slide-up"
@@ -27,14 +49,25 @@ const GalleryItemCard = ({ item, index, onDelete }: GalleryItemCardProps) => {
           alt={recipe?.title || item.user_notes || "מנה"}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <Button
-          variant="destructive"
-          size="icon"
-          onClick={() => onDelete(item.id)}
-          className="absolute top-2 left-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={handleDownloadImage}
+            className="h-8 w-8 rounded-full"
+            title="הורדת תמונה"
+          >
+            <Download className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="destructive"
+            size="icon"
+            onClick={() => onDelete(item.id)}
+            className="h-8 w-8 rounded-full"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Title & Time */}
@@ -86,7 +119,6 @@ const GalleryItemCard = ({ item, index, onDelete }: GalleryItemCardProps) => {
 
           {isExpanded && (
             <div className="mt-3 pt-3 border-t border-border animate-fade-in space-y-4">
-              {/* Ingredients */}
               {recipe.ingredients && recipe.ingredients.length > 0 && (
                 <div>
                   <h4 className="font-medium text-foreground text-sm mb-2">מצרכים:</h4>
@@ -105,7 +137,6 @@ const GalleryItemCard = ({ item, index, onDelete }: GalleryItemCardProps) => {
                 </div>
               )}
 
-              {/* Instructions */}
               {recipe.instructions && recipe.instructions.length > 0 && (
                 <div>
                   <h4 className="font-medium text-foreground text-sm mb-2">הוראות הכנה:</h4>
