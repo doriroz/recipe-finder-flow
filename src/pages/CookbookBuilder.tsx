@@ -116,7 +116,7 @@ const CookbookBuilder = () => {
               variant="ghost"
               onClick={() => {
                 if (cookbook.step === "select") {
-                  navigate("/gallery");
+                  navigate(cameFrom);
                 } else {
                   cookbook.prevStep();
                 }
