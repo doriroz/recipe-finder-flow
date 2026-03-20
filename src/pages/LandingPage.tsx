@@ -109,7 +109,7 @@ const LandingPage = () => {
           {features.map((feature, index) => (
             <div 
               key={index}
-              onClick={() => feature.link && navigate(feature.link)}
+              onClick={() => feature.link && navigate(feature.link, feature.link === "/cookbook" ? { state: { from: "/" } } : undefined)}
               className={`bg-card rounded-2xl shadow-card p-6 text-center border border-border/30 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 animate-slide-up ${feature.link ? "cursor-pointer" : ""}`}
               style={{ animationDelay: `${0.4 + index * 0.1}s`, animationFillMode: "both" }}
             >

@@ -129,7 +129,7 @@ const Gallery = () => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => navigate("/cookbook")}
+                onClick={() => navigate("/cookbook", { state: { from: "/gallery" } })}
                 className="border-primary/30"
                 title="יצירת ספר מתכונים"
               >

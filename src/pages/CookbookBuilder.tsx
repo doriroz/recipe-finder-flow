@@ -5,7 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { he } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useUserGallery } from "@/hooks/useUserGallery";
 import { useAuth } from "@/hooks/useAuth";
 import { useCookbook } from "@/hooks/useCookbook";
@@ -20,6 +20,8 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 
 const CookbookBuilder = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const cameFrom = (location.state as { from?: string })?.from || "/gallery";
   const { user, loading: authLoading } = useAuth();
   const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
   const cookbook = useCookbook(user?.id);
@@ -114,7 +116,7 @@ const CookbookBuilder = () => {
               variant="ghost"
               onClick={() => {
                 if (cookbook.step === "select") {
-                  navigate("/gallery");
+                  navigate(cameFrom);
                 } else {
                   cookbook.prevStep();
                 }

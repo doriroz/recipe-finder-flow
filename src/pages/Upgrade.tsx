@@ -148,7 +148,7 @@ const Upgrade = () => {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => navigate("/cookbook")}
+              onClick={() => navigate("/cookbook", { state: { from: "/upgrade" } })}
             >
               <BookOpen className="w-4 h-4" />
               בניית ספר מתכונים
