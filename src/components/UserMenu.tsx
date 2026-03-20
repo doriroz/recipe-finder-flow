@@ -83,8 +83,8 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 [&>*]:text-right" align="start" forceMount>
-        <div className="flex items-center gap-2 p-2 flex-row-reverse">
+      <DropdownMenuContent dir="rtl" className="w-56" align="end" forceMount>
+        <div className="flex items-center gap-2 p-2">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="bg-primary/10 text-primary text-sm">
               {userInitial}
@@ -102,31 +102,31 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => navigate("/profile")}
-          className="cursor-pointer"
+          className="cursor-pointer flex-row-reverse"
         >
-          <User className="ml-2 h-4 w-4" />
+          <User className="mr-2 h-4 w-4" />
           הפרופיל שלי
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate("/gallery")}
-          className="cursor-pointer"
+          className="cursor-pointer flex-row-reverse"
         >
-          <BookOpen className="ml-2 h-4 w-4" />
+          <BookOpen className="mr-2 h-4 w-4" />
           הגלריה שלי
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate("/ingredients")}
-          className="cursor-pointer"
+          className="cursor-pointer flex-row-reverse"
         >
-          <ChefHat className="ml-2 h-4 w-4" />
+          <ChefHat className="mr-2 h-4 w-4" />
           בישול חדש
         </DropdownMenuItem>
         {onOpenHistory && (
           <DropdownMenuItem
             onClick={onOpenHistory}
-            className="cursor-pointer"
+            className="cursor-pointer flex-row-reverse"
           >
-            <History className="ml-2 h-4 w-4" />
+            <History className="mr-2 h-4 w-4" />
             מתכונים אחרונים
           </DropdownMenuItem>
         )}
@@ -135,9 +135,9 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => navigate("/admin/analytics")}
-              className="cursor-pointer"
+              className="cursor-pointer flex-row-reverse"
             >
-              <BarChart3 className="ml-2 h-4 w-4" />
+              <BarChart3 className="mr-2 h-4 w-4" />
               דשבורד אנליטיקס
             </DropdownMenuItem>
           </>
@@ -146,11 +146,10 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
         <DropdownMenuItem
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="cursor-pointer text-destructive focus:text-destructive"
+          className="cursor-pointer text-destructive focus:text-destructive flex-row-reverse"
         >
-          <LogOut className="ml-2 h-4 w-4" />
+          <LogOut className="mr-2 h-4 w-4" />
           {isLoggingOut ? "מתנתק..." : "התנתקות"}
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
