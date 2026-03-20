@@ -53,21 +53,6 @@ const Gallery = () => {
     }
   };
 
-  const handleExportCookbook = () => {
-    if (!galleryItems || galleryItems.length === 0) {
-      toast({
-        title: "הגלריה ריקה",
-        description: "אין מנות ליצירת ספר מתכונים",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "בקרוב!",
-      description: "תכונת יצוא ספר מתכונים תהיה זמינה בקרוב",
-    });
-  };
 
   if (!user && !authLoading) {
     return (
