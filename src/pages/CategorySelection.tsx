@@ -9,8 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useRecipeSearch, SearchRecipeResult } from "@/hooks/useRecipeSearch";
 import { Button } from "@/components/ui/button";
-import CreditCounter from "@/components/CreditCounter";
-
 const CategorySelection = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
