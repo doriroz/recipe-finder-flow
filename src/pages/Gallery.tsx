@@ -92,30 +92,30 @@ const Gallery = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => navigate("/")}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1 hover:bg-primary/10"
             >
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4" />
               חזרה
             </Button>
             <div className="flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-primary" />
-              <span className="font-bold text-foreground">הגלריה שלי</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/cookbook", { state: { from: "/gallery" } })}
+                className="hover:bg-primary/10"
+                title="יצירת ספר מתכונים"
+              >
+                <BookMarked className="w-5 h-5 text-primary" />
+              </Button>
+              <span className="font-bold text-foreground">מה שיש 🍳</span>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate("/cookbook", { state: { from: "/gallery" } })}
-              className="border-primary/30"
-              title="יצירת ספר מתכונים"
-            >
-              <BookMarked className="w-5 h-5" />
-            </Button>
           </div>
         </div>
       </header>

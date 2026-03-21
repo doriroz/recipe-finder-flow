@@ -112,11 +112,12 @@ const CookbookBuilder = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-card border-b border-border shrink-0">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft shrink-0">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => {
                 if (cookbook.step === "select") {
                   navigate(cameFrom);
@@ -124,16 +125,12 @@ const CookbookBuilder = () => {
                   cookbook.prevStep();
                 }
               }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1 hover:bg-primary/10"
             >
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4" />
               {cookbook.step === "select" ? backToOriginLabel : "חזרה"}
             </Button>
-            <div className="flex items-center gap-2">
-              <BookMarked className="w-6 h-6 text-primary" />
-              <span className="font-bold text-foreground">יצירת ספר מתכונים</span>
-            </div>
-            <div className="w-20" />
+            <span className="font-bold text-foreground">מה שיש 🍳</span>
           </div>
         </div>
 
