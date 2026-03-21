@@ -9,8 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useRecipeSearch, SearchRecipeResult } from "@/hooks/useRecipeSearch";
 import { Button } from "@/components/ui/button";
-import CreditCounter from "@/components/CreditCounter";
-
 const CategorySelection = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -156,10 +154,7 @@ const CategorySelection = () => {
               <ArrowRight className="w-4 h-4" />
               חזרה
             </Button>
-            <div className="flex items-center gap-2">
-              <CreditCounter />
-              <span className="font-bold text-foreground">מה שיש 🍳</span>
-            </div>
+            <span className="font-bold text-foreground">מה שיש 🍳</span>
           </div>
         </div>
       </header>
