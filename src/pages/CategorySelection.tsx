@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useRecipeSearch, SearchRecipeResult } from "@/hooks/useRecipeSearch";
+import { Button } from "@/components/ui/button";
+import CreditCounter from "@/components/CreditCounter";
 
 const CategorySelection = () => {
   const navigate = useNavigate();
@@ -140,73 +142,88 @@ const CategorySelection = () => {
   }, [selectedCategory]);
 
   return (
-    <div className="min-h-screen bg-muted" dir="rtl">
-      {/* Header */}
-      <div className="bg-gradient-to-b from-primary/10 to-muted px-4 pt-6 pb-4">
-        <div className="max-w-lg mx-auto">
-          <div className="relative flex items-center justify-center mb-4">
-            <button
+    <div className="min-h-screen bg-background">
+      {/* App Header - matching IngredientInput */}
+      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate(-1)}
-              className="absolute right-0 rounded-full p-2 hover:bg-accent transition-colors text-muted-foreground"
+              className="flex items-center gap-1 hover:bg-primary/10"
             >
-              <ArrowRight className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold text-foreground">בחירת קטגוריה 🍽️</h1>
+              <ArrowRight className="w-4 h-4" />
+              חזרה
+            </Button>
+            <div className="flex items-center gap-2">
+              <CreditCounter />
+              <span className="font-bold text-foreground">מה שיש 🍳</span>
+            </div>
           </div>
+        </div>
+      </header>
 
-          <div className="relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="חפשו מתכון... (הקישו Enter לחיפוש)"
-              className={cn(
-                "w-full bg-card border border-border rounded-full py-4 pr-12 pl-12 text-foreground",
-                "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
-                "transition-all"
-              )}
-            />
-            {query && (
-              <button
-                onClick={handleClearQuery}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+      {/* Page title bar - matching tab bar position */}
+      <div className="sticky top-0 z-30 bg-background border-b border-border" style={{ height: '48px' }}>
+        <div className="container mx-auto px-4 flex items-center justify-center h-full">
+          <h1 className="text-sm font-semibold text-foreground">בחירת קטגוריה 🍽️</h1>
         </div>
       </div>
 
-      {/* Search results section */}
-      {(isSearching || (hasSearched && !isSearching)) && (
-        <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
-          {isSearching && (
-            <div className="flex flex-col items-center gap-3 py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-muted-foreground text-sm">מחפש מתכונים...</p>
-            </div>
+      <main className="container mx-auto px-4 py-4 space-y-4 pb-8">
+        {/* Search bar */}
+        <div className="relative">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="חפשו מתכון... (הקישו Enter לחיפוש)"
+            className={cn(
+              "w-full bg-card border border-border rounded-full py-3 pr-12 pl-12 text-foreground",
+              "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
+              "transition-all"
+            )}
+          />
+          {query && (
+            <button
+              onClick={handleClearQuery}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
           )}
+        </div>
 
-          {!isSearching && hasSearched && error && (
-            <div className="text-center py-6">
-              <p className="text-destructive text-sm">{error}</p>
-            </div>
-          )}
+        {/* Search results section */}
+        {(isSearching || (hasSearched && !isSearching)) && (
+          <div>
+            {isSearching && (
+              <div className="flex flex-col items-center gap-3 py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-muted-foreground text-sm">מחפש מתכונים...</p>
+              </div>
+            )}
 
-          {!isSearching && hasSearched && !error && results.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-8">
-              <SearchX className="w-10 h-10 text-muted-foreground/50" />
-              <p className="text-foreground font-medium">לא מצאנו מתכונים עבור "{query}" 😕</p>
-              <p className="text-muted-foreground text-sm">נסו מילים אחרות או חפשו בקטגוריות למטה</p>
-            </div>
-          )}
+            {!isSearching && hasSearched && error && (
+              <div className="text-center py-6">
+                <p className="text-destructive text-sm">{error}</p>
+              </div>
+            )}
 
-          {!isSearching && hasSearched && results.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground mb-3">נמצאו {results.length} תוצאות:</p>
+            {!isSearching && hasSearched && !error && results.length === 0 && (
+              <div className="flex flex-col items-center gap-2 py-8">
+                <SearchX className="w-10 h-10 text-muted-foreground/50" />
+                <p className="text-foreground font-medium">לא מצאנו מתכונים עבור "{query}" 😕</p>
+                <p className="text-muted-foreground text-sm">נסו מילים אחרות או חפשו בקטגוריות למטה</p>
+              </div>
+            )}
+
+            {!isSearching && hasSearched && results.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground mb-3">נמצאו {results.length} תוצאות:</p>
               {results.map((result, i) => (
                 <motion.div
                   key={result.id}
@@ -246,10 +263,9 @@ const CategorySelection = () => {
             </div>
           )}
         </div>
-      )}
+        )}
 
-      {/* Category grid */}
-      <div className="max-w-lg mx-auto px-4 pb-8 pt-4">
+        {/* Category grid */}
         <div className="grid grid-cols-3 gap-3">
           {filtered.map((cat, idx) => (
             <motion.button
@@ -286,7 +302,7 @@ const CategorySelection = () => {
         {filtered.length === 0 && (
           <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>
         )}
-      </div>
+      </main>
 
       {/* Floating modal — portal */}
       {createPortal(
