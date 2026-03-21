@@ -263,10 +263,9 @@ const CategorySelection = () => {
             </div>
           )}
         </div>
-      )}
+        )}
 
-      {/* Category grid */}
-      <div className="max-w-lg mx-auto px-4 pb-8 pt-4">
+        {/* Category grid */}
         <div className="grid grid-cols-3 gap-3">
           {filtered.map((cat, idx) => (
             <motion.button
@@ -303,7 +302,7 @@ const CategorySelection = () => {
         {filtered.length === 0 && (
           <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>
         )}
-      </div>
+      </main>
 
       {/* Floating modal — portal */}
       {createPortal(
