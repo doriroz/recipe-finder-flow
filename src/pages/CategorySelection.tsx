@@ -142,43 +142,32 @@ const CategorySelection = () => {
   }, [selectedCategory]);
 
   return (
-    <div className="min-h-screen bg-muted" dir="rtl">
-      {/* Header */}
-      <div className="bg-gradient-to-b from-primary/10 to-muted px-4 pt-6 pb-4">
-        <div className="max-w-lg mx-auto">
-          <div className="relative flex items-center justify-center mb-4">
-            <button
+    <div className="min-h-screen bg-background">
+      {/* App Header - matching IngredientInput */}
+      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate(-1)}
-              className="absolute right-0 rounded-full p-2 hover:bg-accent transition-colors text-muted-foreground"
+              className="flex items-center gap-1 hover:bg-primary/10"
             >
-              <ArrowRight className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold text-foreground">בחירת קטגוריה 🍽️</h1>
+              <ArrowRight className="w-4 h-4" />
+              חזרה
+            </Button>
+            <div className="flex items-center gap-2">
+              <CreditCounter />
+              <span className="font-bold text-foreground">מה שיש 🍳</span>
+            </div>
           </div>
+        </div>
+      </header>
 
-          <div className="relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="חפשו מתכון... (הקישו Enter לחיפוש)"
-              className={cn(
-                "w-full bg-card border border-border rounded-full py-4 pr-12 pl-12 text-foreground",
-                "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
-                "transition-all"
-              )}
-            />
-            {query && (
-              <button
-                onClick={handleClearQuery}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+      {/* Page title bar - matching tab bar position */}
+      <div className="sticky top-0 z-30 bg-background border-b border-border" style={{ height: '48px' }}>
+        <div className="container mx-auto px-4 flex items-center justify-center h-full">
+          <h1 className="text-sm font-semibold text-foreground">בחירת קטגוריה 🍽️</h1>
         </div>
       </div>
 
