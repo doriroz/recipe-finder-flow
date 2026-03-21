@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import CreditCounter from "@/components/CreditCounter";
+
 import {
   Dialog,
   DialogContent,
@@ -190,10 +190,7 @@ const FridgeChallenges = () => {
               <ArrowRight className="w-4 h-4" />
               חזרה
             </Button>
-            <div className="flex items-center gap-2">
-              <CreditCounter />
-              <span className="font-bold text-foreground">🧊 אתגרי המקרר</span>
-            </div>
+            <span className="font-bold text-foreground">🧊 אתגרי המקרר</span>
           </div>
         </div>
       </header>
