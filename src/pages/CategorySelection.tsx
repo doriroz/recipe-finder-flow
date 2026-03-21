@@ -171,33 +171,59 @@ const CategorySelection = () => {
         </div>
       </div>
 
-      {/* Search results section */}
-      {(isSearching || (hasSearched && !isSearching)) && (
-        <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
-          {isSearching && (
-            <div className="flex flex-col items-center gap-3 py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-muted-foreground text-sm">מחפש מתכונים...</p>
-            </div>
+      <main className="container mx-auto px-4 py-4 space-y-4 pb-8">
+        {/* Search bar */}
+        <div className="relative">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="חפשו מתכון... (הקישו Enter לחיפוש)"
+            className={cn(
+              "w-full bg-card border border-border rounded-full py-3 pr-12 pl-12 text-foreground",
+              "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
+              "transition-all"
+            )}
+          />
+          {query && (
+            <button
+              onClick={handleClearQuery}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
           )}
+        </div>
 
-          {!isSearching && hasSearched && error && (
-            <div className="text-center py-6">
-              <p className="text-destructive text-sm">{error}</p>
-            </div>
-          )}
+        {/* Search results section */}
+        {(isSearching || (hasSearched && !isSearching)) && (
+          <div>
+            {isSearching && (
+              <div className="flex flex-col items-center gap-3 py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-muted-foreground text-sm">מחפש מתכונים...</p>
+              </div>
+            )}
 
-          {!isSearching && hasSearched && !error && results.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-8">
-              <SearchX className="w-10 h-10 text-muted-foreground/50" />
-              <p className="text-foreground font-medium">לא מצאנו מתכונים עבור "{query}" 😕</p>
-              <p className="text-muted-foreground text-sm">נסו מילים אחרות או חפשו בקטגוריות למטה</p>
-            </div>
-          )}
+            {!isSearching && hasSearched && error && (
+              <div className="text-center py-6">
+                <p className="text-destructive text-sm">{error}</p>
+              </div>
+            )}
 
-          {!isSearching && hasSearched && results.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground mb-3">נמצאו {results.length} תוצאות:</p>
+            {!isSearching && hasSearched && !error && results.length === 0 && (
+              <div className="flex flex-col items-center gap-2 py-8">
+                <SearchX className="w-10 h-10 text-muted-foreground/50" />
+                <p className="text-foreground font-medium">לא מצאנו מתכונים עבור "{query}" 😕</p>
+                <p className="text-muted-foreground text-sm">נסו מילים אחרות או חפשו בקטגוריות למטה</p>
+              </div>
+            )}
+
+            {!isSearching && hasSearched && results.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground mb-3">נמצאו {results.length} תוצאות:</p>
               {results.map((result, i) => (
                 <motion.div
                   key={result.id}
