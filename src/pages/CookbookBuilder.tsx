@@ -133,10 +133,10 @@ const CookbookBuilder = () => {
             <span className="font-bold text-foreground">מה שיש 🍳</span>
           </div>
         </div>
-
-        {/* Step Indicator */}
-        <CookbookStepIndicator currentStep={cookbook.step} />
       </header>
+
+      {/* Step Indicator */}
+      <CookbookStepIndicator currentStep={cookbook.step} />
 
       {/* Main Content */}
       <main className="flex-1 flex overflow-hidden">
