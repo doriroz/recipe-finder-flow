@@ -359,7 +359,10 @@ const FridgeChallenges = () => {
                     </span>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground">מה שיש 🍳</p>
+                <div className="flex items-center gap-1">
+                  <ChefHat className="w-4 h-4 text-primary" />
+                  <p className="text-xs text-muted-foreground">מה שיש</p>
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <Button variant="outline" onClick={() => handleShareWhatsApp(shareChallenge)} className="justify-start gap-3">

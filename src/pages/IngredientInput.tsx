@@ -83,7 +83,10 @@ const IngredientInput = () => {
             </Button>
             <div className="flex items-center gap-2">
               <CreditCounter />
-              <span className="font-bold text-foreground">מה שיש 🍳</span>
+              <div className="flex items-center gap-2">
+                <ChefHat className="w-6 h-6 text-primary" />
+                <span className="font-bold text-foreground">מה שיש</span>
+              </div>
             </div>
           </div>
         </div>

@@ -133,7 +133,10 @@ const CookbookBuilder = () => {
               <ArrowRight className="w-4 h-4" />
               {cookbook.step === "select" ? backToOriginLabel : "חזרה"}
             </Button>
-            <span className="font-bold text-foreground">מה שיש 🍳</span>
+            <div className="flex items-center gap-2">
+              <ChefHat className="w-6 h-6 text-primary" />
+              <span className="font-bold text-foreground">מה שיש</span>
+            </div>
           </div>
         </div>
       </header>
