@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Search, BookOpen, Loader2, BookMarked, BookText, Clock, RotateCcw } from "lucide-react";
+import { ArrowRight, Search, BookOpen, Loader2, BookMarked, BookText, Clock, RotateCcw, ChefHat } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { he } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
