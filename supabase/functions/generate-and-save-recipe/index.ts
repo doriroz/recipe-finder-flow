@@ -933,13 +933,17 @@ serve(async (req) => {
 
       await logAiUsage(supabaseAdmin, userId, "creative_recipe", 1024, 2, "ai");
 
+      // Find DB substitutions for creative recipes too
+      const creativeHebrewIngNames = fallback.ingredients.map((i: any) => i.name);
+      const creativeDbSubstitutions = await findSubstitutionsFromDB(supabaseAdmin, creativeHebrewIngNames);
+
       const { data: insertedRecipe, error: insertError } = await supabase
         .from("recipes")
         .insert({
           title: fallback.title,
           ingredients: fallback.ingredients,
           instructions: fallback.instructions,
-          substitutions: fallback.substitutions || [],
+          substitutions: creativeDbSubstitutions.length > 0 ? creativeDbSubstitutions : (fallback.substitutions || []),
           cooking_time: fallback.cooking_time || null,
           user_id: userId,
         })
