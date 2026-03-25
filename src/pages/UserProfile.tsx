@@ -174,23 +174,8 @@ const UserProfile = () => {
               </div>
             )}
 
-            {/* Credit Management */}
-            <div className="card-warm p-6 mb-8 animate-slide-up" style={{ animationDelay: "0.25s" }}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-foreground flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
-                  קרדיטים
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className={`text-2xl font-bold ${(credits?.credits_remaining ?? 0) <= 0 ? "text-destructive" : "text-primary"}`}>
-                    {credits?.credits_remaining ?? 0}
-                  </span>
-                  <span className="text-sm text-muted-foreground">נותרו</span>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                כל יצירת מתכון עם AI צורכת 2 קרדיטים. ניתן לאפס את הקרדיטים ל-10 בכל עת.
-              </p>
+            {/* Reset Credits */}
+            <div className="mb-6">
               <Button
                 variant="outline"
                 size="sm"
