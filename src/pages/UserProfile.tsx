@@ -50,10 +50,6 @@ const UserProfile = () => {
     imageUrl: item.image_url,
   }));
 
-  const stats = [
-    { icon: "🍳", label: "מתכונים שבושלו", value: userDishes.length },
-    { icon: "📖", label: "מתכונים שמורים", value: recipes?.length || 0 },
-  ];
 
   if (!user && !authLoading) {
     return (
