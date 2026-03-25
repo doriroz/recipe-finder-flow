@@ -1,4 +1,4 @@
-import { ArrowRight, ChefHat, BookOpen, Award, Loader2, Zap, RefreshCw } from "lucide-react";
+import { ArrowRight, ChefHat, BookOpen, Award, Loader2, Zap, RefreshCw, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DishCard, { Dish } from "@/components/DishCard";
@@ -50,10 +50,6 @@ const UserProfile = () => {
     imageUrl: item.image_url,
   }));
 
-  const stats = [
-    { icon: "🍳", label: "מתכונים שבושלו", value: userDishes.length },
-    { icon: "📖", label: "מתכונים שמורים", value: recipes?.length || 0 },
-  ];
 
   if (!user && !authLoading) {
     return (
@@ -125,33 +121,44 @@ const UserProfile = () => {
           </div>
         ) : (
           <>
-            {/* Profile Header */}
-            <div className="text-center mb-8 animate-fade-in">
-              <div className="w-24 h-24 bg-accent rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-5xl">👨‍🍳</span>
-              </div>
-              <h1 className="text-2xl font-bold text-foreground mb-1">
-                {user?.email?.split("@")[0] || "שף מתחיל"}
-              </h1>
-              <p className="text-muted-foreground">
-                מבשלים ביחד מ{user?.created_at 
-                  ? new Date(user.created_at).toLocaleDateString("he-IL", { month: "long", year: "numeric" })
-                  : "ינואר 2025"}
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 mb-8 animate-slide-up">
-              {stats.map((stat, index) => (
-                <div 
-                  key={index}
-                  className="card-warm text-center py-4"
-                >
-                  <span className="text-2xl mb-2 block">{stat.icon}</span>
-                  <p className="text-xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+            {/* Profile Header + Stats combined */}
+            <div className="bg-gradient-to-br from-primary/10 via-accent to-card rounded-2xl p-6 mb-6 animate-fade-in">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-primary/15 rounded-full flex items-center justify-center shrink-0">
+                  <ChefHat className="w-8 h-8 text-primary" />
                 </div>
-              ))}
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl font-bold text-foreground truncate">
+                    {user?.email?.split("@")[0] || "שף מתחיל"}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    מבשלים ביחד מ{user?.created_at 
+                      ? new Date(user.created_at).toLocaleDateString("he-IL", { month: "long", year: "numeric" })
+                      : "ינואר 2025"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Inline Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-background/60 rounded-xl text-center py-3 px-2">
+                  <UtensilsCrossed className="w-5 h-5 text-primary mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">{userDishes.length}</p>
+                  <p className="text-xs text-muted-foreground">בושלו</p>
+                </div>
+                <div className="bg-background/60 rounded-xl text-center py-3 px-2">
+                  <BookOpen className="w-5 h-5 text-primary mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">{recipes?.length || 0}</p>
+                  <p className="text-xs text-muted-foreground">שמורים</p>
+                </div>
+                <div className="bg-background/60 rounded-xl text-center py-3 px-2">
+                  <Zap className="w-5 h-5 text-primary mx-auto mb-1" />
+                  <p className={`text-lg font-bold ${(credits?.credits_remaining ?? 0) <= 0 ? "text-destructive" : "text-foreground"}`}>
+                    {credits?.credits_remaining ?? 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">קרדיטים</p>
+                </div>
+              </div>
             </div>
 
             {/* Achievement Badge */}
@@ -167,23 +174,8 @@ const UserProfile = () => {
               </div>
             )}
 
-            {/* Credit Management */}
-            <div className="card-warm p-6 mb-8 animate-slide-up" style={{ animationDelay: "0.25s" }}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-foreground flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
-                  קרדיטים
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className={`text-2xl font-bold ${(credits?.credits_remaining ?? 0) <= 0 ? "text-destructive" : "text-primary"}`}>
-                    {credits?.credits_remaining ?? 0}
-                  </span>
-                  <span className="text-sm text-muted-foreground">נותרו</span>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                כל יצירת מתכון עם AI צורכת 2 קרדיטים. ניתן לאפס את הקרדיטים ל-10 בכל עת.
-              </p>
+            {/* Reset Credits */}
+            <div className="mb-6">
               <Button
                 variant="outline"
                 size="sm"

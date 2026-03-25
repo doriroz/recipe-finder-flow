@@ -13,8 +13,12 @@ interface DishCardProps {
 const DishCard = ({ dish }: DishCardProps) => {
   return (
     <div className="card-warm hover:shadow-elevated transition-all duration-300 cursor-pointer group">
-      <div className="aspect-square bg-cream rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-300">
-        <span className="text-6xl">{dish.emoji}</span>
+      <div className="aspect-square bg-cream rounded-xl overflow-hidden flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-300">
+        {dish.imageUrl ? (
+          <img src={dish.imageUrl} alt={dish.name} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-6xl">{dish.emoji}</span>
+        )}
       </div>
       <h3 className="font-semibold text-foreground mb-1 truncate">{dish.name}</h3>
       <p className="text-sm text-muted-foreground">{dish.date}</p>
