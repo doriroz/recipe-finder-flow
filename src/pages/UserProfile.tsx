@@ -124,25 +124,24 @@ const UserProfile = () => {
         ) : (
           <>
             {/* Profile Header + Stats combined */}
-            <div className="bg-gradient-to-br from-primary/10 via-accent to-card rounded-2xl mb-6 animate-fade-in relative overflow-hidden">
-              {/* Top section: decoration image + user info */}
-              <div className="flex items-stretch min-h-[180px]">
-                {/* Decoration image on the left */}
-                <div className="w-2/5 relative">
-                  <img
-                    src={profileDecoration}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-contain object-bottom p-3"
-                    style={{ filter: "sepia(0.2) saturate(0.9)" }}
-                  />
-                </div>
+            <div className="bg-gradient-to-br from-primary/10 via-accent to-card rounded-2xl p-6 mb-6 animate-fade-in relative overflow-hidden">
+              {/* Decorative image */}
+              <img
+                src={profileDecoration}
+                alt=""
+                className="absolute left-0 bottom-0 w-28 h-28 object-contain opacity-20 pointer-events-none"
+                style={{ filter: "sepia(0.4) saturate(0.8)" }}
+              />
 
-                {/* User info on the right */}
-                <div className="w-3/5 flex flex-col justify-center py-6 pr-6 pl-2">
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-primary/30">
+                  <img src={profileAvatar} alt="Profile" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
                   <h1 className="text-xl font-bold text-foreground truncate">
                     {user?.email?.split("@")[0] || "שף מתחיל"}
                   </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground">
                     מבשלים ביחד מ{user?.created_at 
                       ? new Date(user.created_at).toLocaleDateString("he-IL", { month: "long", year: "numeric" })
                       : "ינואר 2025"}
@@ -150,8 +149,8 @@ const UserProfile = () => {
                 </div>
               </div>
 
-              {/* Stats row at the bottom */}
-              <div className="grid grid-cols-3 gap-3 px-4 pb-4">
+              {/* Inline Stats */}
+              <div className="grid grid-cols-3 gap-3 relative z-10">
                 <div className="bg-background/60 rounded-xl text-center py-3 px-2">
                   <UtensilsCrossed className="w-5 h-5 text-primary mx-auto mb-1" />
                   <p className="text-lg font-bold text-foreground">{userDishes.length}</p>
