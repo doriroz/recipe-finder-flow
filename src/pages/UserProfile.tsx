@@ -1,5 +1,6 @@
 import { ArrowRight, ChefHat, BookOpen, Award, Loader2, Zap, RefreshCw, UtensilsCrossed } from "lucide-react";
 import profileAvatar from "@/assets/profile-avatar.avif";
+import profileDecoration from "@/assets/profile-decoration.png";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DishCard, { Dish } from "@/components/DishCard";
@@ -123,8 +124,16 @@ const UserProfile = () => {
         ) : (
           <>
             {/* Profile Header + Stats combined */}
-            <div className="bg-gradient-to-br from-primary/10 via-accent to-card rounded-2xl p-6 mb-6 animate-fade-in">
-              <div className="flex items-center gap-4 mb-4">
+            <div className="bg-gradient-to-br from-primary/10 via-accent to-card rounded-2xl p-6 mb-6 animate-fade-in relative overflow-hidden">
+              {/* Decorative image */}
+              <img
+                src={profileDecoration}
+                alt=""
+                className="absolute left-0 bottom-0 w-28 h-28 object-contain opacity-20 pointer-events-none"
+                style={{ filter: "sepia(0.4) saturate(0.8)" }}
+              />
+
+              <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-primary/30">
                   <img src={profileAvatar} alt="Profile" className="w-full h-full object-cover" />
                 </div>
@@ -141,7 +150,7 @@ const UserProfile = () => {
               </div>
 
               {/* Inline Stats */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-3 relative z-10">
                 <div className="bg-background/60 rounded-xl text-center py-3 px-2">
                   <UtensilsCrossed className="w-5 h-5 text-primary mx-auto mb-1" />
                   <p className="text-lg font-bold text-foreground">{userDishes.length}</p>
