@@ -1,4 +1,5 @@
 import { ArrowRight, ChefHat, BookOpen, Award, Loader2, Zap, RefreshCw, UtensilsCrossed } from "lucide-react";
+import profileAvatar from "@/assets/profile-avatar.avif";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DishCard, { Dish } from "@/components/DishCard";
