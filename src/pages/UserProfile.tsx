@@ -125,8 +125,8 @@ const UserProfile = () => {
             {/* Profile Header + Stats combined */}
             <div className="bg-gradient-to-br from-primary/10 via-accent to-card rounded-2xl p-6 mb-6 animate-fade-in">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-primary/15 rounded-full flex items-center justify-center shrink-0">
-                  <ChefHat className="w-8 h-8 text-primary" />
+                <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-primary/30">
+                  <img src={profileAvatar} alt="Profile" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h1 className="text-xl font-bold text-foreground truncate">
