@@ -125,23 +125,24 @@ const UserProfile = () => {
           <>
             {/* Profile Header + Stats combined */}
             <div className="bg-gradient-to-br from-primary/10 via-accent to-card rounded-2xl p-6 mb-6 animate-fade-in relative overflow-hidden">
-              {/* Decorative image */}
-              <img
-                src={profileDecoration}
-                alt=""
-                className="absolute left-0 bottom-0 w-28 h-28 object-contain opacity-20 pointer-events-none"
-                style={{ filter: "sepia(0.4) saturate(0.8)" }}
-              />
-
-              <div className="flex items-center gap-4 mb-4 relative z-10">
-                <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-primary/30">
-                  <img src={profileAvatar} alt="Profile" className="w-full h-full object-cover" />
+              {/* Two-column hero layout */}
+              <div className="flex flex-col md:flex-row-reverse items-center gap-6 md:gap-10 mb-4 relative z-10">
+                {/* Left column - Illustration (appears first in RTL / row-reverse) */}
+                <div className="w-full md:w-[48%] shrink-0">
+                  <img
+                    src={profileDecoration}
+                    alt="Cooking illustration"
+                    className="w-full h-auto rounded-2xl object-cover"
+                    style={{ maxHeight: "180px", objectPosition: "center" }}
+                  />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-xl font-bold text-foreground truncate">
+
+                {/* Right column - User info */}
+                <div className="flex-1 flex flex-col items-center md:items-end justify-center text-center md:text-right min-w-0">
+                  <h1 className="text-2xl font-bold text-foreground truncate">
                     {user?.email?.split("@")[0] || "שף מתחיל"}
                   </h1>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mt-1">
                     מבשלים ביחד מ{user?.created_at 
                       ? new Date(user.created_at).toLocaleDateString("he-IL", { month: "long", year: "numeric" })
                       : "ינואר 2025"}
@@ -149,7 +150,7 @@ const UserProfile = () => {
                 </div>
               </div>
 
-              {/* Inline Stats */}
+              {/* Stats row */}
               <div className="grid grid-cols-3 gap-3 relative z-10">
                 <div className="bg-background/60 rounded-xl text-center py-3 px-2">
                   <UtensilsCrossed className="w-5 h-5 text-primary mx-auto mb-1" />
