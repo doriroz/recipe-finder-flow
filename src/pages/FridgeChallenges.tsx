@@ -152,13 +152,14 @@ const FridgeChallenges = () => {
 
   const handleShareWhatsApp = (challenge: FridgeChallenge) => {
     const text = encodeURIComponent(getShareText(challenge));
-    window.open(`https://wa.me/?text=${text}`, "_blank");
+    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
     setShareDialogOpen(false);
   };
 
   const handleShareFacebook = (challenge: FridgeChallenge) => {
     const url = encodeURIComponent("https://recipe-finder-flow.lovable.app");
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank");
+    const quote = encodeURIComponent(getShareText(challenge));
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`, "_blank");
     setShareDialogOpen(false);
   };
 
