@@ -8,6 +8,7 @@ import RecipeSearchOverlay from "@/components/RecipeSearchOverlay";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import HowItWorks from "@/components/HowItWorks";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const LandingPage = () => {
 
   const features = [
     { icon: "🤖", title: "מתכונים עם AI", description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם", link: "/ingredients" },
-    { icon: "💡", title: "החלפות חכמות", description: "אין לכם מצרך? יש לנו פתרון", link: "/ingredients" },
+    { icon: "🔍", title: "גלו מתכונים", description: "חפשו מתכונים לפי קטגוריה", link: "/categories" },
     { icon: "🧊", title: "אתגרי המקרר", description: "חזרו לשילובים שניסיתם בעבר", link: "/challenges" },
     { icon: "📚", title: "ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי", link: "/cookbook" },
   ];
@@ -120,8 +121,11 @@ const LandingPage = () => {
           ))}
         </div>
 
+        {/* How It Works */}
+        <HowItWorks />
+
         {/* Encouraging Message */}
-        <div className="mt-20 text-center animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
+        <div className="mt-16 text-center animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
           <div className="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-6 py-3 rounded-full border border-secondary/20">
             <Heart className="w-5 h-5" />
             <span className="font-medium">נעשה לכם בישול קל ומהנה</span>

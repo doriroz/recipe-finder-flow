@@ -372,6 +372,10 @@ const FridgeChallenges = () => {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-2">
+                <Button variant="default" onClick={() => handleCopyLink(shareChallenge)} className="justify-start gap-3">
+                  <Copy className="w-4 h-4" />
+                  העתקת טקסט
+                </Button>
                 <Button variant="outline" onClick={() => handleShareWhatsApp(shareChallenge)} className="justify-start gap-3">
                   <span className="text-lg">💬</span>
                   WhatsApp
@@ -379,10 +383,6 @@ const FridgeChallenges = () => {
                 <Button variant="outline" onClick={() => handleShareFacebook(shareChallenge)} className="justify-start gap-3">
                   <span className="text-lg">📘</span>
                   Facebook
-                </Button>
-                <Button variant="outline" onClick={() => handleCopyLink(shareChallenge)} className="justify-start gap-3">
-                  <Copy className="w-4 h-4" />
-                  העתקת טקסט
                 </Button>
               </div>
             </div>

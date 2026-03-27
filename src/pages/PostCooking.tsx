@@ -149,8 +149,8 @@ const PostCooking = () => {
       {showConfetti && <Confetti />}
       
       {/* Header */}
-      <header className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-center gap-2">
             <ChefHat className="w-6 h-6 text-primary" />
             <span className="font-bold text-foreground">מה שיש</span>
@@ -301,21 +301,37 @@ const PostCooking = () => {
           </div>
         )}
 
-        {/* Home Button */}
-        <Button
-          variant="ghost"
-          size="lg"
-          onClick={() => navigate("/")}
-          className="animate-fade-in"
-          style={{ animationDelay: "0.6s" }}
-        >
-          <Home className="w-5 h-5" />
-          חזרה לדף הבית
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in" style={{ animationDelay: "0.6s" }}>
+          <Button
+            variant="default"
+            size="lg"
+            onClick={() => navigate("/ingredients")}
+          >
+            <ChefHat className="w-5 h-5" />
+            בואו נבשל עוד
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => navigate("/gallery")}
+          >
+            <BookOpen className="w-5 h-5" />
+            הגלריה שלי
+          </Button>
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={() => navigate("/")}
+          >
+            <Home className="w-5 h-5" />
+            דף הבית
+          </Button>
+        </div>
 
         {/* Encouraging Message */}
-        <div className="mt-12 animate-fade-in" style={{ animationDelay: "0.8s" }}>
-          <div className="inline-flex items-center gap-2 bg-sage-light text-sage-dark px-6 py-3 rounded-full">
+        <div className="mt-10 animate-fade-in" style={{ animationDelay: "0.8s" }}>
+          <div className="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-6 py-3 rounded-full border border-secondary/20">
             <span>💪</span>
             <span className="font-medium">עשיתם את זה! בישול זה כיף</span>
           </div>
