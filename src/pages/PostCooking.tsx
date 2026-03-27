@@ -149,8 +149,8 @@ const PostCooking = () => {
       {showConfetti && <Confetti />}
       
       {/* Header */}
-      <header className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-center gap-2">
             <ChefHat className="w-6 h-6 text-primary" />
             <span className="font-bold text-foreground">מה שיש</span>

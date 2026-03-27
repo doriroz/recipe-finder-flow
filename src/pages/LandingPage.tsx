@@ -121,8 +121,11 @@ const LandingPage = () => {
           ))}
         </div>
 
+        {/* How It Works */}
+        <HowItWorks />
+
         {/* Encouraging Message */}
-        <div className="mt-20 text-center animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
+        <div className="mt-16 text-center animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
           <div className="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-6 py-3 rounded-full border border-secondary/20">
             <Heart className="w-5 h-5" />
             <span className="font-medium">נעשה לכם בישול קל ומהנה</span>
