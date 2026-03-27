@@ -150,17 +150,23 @@ const FridgeChallenges = () => {
     setShareDialogOpen(false);
   };
 
+  const openShareWindow = (url: string) => {
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    if (!win) {
+      window.location.href = url;
+    }
+    setShareDialogOpen(false);
+  };
+
   const handleShareWhatsApp = (challenge: FridgeChallenge) => {
     const text = encodeURIComponent(getShareText(challenge));
-    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
-    setShareDialogOpen(false);
+    openShareWindow(`https://wa.me/?text=${text}`);
   };
 
   const handleShareFacebook = (challenge: FridgeChallenge) => {
     const url = encodeURIComponent("https://recipe-finder-flow.lovable.app");
     const quote = encodeURIComponent(getShareText(challenge));
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`, "_blank");
-    setShareDialogOpen(false);
+    openShareWindow(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`);
   };
 
   const formatDate = (dateStr: string) => {
