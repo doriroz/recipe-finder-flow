@@ -8,6 +8,7 @@ import RecipeSearchOverlay from "@/components/RecipeSearchOverlay";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import HowItWorks from "@/components/HowItWorks";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const LandingPage = () => {
 
   const features = [
     { icon: "🤖", title: "מתכונים עם AI", description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם", link: "/ingredients" },
-    { icon: "💡", title: "החלפות חכמות", description: "אין לכם מצרך? יש לנו פתרון", link: "/ingredients" },
+    { icon: "🔍", title: "גלו מתכונים", description: "חפשו מתכונים לפי קטגוריה", link: "/categories" },
     { icon: "🧊", title: "אתגרי המקרר", description: "חזרו לשילובים שניסיתם בעבר", link: "/challenges" },
     { icon: "📚", title: "ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי", link: "/cookbook" },
   ];
