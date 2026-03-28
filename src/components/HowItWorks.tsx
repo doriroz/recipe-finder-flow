@@ -76,8 +76,20 @@ const HowItWorks = () => (
               } animate-slide-up`}
               style={{ animationDelay: `${0.1 * i}s`, animationFillMode: "both" }}
             >
+              {/* For middle step (i===2), put text above circle */}
+              {i === 2 && (
+                <>
+                  <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 max-w-[140px]">
+                    {step.title}
+                  </h3>
+                  <p className="text-muted-foreground text-xs leading-snug max-w-[150px] mb-3">
+                    {step.description}
+                  </p>
+                </>
+              )}
+
               {/* Circle with icon */}
-              <div className="w-20 h-20 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft mb-3 relative">
+              <div className={`w-20 h-20 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft ${i === 2 ? 'mt-0' : 'mb-3'} relative`}>
                 <img
                   src={step.icon}
                   alt={step.title}
@@ -94,12 +106,17 @@ const HowItWorks = () => (
                 />
               </div>
 
-              <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 max-w-[140px]">
-                {step.title}
-              </h3>
-              <p className="text-muted-foreground text-xs leading-snug max-w-[150px]">
-                {step.description}
-              </p>
+              {/* For other steps, text below circle */}
+              {i !== 2 && (
+                <>
+                  <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 max-w-[140px]">
+                    {step.title}
+                  </h3>
+                  <p className="text-muted-foreground text-xs leading-snug max-w-[150px]">
+                    {step.description}
+                  </p>
+                </>
+              )}
             </div>
           );
         })}
