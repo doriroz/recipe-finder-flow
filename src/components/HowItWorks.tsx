@@ -38,8 +38,8 @@ const HowItWorks = () => (
       ✨ איך זה עובד?
     </h2>
 
-    {/* Desktop zig-zag */}
-    <div className="hidden md:block relative">
+    {/* Desktop: icons positioned ON the zig-zag path */}
+    <div className="hidden md:block relative" style={{ height: "420px" }}>
       {/* SVG zig-zag arrow background */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"
@@ -48,62 +48,79 @@ const HowItWorks = () => (
         fill="none"
       >
         <path
-          d="M950 100 L750 100 Q700 100 700 150 L700 270 Q700 320 650 320 L550 320 Q500 320 500 270 L500 150 Q500 100 450 100 L250 100 Q200 100 200 150 L200 270 Q200 320 150 320 L50 320"
-          stroke="hsl(25 85% 75%)"
+          d="M950 130 L750 130 Q700 130 700 180 L700 290 Q700 340 650 340 L550 340 Q500 340 500 290 L500 180 Q500 130 450 130 L250 130 Q200 130 200 180 L200 290 Q200 340 150 340 L50 340"
+          stroke="hsl(var(--primary) / 0.35)"
           strokeWidth="50"
           strokeLinecap="round"
           strokeLinejoin="round"
-          opacity="0.35"
         />
         {/* Arrow head at the end (left side) */}
         <polygon
-          points="30,320 70,295 70,345"
-          fill="hsl(25 85% 70%)"
-          opacity="0.5"
+          points="30,340 70,315 70,365"
+          fill="hsl(var(--primary) / 0.5)"
         />
       </svg>
 
-      {/* Steps grid - 5 columns */}
-      <div className="relative grid grid-cols-5 gap-4" style={{ minHeight: "420px" }}>
-        {steps.map((step, i) => {
-          // Zig-zag: steps 0,2,4 on top; steps 1,3 on bottom
-          const isTop = i % 2 === 0;
-          return (
-            <div
-              key={i}
-              className={`flex flex-col items-center text-center ${
-                isTop ? "self-start pt-0" : "self-end pb-0"
-              } animate-slide-up`}
-              style={{ animationDelay: `${0.1 * i}s`, animationFillMode: "both" }}
-            >
-              {/* Circle with icon */}
-              <div className="w-20 h-20 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft mb-3 relative">
-                <img
-                  src={step.icon}
-                  alt={step.title}
-                  className="w-14 h-14 object-contain"
-                  loading="lazy"
-                  width={56}
-                  height={56}
-                />
-                {/* Orange dot connector */}
-                <div
-                  className={`absolute w-3 h-3 rounded-full bg-primary shadow-sm ${
-                    isTop ? "-bottom-1.5" : "-top-1.5"
-                  } left-1/2 -translate-x-1/2`}
-                />
-              </div>
+      {/* Steps absolutely positioned on the path */}
+      {steps.map((step, i) => {
+        const isTop = i % 2 === 0;
+        // X positions for 5 columns (right-to-left in a 1000-wide viewbox mapped to %)
+        const xPositions = [90, 70, 50, 30, 10]; // percentage from left
+        // Icons sit ON the path: top path at ~130, bottom path at ~340 in viewbox
+        // Map to container: top icons centered at ~31%, bottom icons at ~81%
+        const iconTop = isTop ? "28%" : "68%";
 
-              <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 max-w-[140px]">
-                {step.title}
-              </h3>
-              <p className="text-muted-foreground text-xs leading-snug max-w-[150px]">
-                {step.description}
-              </p>
+        return (
+          <div
+            key={i}
+            className="absolute flex flex-col items-center text-center animate-slide-up"
+            style={{
+              left: `${xPositions[i]}%`,
+              top: iconTop,
+              transform: "translate(-50%, -50%)",
+              width: "160px",
+              animationDelay: `${0.1 * i}s`,
+              animationFillMode: "both",
+            }}
+          >
+            {/* For top steps: text above, icon below */}
+            {isTop && (
+              <div className="mb-2">
+                <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground text-xs leading-snug">
+                  {step.description}
+                </p>
+              </div>
+            )}
+
+            {/* Circle with icon - sits on the path */}
+            <div className="w-20 h-20 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft flex-shrink-0">
+              <img
+                src={step.icon}
+                alt={step.title}
+                className="w-14 h-14 object-contain"
+                loading="lazy"
+                width={56}
+                height={56}
+              />
             </div>
-          );
-        })}
-      </div>
+
+            {/* For bottom steps: text below icon */}
+            {!isTop && (
+              <div className="mt-2">
+                <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground text-xs leading-snug">
+                  {step.description}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
 
     {/* Mobile: vertical timeline */}
