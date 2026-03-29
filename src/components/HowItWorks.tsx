@@ -9,43 +9,36 @@ const steps = [
     icon: iconIngredients,
     title: "בחרו מצרכים",
     description: "סמנו מה יש לכם במקרר",
-    position: "top" as const,
-  },
-  {
-    icon: iconCuisines,
-    title: "מתכונים פופולאריים לפי מטבחים",
-    description: "חקרו טעמים עולמיים וגלו מתכונים אהובים ממטבחים שונים.",
-    position: "bottom" as const,
   },
   {
     icon: iconAiRobot,
     title: "AI יוצר מתכון",
     description: "מתכון מותאם אישית תוך שניות",
-    position: "top" as const,
+  },
+  {
+    icon: iconCuisines,
+    title: "מתכונים פופולאריים לפי מטבחים",
+    description: "חקרו טעמים עולמיים וגלו מתכונים אהובים ממטבחים שונים.",
   },
   {
     icon: iconCooking,
     title: "בישול בהנחיה",
     description: "שלב אחר שלב עד למנה מושלמת.",
-    position: "bottom" as const,
   },
   {
     icon: iconCookbook,
     title: "יצירת ספר מתכונים אישי",
     description: "אגדו, ערכו והדפיסו את האוסף המלא שלכם",
-    position: "top" as const,
   },
 ];
 
-// Layout constants
-const W = 1000;
-const H = 420;
-const TOP = 120;   // y-center for top nodes
-const BOT = 300;   // y-center for bottom nodes
+// ViewBox height = container height → Y coords map 1:1 to CSS px
+const H = 480;
+const TOP_Y = 150;
+const BOT_Y = 330;
 const ICON = 80;
-
-// X positions right-to-left: node 1 → node 5
-const nodeX = [850, 675, 500, 325, 150];
+const HALF = ICON / 2;
+const XS = [88, 70, 50, 30, 12]; // % from left, right-to-left
 
 const HowItWorks = () => (
   <section className="mt-20 max-w-5xl mx-auto px-4">
@@ -55,72 +48,50 @@ const HowItWorks = () => (
 
     {/* Desktop */}
     <div className="hidden md:block relative" style={{ height: H }}>
+      {/* SVG zig-zag path */}
       <svg
         className="absolute inset-0 w-full pointer-events-none"
         style={{ height: H }}
-        viewBox={`0 0 ${W} ${H}`}
+        viewBox={`0 0 1000 ${H}`}
         preserveAspectRatio="none"
         fill="none"
       >
-        {/* Smooth S-curve path flowing right to left through all 5 nodes */}
         <path
-          d={`
-            M ${nodeX[0]} ${TOP}
-            C ${nodeX[0] - 60} ${TOP}, ${nodeX[1] + 60} ${BOT}, ${nodeX[1]} ${BOT}
-            C ${nodeX[1] - 60} ${BOT}, ${nodeX[2] + 60} ${TOP}, ${nodeX[2]} ${TOP}
-            C ${nodeX[2] - 60} ${TOP}, ${nodeX[3] + 60} ${BOT}, ${nodeX[3]} ${BOT}
-            C ${nodeX[3] - 60} ${BOT}, ${nodeX[4] + 60} ${TOP}, ${nodeX[4]} ${TOP}
-          `}
+          d={`M950 ${TOP_Y} L750 ${TOP_Y} Q700 ${TOP_Y} 700 ${TOP_Y + 45} L700 ${BOT_Y - 45} Q700 ${BOT_Y} 650 ${BOT_Y} L550 ${BOT_Y} Q500 ${BOT_Y} 500 ${BOT_Y - 45} L500 ${TOP_Y + 45} Q500 ${TOP_Y} 450 ${TOP_Y} L250 ${TOP_Y} Q200 ${TOP_Y} 200 ${TOP_Y + 45} L200 ${BOT_Y - 45} Q200 ${BOT_Y} 150 ${BOT_Y} L50 ${BOT_Y}`}
           stroke="hsl(var(--primary) / 0.35)"
-          strokeWidth="46"
+          strokeWidth="50"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Arrow at the end (left) */}
         <polygon
-          points={`${nodeX[4] - 40},${TOP} ${nodeX[4] - 10},${TOP - 22} ${nodeX[4] - 10},${TOP + 22}`}
+          points={`30,${BOT_Y} 70,${BOT_Y - 25} 70,${BOT_Y + 25}`}
           fill="hsl(var(--primary) / 0.5)"
         />
       </svg>
 
-      {/* Nodes */}
+      {/* Steps — each icon absolutely centred on the path line */}
       {steps.map((step, i) => {
-        const cx = nodeX[i];
-        const cy = step.position === "top" ? TOP : BOT;
-        const isTop = step.position === "top";
+        const isTop = i % 2 === 0;
+        const cy = isTop ? TOP_Y : BOT_Y;
 
         return (
           <div
             key={i}
             className="absolute animate-slide-up"
             style={{
-              left: (cx / W) * 100 + "%",
-              top: cy,
-              transform: "translate(-50%, -50%)",
-              width: 170,
+              left: `${XS[i]}%`,
+              top: 0,
+              width: 160,
+              height: H,
+              transform: "translateX(-50%)",
               animationDelay: `${0.1 * i}s`,
               animationFillMode: "both",
             }}
           >
-            {/* Text ABOVE for top nodes */}
-            {isTop && (
-              <div
-                className="absolute left-1/2 -translate-x-1/2 text-center w-44"
-                style={{ bottom: ICON / 2 + 10 }}
-              >
-                <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground text-xs leading-snug">
-                  {step.description}
-                </p>
-              </div>
-            )}
-
-            {/* Icon circle — centred on the path */}
+            {/* Icon circle — centred exactly on the path */}
             <div
-              className="relative left-1/2 -translate-x-1/2 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft z-10"
-              style={{ width: ICON, height: ICON }}
+              className="absolute left-1/2 w-20 h-20 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft z-10"
+              style={{ top: cy - HALF, transform: "translateX(-50%)" }}
             >
               <img
                 src={step.icon}
@@ -132,20 +103,22 @@ const HowItWorks = () => (
               />
             </div>
 
-            {/* Text BELOW for bottom nodes */}
-            {!isTop && (
-              <div
-                className="absolute left-1/2 -translate-x-1/2 text-center w-44"
-                style={{ top: ICON / 2 + 10 }}
-              >
-                <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground text-xs leading-snug">
-                  {step.description}
-                </p>
-              </div>
-            )}
+            {/* Text block — ABOVE icon for top steps, BELOW for bottom */}
+            <div
+              className="absolute left-0 right-0 text-center"
+              style={
+                isTop
+                  ? { bottom: H - cy + HALF + 8 }
+                  : { top: cy + HALF + 8 }
+              }
+            >
+              <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
+                {step.title}
+              </h3>
+              <p className="text-muted-foreground text-xs leading-snug">
+                {step.description}
+              </p>
+            </div>
           </div>
         );
       })}
