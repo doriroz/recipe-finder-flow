@@ -32,14 +32,13 @@ const steps = [
   },
 ];
 
-// Fixed pixel positions for precise alignment
-const TOP_LINE_Y = 160; // center of top horizontal path
-const BOTTOM_LINE_Y = 340; // center of bottom horizontal path
-const ICON_SIZE = 80; // w-20 = 80px
-const CONTAINER_HEIGHT = 480;
-
-// X positions (percentage from left) for 5 steps, right-to-left order
-const X_POSITIONS = [88, 70, 50, 30, 12];
+// ViewBox height = container height → Y coords map 1:1 to CSS px
+const H = 480;
+const TOP_Y = 150;
+const BOT_Y = 330;
+const ICON = 80;
+const HALF = ICON / 2;
+const XS = [88, 70, 50, 30, 12]; // % from left, right-to-left
 
 const HowItWorks = () => (
   <section className="mt-20 max-w-5xl mx-auto px-4">
@@ -47,76 +46,53 @@ const HowItWorks = () => (
       ✨ איך זה עובד?
     </h2>
 
-    {/* Desktop: icons ON the zig-zag path */}
-    <div className="hidden md:block relative" style={{ height: `${CONTAINER_HEIGHT}px` }}>
+    {/* Desktop */}
+    <div className="hidden md:block relative" style={{ height: H }}>
       {/* SVG zig-zag path */}
       <svg
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        viewBox={`0 0 1000 ${CONTAINER_HEIGHT}`}
+        className="absolute inset-0 w-full pointer-events-none"
+        style={{ height: H }}
+        viewBox={`0 0 1000 ${H}`}
         preserveAspectRatio="none"
         fill="none"
       >
         <path
-          d={`M950 ${TOP_LINE_Y} L750 ${TOP_LINE_Y} Q700 ${TOP_LINE_Y} 700 ${TOP_LINE_Y + 50} L700 ${BOTTOM_LINE_Y - 50} Q700 ${BOTTOM_LINE_Y} 650 ${BOTTOM_LINE_Y} L550 ${BOTTOM_LINE_Y} Q500 ${BOTTOM_LINE_Y} 500 ${BOTTOM_LINE_Y - 50} L500 ${TOP_LINE_Y + 50} Q500 ${TOP_LINE_Y} 450 ${TOP_LINE_Y} L250 ${TOP_LINE_Y} Q200 ${TOP_LINE_Y} 200 ${TOP_LINE_Y + 50} L200 ${BOTTOM_LINE_Y - 50} Q200 ${BOTTOM_LINE_Y} 150 ${BOTTOM_LINE_Y} L50 ${BOTTOM_LINE_Y}`}
+          d={`M950 ${TOP_Y} L750 ${TOP_Y} Q700 ${TOP_Y} 700 ${TOP_Y + 45} L700 ${BOT_Y - 45} Q700 ${BOT_Y} 650 ${BOT_Y} L550 ${BOT_Y} Q500 ${BOT_Y} 500 ${BOT_Y - 45} L500 ${TOP_Y + 45} Q500 ${TOP_Y} 450 ${TOP_Y} L250 ${TOP_Y} Q200 ${TOP_Y} 200 ${TOP_Y + 45} L200 ${BOT_Y - 45} Q200 ${BOT_Y} 150 ${BOT_Y} L50 ${BOT_Y}`}
           stroke="hsl(var(--primary) / 0.35)"
           strokeWidth="50"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <polygon
-          points={`30,${BOTTOM_LINE_Y} 70,${BOTTOM_LINE_Y - 25} 70,${BOTTOM_LINE_Y + 25}`}
+          points={`30,${BOT_Y} 70,${BOT_Y - 25} 70,${BOT_Y + 25}`}
           fill="hsl(var(--primary) / 0.5)"
         />
       </svg>
 
-      {/* Steps positioned with icons centered ON the path */}
+      {/* Steps — each icon absolutely centred on the path line */}
       {steps.map((step, i) => {
         const isTop = i % 2 === 0;
-        // Icon center aligns with the path line
-        const iconCenterY = isTop ? TOP_LINE_Y : BOTTOM_LINE_Y;
-        // Convert viewBox Y to percentage of container
-        const iconTopPx = (iconCenterY / CONTAINER_HEIGHT) * 100;
+        const cy = isTop ? TOP_Y : BOT_Y;
 
         return (
           <div
             key={i}
-            className="absolute flex flex-col items-center text-center animate-slide-up"
+            className="absolute animate-slide-up"
             style={{
-              left: `${X_POSITIONS[i]}%`,
+              left: `${XS[i]}%`,
+              top: 0,
+              width: 160,
+              height: H,
               transform: "translateX(-50%)",
-              width: "160px",
               animationDelay: `${0.1 * i}s`,
               animationFillMode: "both",
-              // Position the whole column so icon center lands on the line
-              ...(isTop
-                ? {
-                    // Top steps: text above, then icon. Bottom of icon center = line
-                    bottom: `${100 - iconTopPx}%`,
-                    // Use flex-end so the icon (last child) aligns to bottom
-                    justifyContent: "flex-end",
-                    paddingBottom: `${ICON_SIZE / 2}px`,
-                    top: "0",
-                  }
-                : {
-                    // Bottom steps: icon on top, text below. Top of icon center = line  
-                    top: `${iconTopPx}%`,
-                    marginTop: `-${ICON_SIZE / 2}px`,
-                    bottom: "0",
-                  }),
             }}
           >
-            {isTop && (
-              <div className="mb-3">
-                <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground text-xs leading-snug">
-                  {step.description}
-                </p>
-              </div>
-            )}
-
-            <div className="w-20 h-20 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft flex-shrink-0 relative z-10">
+            {/* Icon circle — centred exactly on the path */}
+            <div
+              className="absolute left-1/2 w-20 h-20 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft z-10"
+              style={{ top: cy - HALF, transform: "translateX(-50%)" }}
+            >
               <img
                 src={step.icon}
                 alt={step.title}
@@ -127,16 +103,22 @@ const HowItWorks = () => (
               />
             </div>
 
-            {!isTop && (
-              <div className="mt-3">
-                <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground text-xs leading-snug">
-                  {step.description}
-                </p>
-              </div>
-            )}
+            {/* Text block — ABOVE icon for top steps, BELOW for bottom */}
+            <div
+              className="absolute left-0 right-0 text-center"
+              style={
+                isTop
+                  ? { bottom: H - cy + HALF + 8 }
+                  : { top: cy + HALF + 8 }
+              }
+            >
+              <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
+                {step.title}
+              </h3>
+              <p className="text-muted-foreground text-xs leading-snug">
+                {step.description}
+              </p>
+            </div>
           </div>
         );
       })}
@@ -145,7 +127,6 @@ const HowItWorks = () => (
     {/* Mobile: vertical timeline */}
     <div className="md:hidden flex flex-col items-center gap-0 relative">
       <div className="absolute top-0 bottom-0 w-1 bg-primary/20 rounded-full" />
-
       {steps.map((step, i) => (
         <div
           key={i}
@@ -157,14 +138,7 @@ const HowItWorks = () => (
           }}
         >
           <div className="w-16 h-16 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft z-10 flex-shrink-0">
-            <img
-              src={step.icon}
-              alt={step.title}
-              className="w-11 h-11 object-contain"
-              loading="lazy"
-              width={44}
-              height={44}
-            />
+            <img src={step.icon} alt={step.title} className="w-11 h-11 object-contain" loading="lazy" width={44} height={44} />
           </div>
           <div className={`flex-1 ${i % 2 === 0 ? "text-right" : "text-left"}`}>
             <h3 className="font-semibold text-foreground text-sm mb-0.5">{step.title}</h3>
@@ -172,7 +146,6 @@ const HowItWorks = () => (
           </div>
         </div>
       ))}
-
       <div className="text-primary/50 text-2xl mt-2">▼</div>
     </div>
   </section>
