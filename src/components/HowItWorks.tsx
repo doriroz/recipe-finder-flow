@@ -38,13 +38,11 @@ const TOP_Y = 150;
 const BOT_Y = 330;
 const ICON = 80;
 const HALF = ICON / 2;
-const XS = [88, 70, 50, 30, 12]; // % from left, right-to-left
+const XS = [88, 61, 42, 11, 12]; // % from left, right-to-left
 
 const HowItWorks = () => (
   <section className="mt-20 max-w-5xl mx-auto px-4">
-    <h2 className="text-2xl font-bold text-foreground text-center mb-12">
-      ✨ איך זה עובד?
-    </h2>
+    <h2 className="text-2xl font-bold text-foreground text-center mb-12">✨ איך זה עובד?</h2>
 
     {/* Desktop */}
     <div className="hidden md:block relative" style={{ height: H }}>
@@ -63,10 +61,7 @@ const HowItWorks = () => (
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <polygon
-          points={`30,${BOT_Y} 70,${BOT_Y - 25} 70,${BOT_Y + 25}`}
-          fill="hsl(var(--primary) / 0.5)"
-        />
+        <polygon points={`30,${BOT_Y} 70,${BOT_Y - 25} 70,${BOT_Y + 25}`} fill="hsl(var(--primary) / 0.5)" />
       </svg>
 
       {/* Steps — each icon absolutely centred on the path line */}
@@ -106,18 +101,10 @@ const HowItWorks = () => (
             {/* Text block — ABOVE icon for top steps, BELOW for bottom */}
             <div
               className="absolute left-0 right-0 text-center"
-              style={
-                isTop
-                  ? { bottom: H - cy + HALF + 8 }
-                  : { top: cy + HALF + 8 }
-              }
+              style={isTop ? { bottom: H - cy + HALF + 8 } : { top: cy + HALF + 8 }}
             >
-              <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">
-                {step.title}
-              </h3>
-              <p className="text-muted-foreground text-xs leading-snug">
-                {step.description}
-              </p>
+              <h3 className="font-semibold text-foreground text-sm leading-tight mb-1">{step.title}</h3>
+              <p className="text-muted-foreground text-xs leading-snug">{step.description}</p>
             </div>
           </div>
         );
@@ -138,7 +125,14 @@ const HowItWorks = () => (
           }}
         >
           <div className="w-16 h-16 rounded-full bg-accent border-[3px] border-primary/40 flex items-center justify-center shadow-soft z-10 flex-shrink-0">
-            <img src={step.icon} alt={step.title} className="w-11 h-11 object-contain" loading="lazy" width={44} height={44} />
+            <img
+              src={step.icon}
+              alt={step.title}
+              className="w-11 h-11 object-contain"
+              loading="lazy"
+              width={44}
+              height={44}
+            />
           </div>
           <div className={`flex-1 ${i % 2 === 0 ? "text-right" : "text-left"}`}>
             <h3 className="font-semibold text-foreground text-sm mb-0.5">{step.title}</h3>
