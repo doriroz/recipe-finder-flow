@@ -17,7 +17,7 @@ const PostCooking = () => {
   const [searchParams] = useSearchParams();
   const recipeId = searchParams.get("id");
   const { user } = useAuth();
-  
+
   const [showConfetti, setShowConfetti] = useState(true);
   const [rating, setRating] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -26,7 +26,7 @@ const PostCooking = () => {
   const [showSaveForm, setShowSaveForm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: recipe } = useRecipe(recipeId !== 'mock' ? recipeId : null);
+  const { data: recipe } = useRecipe(recipeId !== "mock" ? recipeId : null);
   const insertGalleryItem = useInsertGalleryItem();
   const { uploadImage, isUploading } = useGalleryImageUpload();
 
@@ -95,11 +95,11 @@ const PostCooking = () => {
     try {
       // Upload image to Supabase Storage
       const imageUrl = await uploadImage(dishPhoto, user.id);
-      
+
       const notesText = notes.trim() || `${displayTitle} - דירוג: ${rating} כוכבים`;
 
       await insertGalleryItem.mutateAsync({
-        recipe_id: recipeId !== 'mock' ? recipeId || undefined : undefined,
+        recipe_id: recipeId !== "mock" ? recipeId || undefined : undefined,
         image_url: imageUrl,
         user_notes: notesText,
       });
@@ -129,14 +129,11 @@ const PostCooking = () => {
     });
 
     // Save rating to database
-    if (user && recipeId && recipeId !== 'mock') {
+    if (user && recipeId && recipeId !== "mock") {
       try {
         const { error } = await supabase
           .from("recipe_ratings" as any)
-          .upsert(
-            { recipe_id: recipeId, user_id: user.id, rating: star },
-            { onConflict: "recipe_id,user_id" }
-          );
+          .upsert({ recipe_id: recipeId, user_id: user.id, rating: star }, { onConflict: "recipe_id,user_id" });
         if (error) console.error("Rating save error:", error);
       } catch (err) {
         console.error("Rating save error:", err);
@@ -147,11 +144,11 @@ const PostCooking = () => {
   return (
     <div className="min-h-screen bg-background">
       {showConfetti && <Confetti />}
-      
+
       {/* Header */}
       <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             <ChefHat className="w-6 h-6 text-primary" />
             <span className="font-bold text-foreground">מה שיש</span>
           </div>
@@ -162,15 +159,9 @@ const PostCooking = () => {
         {/* Celebration */}
         <div className="animate-scale-in">
           <div className="text-8xl mb-6">🎉</div>
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            כל הכבוד!
-          </h1>
-          <p className="text-xl text-muted-foreground mb-2">
-            סיימתם להכין
-          </p>
-          <h2 className="text-2xl font-semibold text-primary mb-8">
-            {displayTitle}
-          </h2>
+          <h1 className="text-4xl font-bold text-foreground mb-4">כל הכבוד!</h1>
+          <p className="text-xl text-muted-foreground mb-2">סיימתם להכין</p>
+          <h2 className="text-2xl font-semibold text-primary mb-8">{displayTitle}</h2>
         </div>
 
         {/* Rating Stars */}
@@ -183,12 +174,10 @@ const PostCooking = () => {
                 className="text-4xl hover:scale-125 transition-transform cursor-pointer"
                 onClick={() => handleRating(star)}
               >
-                <Star 
+                <Star
                   className={`w-8 h-8 transition-colors ${
-                    star <= rating 
-                      ? "text-primary fill-primary" 
-                      : "text-primary fill-primary/20 hover:fill-primary"
-                  }`} 
+                    star <= rating ? "text-primary fill-primary" : "text-primary fill-primary/20 hover:fill-primary"
+                  }`}
                 />
               </button>
             ))}
@@ -228,11 +217,7 @@ const PostCooking = () => {
               {/* Photo Preview */}
               {dishPhoto && (
                 <div className="relative mb-6">
-                  <img
-                    src={dishPhoto}
-                    alt="המנה שלכם"
-                    className="w-full h-64 object-cover rounded-xl"
-                  />
+                  <img src={dishPhoto} alt="המנה שלכם" className="w-full h-64 object-cover rounded-xl" />
                   <Button
                     variant="destructive"
                     size="icon"
@@ -256,18 +241,14 @@ const PostCooking = () => {
                   </div>
                   <p className="text-foreground font-semibold">{recipe.title}</p>
                   {recipe.cooking_time && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      ⏱️ {recipe.cooking_time} דקות
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">⏱️ {recipe.cooking_time} דקות</p>
                   )}
                 </div>
               )}
 
               {/* Notes Input */}
               <div className="mb-6">
-                <label className="block text-foreground font-medium mb-2 text-right">
-                  הוסיפו הערות
-                </label>
+                <label className="block text-foreground font-medium mb-2 text-right">הוסיפו הערות</label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -302,28 +283,19 @@ const PostCooking = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in" style={{ animationDelay: "0.6s" }}>
-          <Button
-            variant="default"
-            size="lg"
-            onClick={() => navigate("/ingredients")}
-          >
+        <div
+          className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in"
+          style={{ animationDelay: "0.6s" }}
+        >
+          <Button variant="default" size="lg" onClick={() => navigate("/ingredients")}>
             <ChefHat className="w-5 h-5" />
             בואו נבשל עוד
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => navigate("/gallery")}
-          >
+          <Button variant="outline" size="lg" onClick={() => navigate("/gallery")}>
             <BookOpen className="w-5 h-5" />
             הגלריה שלי
           </Button>
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={() => navigate("/")}
-          >
+          <Button variant="ghost" size="lg" onClick={() => navigate("/")}>
             <Home className="w-5 h-5" />
             דף הבית
           </Button>
