@@ -20,15 +20,16 @@ const steps = [
     title: "מתכונים פופולאריים לפי מטבחים",
     description: "חקרו טעמים עולמיים וגלו מתכונים אהובים ממטבחים שונים.",
   },
-  {
-    icon: iconCooking,
-    title: "בישול בהנחיה",
-    description: "שלב אחר שלב עד למנה מושלמת.",
-  },
+  ,
   {
     icon: iconCookbook,
     title: "יצירת ספר מתכונים אישי",
     description: "אגדו, ערכו והדפיסו את האוסף המלא שלכם",
+  }
+  {
+    icon: iconCooking,
+    title: "בישול בהנחיה",
+    description: "שלב אחר שלב עד למנה מושלמת.",
   },
 ];
 
