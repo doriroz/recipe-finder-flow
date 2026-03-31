@@ -179,10 +179,9 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                 role="dialog"
                 aria-modal="true"
                 aria-label={openCategory}
-                className="fixed z-50 inset-x-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[440px] top-[8%] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                className="fixed z-50 inset-x-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[420px] top-[10%] rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-card"
                 style={{
-                  background: `hsl(${openMeta.hue})`,
-                  maxHeight: "80vh",
+                  maxHeight: "75vh",
                 }}
                 initial={{ scale: 0.82, opacity: 0, y: 28 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -192,7 +191,12 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                 {/* Modal Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
                   <div className="flex items-center gap-3">
-                    <span className="text-4xl leading-none">{openMeta.icon}</span>
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                      style={{ background: `hsl(${openMeta.hue})` }}
+                    >
+                      <span className="text-2xl leading-none">{openMeta.icon}</span>
+                    </div>
                     <div className="text-right">
                       <p className="font-bold text-foreground text-lg leading-tight">{openCategory}</p>
                       <p className="text-xs text-muted-foreground">{openMeta.subtitle}</p>
@@ -201,7 +205,7 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                   <button
                     onClick={closeModal}
                     autoFocus
-                    className="rounded-full p-2 hover:bg-black/10 transition-colors text-foreground/70 hover:text-foreground"
+                    className="rounded-full p-2 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                     aria-label="סגור"
                   >
                     <X className="w-5 h-5" />
@@ -209,10 +213,7 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                 </div>
 
                 {/* Divider */}
-                <div
-                  className="h-px mx-5 shrink-0"
-                  style={{ background: `hsl(${openMeta.hue.split(" ")[0]} ${openMeta.hue.split(" ")[1]} 65%)` }}
-                />
+                <div className="h-px mx-5 shrink-0 bg-border" />
 
                 {/* Scrollable ingredient list */}
                 <div className="overflow-y-auto flex-1 px-4 py-3 space-y-1">
@@ -226,10 +227,10 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                         transition={{ delay: i * 0.025, duration: 0.18 }}
                         onClick={() => togglePending(ing.id)}
                         className={cn(
-                          "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-150 text-right",
+                          "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-150 text-right",
                           isPending
-                            ? "bg-primary/20 border border-primary/40"
-                            : "bg-white/30 hover:bg-white/50 border border-transparent"
+                            ? "bg-accent border border-primary/30"
+                            : "hover:bg-muted/60 border border-transparent"
                         )}
                       >
                         <div className="flex items-center gap-2.5">
@@ -254,10 +255,10 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
 
                 {/* Footer — confirm button */}
                 <div className="px-4 pb-5 pt-3 shrink-0">
-                  <div
-                    className="h-px mb-3"
-                    style={{ background: `hsl(${openMeta.hue.split(" ")[0]} ${openMeta.hue.split(" ")[1]} 65%)` }}
-                  />
+                  <div className="h-px mb-3 bg-border" />
+                  <p className="text-xs text-muted-foreground text-center mb-2">
+                    {pendingSelections.size > 0 ? `נבחרו ${pendingSelections.size}` : "0/X נבחרו"}
+                  </p>
                   <Button
                     variant="hero"
                     className="w-full"
