@@ -255,10 +255,7 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
 
                 {/* Footer — confirm button */}
                 <div className="px-4 pb-5 pt-3 shrink-0">
-                  <div
-                    className="h-px mb-3"
-                    style={{ background: `hsl(${openMeta.hue.split(" ")[0]} ${openMeta.hue.split(" ")[1]} 65%)` }}
-                  />
+                  <div className="h-px mb-3 bg-border" />
                   <Button
                     variant="hero"
                     className="w-full"
