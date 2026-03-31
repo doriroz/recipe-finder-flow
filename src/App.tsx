@@ -18,6 +18,7 @@ import DebugMatching from "./pages/DebugMatching";
 import CategorySelection from "./pages/CategorySelection";
 import Upgrade from "./pages/Upgrade";
 import FridgeChallenges from "./pages/FridgeChallenges";
+import SelectIngredients from "./pages/SelectIngredients";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/categories" element={<CategorySelection />} />
             <Route path="/upgrade" element={<Upgrade />} />
             <Route path="/challenges" element={<FridgeChallenges />} />
+            <Route path="/select-ingredients" element={<SelectIngredients />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
