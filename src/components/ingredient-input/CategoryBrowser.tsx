@@ -227,10 +227,10 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                         transition={{ delay: i * 0.025, duration: 0.18 }}
                         onClick={() => togglePending(ing.id)}
                         className={cn(
-                          "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-150 text-right",
+                          "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-150 text-right",
                           isPending
-                            ? "bg-primary/20 border border-primary/40"
-                            : "bg-white/30 hover:bg-white/50 border border-transparent"
+                            ? "bg-accent border border-primary/30"
+                            : "hover:bg-muted/60 border border-transparent"
                         )}
                       >
                         <div className="flex items-center gap-2.5">
