@@ -148,7 +148,16 @@ const PostCooking = () => {
       {/* Header */}
       <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1 hover:bg-primary/10"
+            >
+              <ArrowRight className="w-4 h-4" />
+              חזרה
+            </Button>
             <ChefHat className="w-6 h-6 text-primary" />
             <span className="font-bold text-foreground">מה שיש</span>
           </div>
