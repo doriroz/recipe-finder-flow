@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, BookOpen, Home, ChefHat, Star, Loader2, X, ArrowRight } from "lucide-react";
+import { Camera, BookOpen, Home, ChefHat, Star, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -146,7 +146,7 @@ const PostCooking = () => {
       {showConfetti && <Confetti />}
 
       {/* Header */}
-      <header className="sticky bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+      <header className="sticky top-0 z-50 bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             <Button
