@@ -179,10 +179,9 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                 role="dialog"
                 aria-modal="true"
                 aria-label={openCategory}
-                className="fixed z-50 inset-x-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[440px] top-[8%] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                className="fixed z-50 inset-x-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[420px] top-[10%] rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-card"
                 style={{
-                  background: `hsl(${openMeta.hue})`,
-                  maxHeight: "80vh",
+                  maxHeight: "75vh",
                 }}
                 initial={{ scale: 0.82, opacity: 0, y: 28 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
