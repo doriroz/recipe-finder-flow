@@ -256,6 +256,9 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                 {/* Footer — confirm button */}
                 <div className="px-4 pb-5 pt-3 shrink-0">
                   <div className="h-px mb-3 bg-border" />
+                  <p className="text-xs text-muted-foreground text-center mb-2">
+                    {pendingSelections.size > 0 ? `נבחרו ${pendingSelections.size}` : "0/X נבחרו"}
+                  </p>
                   <Button
                     variant="hero"
                     className="w-full"
