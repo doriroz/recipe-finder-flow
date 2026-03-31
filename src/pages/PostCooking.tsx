@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, BookOpen, Home, ChefHat, Star, Loader2, X } from "lucide-react";
+import { Camera, BookOpen, Home, ChefHat, Star, Loader2, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, useSearchParams } from "react-router-dom";
