@@ -191,7 +191,12 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                 {/* Modal Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
                   <div className="flex items-center gap-3">
-                    <span className="text-4xl leading-none">{openMeta.icon}</span>
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                      style={{ background: `hsl(${openMeta.hue})` }}
+                    >
+                      <span className="text-2xl leading-none">{openMeta.icon}</span>
+                    </div>
                     <div className="text-right">
                       <p className="font-bold text-foreground text-lg leading-tight">{openCategory}</p>
                       <p className="text-xs text-muted-foreground">{openMeta.subtitle}</p>
@@ -200,7 +205,7 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                   <button
                     onClick={closeModal}
                     autoFocus
-                    className="rounded-full p-2 hover:bg-black/10 transition-colors text-foreground/70 hover:text-foreground"
+                    className="rounded-full p-2 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                     aria-label="סגור"
                   >
                     <X className="w-5 h-5" />
@@ -208,10 +213,7 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                 </div>
 
                 {/* Divider */}
-                <div
-                  className="h-px mx-5 shrink-0"
-                  style={{ background: `hsl(${openMeta.hue.split(" ")[0]} ${openMeta.hue.split(" ")[1]} 65%)` }}
-                />
+                <div className="h-px mx-5 shrink-0 bg-border" />
 
                 {/* Scrollable ingredient list */}
                 <div className="overflow-y-auto flex-1 px-4 py-3 space-y-1">
