@@ -118,7 +118,7 @@ const SelectIngredients = () => {
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Search bar + selected chips */}
-          <div className="bg-card border-b border-border px-4 md:px-8 py-5 space-y-4">
+          <div className="bg-card border-b border-border px-4 md:px-8 space-y-4" style={{ paddingTop: '14px', paddingBottom: '14px' }}>
             <div className="max-w-3xl mx-auto">
               <div className="flex gap-2">
                 <div className="relative flex-1">
