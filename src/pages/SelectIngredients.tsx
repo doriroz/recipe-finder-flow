@@ -228,9 +228,9 @@ const SelectIngredients = () => {
 
         {/* Desktop sidebar - right side */}
         {!isMobile && (
-          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-l border-border flex flex-col order-first">
-            <div className="px-5 border-b border-border flex items-center" style={{ height: '70px' }}>
-              <h2 className="font-bold text-foreground text-base">המצרכים שלי</h2>
+          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-l border-border flex flex-col order-first animate-slide-in-right">
+            <div className="px-5 border-b border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card" style={{ height: '70px' }}>
+              <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
               {selected.length === 0 ? (
@@ -238,10 +238,11 @@ const SelectIngredients = () => {
                   בחרו מצרכים כדי להתחיל 🧑‍🍳
                 </p>
               ) : (
-                selected.map((ing) => (
+                selected.map((ing, index) => (
                   <div
                     key={ing.id}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-muted/60 group"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-muted/60 group animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
                   >
                     <span className="text-lg leading-none">{ing.emoji}</span>
                     <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
