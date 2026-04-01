@@ -323,7 +323,7 @@ const SelectIngredients = () => {
         <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden backdrop-blur-sm">
           {openCategory && openMeta && (
             <>
-              <div className={cn("px-6 pt-6 pb-4", openMeta.bg)}>
+              <div className="px-6 pt-6 pb-4" style={{ background: `hsl(${openMeta.hue})` }}>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-3 text-right">
                     <span className="text-3xl">{openMeta.icon}</span>
