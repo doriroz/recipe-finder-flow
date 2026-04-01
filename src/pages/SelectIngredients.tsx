@@ -12,16 +12,16 @@ import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const CATEGORY_META: Record<string, { icon: string; bg: string; border: string }> = {
-  "ירקות":   { icon: "🥦", bg: "bg-green-50",   border: "border-green-200" },
-  "חלבונים": { icon: "🍗", bg: "bg-red-50",     border: "border-red-200" },
-  "חלבי":    { icon: "🧀", bg: "bg-blue-50",    border: "border-blue-200" },
-  "דגנים":   { icon: "🌾", bg: "bg-yellow-50",  border: "border-yellow-200" },
-  "תבלינים": { icon: "🧂", bg: "bg-orange-50",  border: "border-orange-200" },
-  "שימורים": { icon: "🥫", bg: "bg-amber-50",   border: "border-amber-200" },
-  "פירות":   { icon: "🍎", bg: "bg-pink-50",    border: "border-pink-200" },
-  "שמנים":   { icon: "🫒", bg: "bg-lime-50",    border: "border-lime-200" },
-  "אחר":     { icon: "✨", bg: "bg-purple-50",  border: "border-purple-200" },
+const CATEGORY_META: Record<string, { icon: string; hue: string }> = {
+  "ירקות":   { icon: "🥦", hue: "142 45% 82%" },
+  "חלבונים": { icon: "🍗", hue: "32 65% 82%" },
+  "חלבי":    { icon: "🧀", hue: "200 55% 82%" },
+  "דגנים":   { icon: "🌾", hue: "48 70% 81%" },
+  "תבלינים": { icon: "🧂", hue: "355 55% 82%" },
+  "שימורים": { icon: "🥫", hue: "18 60% 81%" },
+  "פירות":   { icon: "🍎", hue: "340 55% 82%" },
+  "שמנים":   { icon: "🫒", hue: "88 50% 81%" },
+  "אחר":     { icon: "✨", hue: "270 45% 82%" },
 };
 
 const SelectIngredients = () => {
