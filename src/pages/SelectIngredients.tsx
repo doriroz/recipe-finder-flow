@@ -104,7 +104,7 @@ const SelectIngredients = () => {
 
   const canGenerate = selected.length >= 2;
   const openMeta = openCategory
-    ? CATEGORY_META[openCategory] ?? { icon: "🍽️", bg: "bg-muted", border: "border-border" }
+    ? CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%" }
     : null;
   const openIngredients = openCategory
     ? allIngredients.filter((i) => i.category === openCategory).sort((a, b) => b.popularityScore - a.popularityScore)
