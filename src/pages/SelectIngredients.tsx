@@ -120,14 +120,25 @@ const SelectIngredients = () => {
           {/* Search bar + selected chips */}
           <div className="bg-card border-b border-border px-4 md:px-8 py-5 space-y-4">
             <div className="max-w-3xl mx-auto">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="מה יש לכם במקרר היום?"
-                  className="pr-10 rounded-2xl h-12 text-base border-border bg-muted/30 focus:bg-card"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="מה יש לכם במקרר היום?"
+                    className="pr-10 rounded-2xl h-12 text-base border-border bg-muted/30 focus:bg-card"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 rounded-2xl shrink-0 border-border hover:bg-accent"
+                  onClick={() => navigate("/ingredients")}
+                  title="מצא מתכון מתמונה"
+                >
+                  <Camera className="w-5 h-5 text-muted-foreground" />
+                </Button>
               </div>
 
               {/* Search results dropdown */}
