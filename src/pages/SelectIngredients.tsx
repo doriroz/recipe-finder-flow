@@ -215,9 +215,9 @@ const SelectIngredients = () => {
           </main>
         </div>
 
-        {/* Desktop sidebar */}
+        {/* Desktop sidebar - right side */}
         {!isMobile && (
-          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-r border-border flex flex-col">
+          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-l border-border flex flex-col order-last">
             <div className="px-5 py-5 border-b border-border">
               <h2 className="font-bold text-foreground text-base">המצרכים שלי</h2>
             </div>
