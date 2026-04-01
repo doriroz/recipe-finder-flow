@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { Search, X, Sparkles, Check } from "lucide-react";
+import { Search, X, Sparkles, Check, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,16 +12,16 @@ import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const CATEGORY_META: Record<string, { icon: string; bg: string; border: string }> = {
-  "ירקות":   { icon: "🥦", bg: "bg-green-50",   border: "border-green-200" },
-  "חלבונים": { icon: "🍗", bg: "bg-red-50",     border: "border-red-200" },
-  "חלבי":    { icon: "🧀", bg: "bg-blue-50",    border: "border-blue-200" },
-  "דגנים":   { icon: "🌾", bg: "bg-yellow-50",  border: "border-yellow-200" },
-  "תבלינים": { icon: "🧂", bg: "bg-orange-50",  border: "border-orange-200" },
-  "שימורים": { icon: "🥫", bg: "bg-amber-50",   border: "border-amber-200" },
-  "פירות":   { icon: "🍎", bg: "bg-pink-50",    border: "border-pink-200" },
-  "שמנים":   { icon: "🫒", bg: "bg-lime-50",    border: "border-lime-200" },
-  "אחר":     { icon: "✨", bg: "bg-purple-50",  border: "border-purple-200" },
+const CATEGORY_META: Record<string, { icon: string; hue: string }> = {
+  "ירקות":   { icon: "🥦", hue: "142 45% 82%" },
+  "חלבונים": { icon: "🍗", hue: "32 65% 82%" },
+  "חלבי":    { icon: "🧀", hue: "200 55% 82%" },
+  "דגנים":   { icon: "🌾", hue: "48 70% 81%" },
+  "תבלינים": { icon: "🧂", hue: "355 55% 82%" },
+  "שימורים": { icon: "🥫", hue: "18 60% 81%" },
+  "פירות":   { icon: "🍎", hue: "340 55% 82%" },
+  "שמנים":   { icon: "🫒", hue: "88 50% 81%" },
+  "אחר":     { icon: "✨", hue: "270 45% 82%" },
 };
 
 const SelectIngredients = () => {
@@ -104,7 +104,7 @@ const SelectIngredients = () => {
 
   const canGenerate = selected.length >= 2;
   const openMeta = openCategory
-    ? CATEGORY_META[openCategory] ?? { icon: "🍽️", bg: "bg-muted", border: "border-border" }
+    ? CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%" }
     : null;
   const openIngredients = openCategory
     ? allIngredients.filter((i) => i.category === openCategory).sort((a, b) => b.popularityScore - a.popularityScore)
@@ -120,14 +120,25 @@ const SelectIngredients = () => {
           {/* Search bar + selected chips */}
           <div className="bg-card border-b border-border px-4 md:px-8 py-5 space-y-4">
             <div className="max-w-3xl mx-auto">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="מה יש לכם במקרר היום?"
-                  className="pr-10 rounded-2xl h-12 text-base border-border bg-muted/30 focus:bg-card"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="מה יש לכם במקרר היום?"
+                    className="pr-10 rounded-2xl h-12 text-base border-border bg-muted/30 focus:bg-card"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 rounded-2xl shrink-0 border-border hover:bg-accent"
+                  onClick={() => navigate("/ingredients")}
+                  title="מצא מתכון מתמונה"
+                >
+                  <Camera className="w-5 h-5 text-muted-foreground" />
+                </Button>
               </div>
 
               {/* Search results dropdown */}
@@ -183,7 +194,7 @@ const SelectIngredients = () => {
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {categories.map((cat) => {
-                  const meta = CATEGORY_META[cat] ?? { icon: "🍽️", bg: "bg-muted", border: "border-border" };
+                  const meta = CATEGORY_META[cat] ?? { icon: "🍽️", hue: "30 30% 82%" };
                   const catIngredients = allIngredients.filter((i) => i.category === cat);
                   const selectedCount = catIngredients.filter((i) =>
                     selected.some((s) => s.id === i.id)
@@ -193,12 +204,12 @@ const SelectIngredients = () => {
                     <button
                       key={cat}
                       onClick={() => openModal(cat)}
-                      className={cn(
-                        "relative rounded-2xl border p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer select-none",
-                        meta.bg,
-                        meta.border
-                      )}
-                      style={{ minHeight: "140px" }}
+                      className="relative rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer select-none"
+                      style={{
+                        background: `hsl(${meta.hue})`,
+                        minHeight: "140px",
+                        boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.08)",
+                      }}
                     >
                       {selectedCount > 0 && (
                         <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold">
@@ -215,9 +226,9 @@ const SelectIngredients = () => {
           </main>
         </div>
 
-        {/* Desktop sidebar */}
+        {/* Desktop sidebar - right side */}
         {!isMobile && (
-          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-r border-border flex flex-col">
+          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-l border-border flex flex-col order-last">
             <div className="px-5 py-5 border-b border-border">
               <h2 className="font-bold text-foreground text-base">המצרכים שלי</h2>
             </div>
@@ -312,7 +323,7 @@ const SelectIngredients = () => {
         <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden backdrop-blur-sm">
           {openCategory && openMeta && (
             <>
-              <div className={cn("px-6 pt-6 pb-4", openMeta.bg)}>
+              <div className="px-6 pt-6 pb-4" style={{ background: `hsl(${openMeta.hue})` }}>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-3 text-right">
                     <span className="text-3xl">{openMeta.icon}</span>
