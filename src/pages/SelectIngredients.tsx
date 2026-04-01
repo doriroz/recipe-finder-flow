@@ -183,7 +183,7 @@ const SelectIngredients = () => {
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {categories.map((cat) => {
-                  const meta = CATEGORY_META[cat] ?? { icon: "🍽️", bg: "bg-muted", border: "border-border" };
+                  const meta = CATEGORY_META[cat] ?? { icon: "🍽️", hue: "30 30% 82%" };
                   const catIngredients = allIngredients.filter((i) => i.category === cat);
                   const selectedCount = catIngredients.filter((i) =>
                     selected.some((s) => s.id === i.id)
@@ -193,12 +193,12 @@ const SelectIngredients = () => {
                     <button
                       key={cat}
                       onClick={() => openModal(cat)}
-                      className={cn(
-                        "relative rounded-2xl border p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer select-none",
-                        meta.bg,
-                        meta.border
-                      )}
-                      style={{ minHeight: "140px" }}
+                      className="relative rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer select-none"
+                      style={{
+                        background: `hsl(${meta.hue})`,
+                        minHeight: "140px",
+                        boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.08)",
+                      }}
                     >
                       {selectedCount > 0 && (
                         <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold">
