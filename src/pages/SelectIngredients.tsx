@@ -118,7 +118,7 @@ const SelectIngredients = () => {
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Search bar + selected chips */}
-          <div className="bg-card border-b border-border px-4 md:px-8 py-5 space-y-4">
+          <div className="bg-card border-b border-border px-4 md:px-8 space-y-4" style={{ paddingTop: '14px', paddingBottom: '14px' }}>
             <div className="max-w-3xl mx-auto">
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -229,7 +229,7 @@ const SelectIngredients = () => {
         {/* Desktop sidebar - right side */}
         {!isMobile && (
           <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-l border-border flex flex-col order-first">
-            <div className="px-5 py-5 border-b border-border">
+            <div className="px-5 border-b border-border flex items-center" style={{ height: '70px' }}>
               <h2 className="font-bold text-foreground text-base">המצרכים שלי</h2>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
