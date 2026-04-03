@@ -117,9 +117,9 @@ const SelectIngredients = () => {
       <div className="flex min-h-screen">
         {/* Main content */}
         <div className="flex-1 flex flex-col">
-          {/* Search bar + selected chips */}
-          <div className="bg-card border-b border-border px-4 md:px-8 space-y-4" style={{ paddingTop: '14px', paddingBottom: '14px' }}>
-            <div className="max-w-3xl mx-auto">
+          {/* Search bar - fixed height, no chips */}
+          <div className="bg-card border-b border-border px-4 md:px-8 flex items-center" style={{ height: '70px' }}>
+            <div className="max-w-3xl mx-auto w-full">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -143,46 +143,26 @@ const SelectIngredients = () => {
 
               {/* Search results dropdown */}
               {searchQuery.trim() && filteredBySearch.length > 0 && (
-                <div className="mt-2 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto">
-                  {filteredBySearch.map((ing) => {
-                    const isSelected = selected.some((s) => s.id === ing.id);
-                    return (
-                      <button
-                        key={ing.id}
-                        onClick={() => { toggle(ing); setSearchQuery(""); }}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-muted/60 transition-colors",
-                          isSelected && "bg-accent"
-                        )}
-                      >
-                        <span className="text-xl">{ing.emoji}</span>
-                        <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
-                        {isSelected && <Check className="w-4 h-4 text-primary" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Selected chips */}
-              {selected.length > 0 && (
-                <div className="flex gap-2 flex-wrap mt-3">
-                  {selected.map((ing) => (
-                    <span
-                      key={ing.id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-accent text-accent-foreground border border-primary/20"
-                    >
-                      <span>{ing.emoji}</span>
-                      <span>{ing.name}</span>
-                      <button
-                        onClick={() => remove(ing.id)}
-                        className="mr-0.5 hover:text-destructive transition-colors"
-                        aria-label={`הסר ${ing.name}`}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </span>
-                  ))}
+                <div className="relative">
+                  <div className="absolute top-2 left-0 right-0 z-20 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto">
+                    {filteredBySearch.map((ing) => {
+                      const isSelected = selected.some((s) => s.id === ing.id);
+                      return (
+                        <button
+                          key={ing.id}
+                          onClick={() => { toggle(ing); setSearchQuery(""); }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-muted/60 transition-colors",
+                            isSelected && "bg-accent"
+                          )}
+                        >
+                          <span className="text-xl">{ing.emoji}</span>
+                          <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
+                          {isSelected && <Check className="w-4 h-4 text-primary" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
