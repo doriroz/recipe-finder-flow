@@ -19,6 +19,8 @@ import CategorySelection from "./pages/CategorySelection";
 import Upgrade from "./pages/Upgrade";
 import FridgeChallenges from "./pages/FridgeChallenges";
 import SelectIngredients from "./pages/SelectIngredients";
+import V2Dashboard from "./pages/V2Dashboard";
+import V2Cookbook from "./pages/V2Cookbook";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -47,6 +49,8 @@ const App = () => (
             <Route path="/upgrade" element={<Upgrade />} />
             <Route path="/challenges" element={<FridgeChallenges />} />
             <Route path="/select-ingredients" element={<SelectIngredients />} />
+            <Route path="/v2-dashboard" element={<V2Dashboard />} />
+            <Route path="/v2-cookbook" element={<V2Cookbook />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
