@@ -19,6 +19,8 @@ import CategorySelection from "./pages/CategorySelection";
 import Upgrade from "./pages/Upgrade";
 import FridgeChallenges from "./pages/FridgeChallenges";
 import SelectIngredients from "./pages/SelectIngredients";
+import V2Dashboard from "./pages/V2Dashboard";
+import V2Cookbook from "./pages/V2Cookbook";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
