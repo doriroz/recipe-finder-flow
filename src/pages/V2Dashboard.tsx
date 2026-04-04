@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChefHat, Camera, BookOpen, Globe, Sparkles, Upload, PenLine, ArrowLeft } from "lucide-react";
+import { ChefHat, Camera, BookOpen, Globe, Sparkles, Upload, PenLine, ArrowLeft, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,10 +13,23 @@ import { useV2Cookbook } from "@/hooks/useV2Cookbook";
 import type { V2CookbookRecipe } from "@/types/v2cookbook";
 import { SOURCE_BADGES } from "@/types/v2cookbook";
 import { toast } from "sonner";
+import heroBg from "@/assets/v2-hero-bg.jpg";
+
+// Spoonacular sample images for gallery preview
+const SAMPLE_GALLERY_IMAGES = [
+  "https://img.spoonacular.com/recipes/716429-312x231.jpg",
+  "https://img.spoonacular.com/recipes/715497-312x231.jpg",
+  "https://img.spoonacular.com/recipes/644387-312x231.jpg",
+  "https://img.spoonacular.com/recipes/782585-312x231.jpg",
+  "https://img.spoonacular.com/recipes/716426-312x231.jpg",
+  "https://img.spoonacular.com/recipes/795751-312x231.jpg",
+  "https://img.spoonacular.com/recipes/766453-312x231.jpg",
+  "https://img.spoonacular.com/recipes/632269-312x231.jpg",
+];
 
 const V2Dashboard = () => {
   const navigate = useNavigate();
-  const { addRecipe, addRecipeForce } = useV2Cookbook();
+  const { recipes, addRecipe, addRecipeForce } = useV2Cookbook();
   const [heritageOpen, setHeritageOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
@@ -136,97 +149,256 @@ const V2Dashboard = () => {
 
   const selectedCuisineData = CUISINE_CATEGORIES.find((c) => c.id === selectedCuisine);
 
+  // Gallery images: mix real saved recipes with sample spoonacular images
+  const galleryImages = [
+    ...recipes.filter(r => r.heritageImageUrl).map(r => r.heritageImageUrl!),
+    ...SAMPLE_GALLERY_IMAGES,
+  ].slice(0, 8);
+
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      {/* Header */}
-      <div className="bg-gradient-to-l from-accent via-background to-background border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 py-6 flex items-center justify-between">
+    <div className="min-h-screen bg-muted" dir="rtl">
+      {/* ===== TOP HEADER BAR ===== */}
+      <div className="bg-gradient-to-l from-primary via-orange-medium to-primary">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <ChefHat className="w-7 h-7 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
+              <ChefHat className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">ספר המתכונים הדיגיטלי</h1>
-              <p className="text-sm text-muted-foreground">של המשפחה שלנו</p>
+              <h1 className="text-xl font-bold text-primary-foreground">ספר המתכונים הדיגיטלי</h1>
+              <p className="text-xs text-primary-foreground/80">של המשפחה שלנו</p>
             </div>
           </div>
-          <Button variant="outline" className="rounded-xl gap-2" onClick={() => navigate("/v2-cookbook")}>
+          <Button
+            variant="outline"
+            className="rounded-xl gap-2 bg-primary-foreground/20 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/30 hover:text-primary-foreground"
+            onClick={() => navigate("/v2-cookbook")}
+          >
             <BookOpen className="w-4 h-4" />
             הספר שלי
           </Button>
         </div>
       </div>
 
-      {/* Triple Entry Cards */}
-      <div className="max-w-5xl mx-auto px-4 py-10">
-        <div className="text-center mb-10">
-          <h2 className="text-xl font-semibold text-foreground mb-2">איך תרצו להוסיף מתכון?</h2>
-          <p className="text-muted-foreground">בחרו את הדרך שמתאימה לכם</p>
-        </div>
+      {/* ===== MAIN CONTENT: Two-column layout ===== */}
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Path A: AI Fridge */}
-          <Card
-            className="group cursor-pointer border-2 border-transparent hover:border-primary/30 transition-all duration-300 rounded-2xl overflow-hidden hover:shadow-elevated"
-            onClick={() => navigate("/select-ingredients")}
-          >
-            <div className="h-3 bg-gradient-to-l from-primary to-orange-medium" />
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-accent flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Sparkles className="w-8 h-8 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-1">בישול לפי מצרכים</h3>
-                <p className="text-sm text-muted-foreground">בחרו מה יש לכם במקרר ונמצא לכם מתכון מושלם</p>
-              </div>
-              <Badge className="bg-accent text-accent-foreground">🤖 עוזר AI</Badge>
-            </CardContent>
-          </Card>
+          {/* ===== LEFT COLUMN (3/5): Hero + Gallery ===== */}
+          <div className="lg:col-span-3 space-y-6">
 
-          {/* Path B: Heritage */}
-          <Card
-            className="group cursor-pointer border-2 border-transparent hover:border-secondary/30 transition-all duration-300 rounded-2xl overflow-hidden hover:shadow-elevated"
-            onClick={() => { setHeritageOpen(true); setHeritageMode("choose"); }}
-          >
-            <div className="h-3 bg-gradient-to-l from-secondary to-sage" />
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-sage-light flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Camera className="w-8 h-8 text-secondary" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-1">שימור זיכרון משפחתי</h3>
-                <p className="text-sm text-muted-foreground">צלמו מתכון כתוב ביד או הקלידו אותו ידנית</p>
-              </div>
-              <Badge className="bg-sage-light text-sage-dark">👵 זיכרון משפחתי</Badge>
-            </CardContent>
-          </Card>
+            {/* HERO SECTION: "מה נבשל היום?" */}
+            <div className="relative rounded-2xl overflow-hidden shadow-elevated">
+              {/* Background image */}
+              <img
+                src={heroBg}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                width={1920}
+                height={800}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/40 to-foreground/20" />
 
-          {/* Path C: Library */}
-          <Card
-            className="group cursor-pointer border-2 border-transparent hover:border-primary/30 transition-all duration-300 rounded-2xl overflow-hidden hover:shadow-elevated"
-            onClick={() => { setLibraryOpen(true); setSelectedCuisine(null); }}
-          >
-            <div className="h-3 bg-gradient-to-l from-orange-medium to-primary" />
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-orange-light flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Globe className="w-8 h-8 text-orange-dark" />
+              {/* Content overlay */}
+              <div className="relative z-10 p-6 md:p-8">
+                <h2 className="text-2xl md:text-3xl font-extrabold text-primary-foreground mb-6">
+                  מה נבשל היום?
+                </h2>
+
+                {/* Glassmorphism card with two options */}
+                <div className="bg-card/80 backdrop-blur-md rounded-2xl p-5 shadow-elevated border border-border/50">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    {/* AI Fridge */}
+                    <button
+                      onClick={() => navigate("/select-ingredients")}
+                      className="group flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-accent/60 transition-all"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Sparkles className="w-7 h-7 text-primary" />
+                      </div>
+                      <div className="text-center">
+                        <p className="font-bold text-foreground text-sm">בנו מתכון מהמקרר</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">בחרו מה יש לכם במקרר לכם מתכון</p>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                        🤖 עוזר AI
+                      </Badge>
+                    </button>
+
+                    {/* Library / Discovery */}
+                    <button
+                      onClick={() => { setLibraryOpen(true); setSelectedCuisine(null); }}
+                      className="group flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-accent/60 transition-all"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-orange-light flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Globe className="w-7 h-7 text-orange-dark" />
+                      </div>
+                      <div className="text-center">
+                        <p className="font-bold text-foreground text-sm">גלו מתכונים פופולריים</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">גלו מתכונים מהמטבח העולמי לפי קטגוריה</p>
+                      </div>
+                      <Badge className="bg-secondary/10 text-secondary border-secondary/20 text-[10px]">
+                        🌍 Discovery
+                      </Badge>
+                    </button>
+                  </div>
+
+                  {/* CTA */}
+                  <Button
+                    variant="default"
+                    className="w-full rounded-xl text-base font-bold gap-2"
+                    onClick={() => navigate("/select-ingredients")}
+                  >
+                    בנו מתכון!
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground text-center mt-2">
+                    (תהליך: בחירת מצרכים או בחירת סגנון ← הפקת מתכון ← אהבתם? שמרו לספר שלי)
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-1">מתכונים פופולריים</h3>
-                <p className="text-sm text-muted-foreground">גלו מתכונים מהמטבח העולמי לפי קטגוריות</p>
+            </div>
+
+            {/* ===== GALLERY PREVIEW SECTION ===== */}
+            <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-foreground text-lg">הגלריה שלי</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary text-xs gap-1"
+                  onClick={() => navigate("/v2-cookbook")}
+                >
+                  Live Preview →
+                </Button>
               </div>
-              <Badge className="bg-orange-light text-orange-dark">🌍 מהמטבח העולמי</Badge>
-            </CardContent>
-          </Card>
+              <p className="text-xs text-muted-foreground mb-4">
+                כל המתכונים שתאספו או תשמרו יחכו לכם בגלריה, ממנה תוכלו להפיק ספר מתכונים מודפס.
+              </p>
+
+              {/* Image grid */}
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                {galleryImages.map((img, i) => (
+                  <div
+                    key={i}
+                    className="aspect-square rounded-xl overflow-hidden border border-border hover:shadow-soft transition-shadow cursor-pointer"
+                    onClick={() => navigate("/v2-cookbook")}
+                  >
+                    <img
+                      src={img}
+                      alt={`מתכון ${i + 1}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {recipes.length > 0 && (
+                <p className="text-xs text-muted-foreground text-center mt-3">
+                  {recipes.length} מתכונים בספר שלך
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* ===== RIGHT COLUMN (2/5): Heritage + Gallery Info ===== */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* HERITAGE SECTION */}
+            <div className="bg-gradient-to-b from-accent via-card to-card rounded-2xl p-5 shadow-soft border border-border">
+              <h3 className="text-lg font-bold text-foreground mb-1">המורשת הקולינרית שלכם</h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                (מתכון זיכרון אינו תהליך בישול, אלא העלאה ישירה לגלריה)
+              </p>
+
+              {/* Heritage action card */}
+              <Card
+                className="cursor-pointer border-2 border-dashed border-secondary/30 hover:border-secondary/60 rounded-2xl transition-all hover:shadow-soft group"
+                onClick={() => { setHeritageOpen(true); setHeritageMode("choose"); }}
+              >
+                <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-sage-light flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Camera className="w-7 h-7 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-foreground">שימור זיכרון משפחתי</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      העלו מתכון מסבתא!
+                    </p>
+                  </div>
+                  <Badge className="bg-sage-light text-sage-dark border-secondary/20">
+                    👵 זיכרון משפחתי
+                  </Badge>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* GALLERY INFO CARD */}
+            <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
+              <div className="flex items-center gap-2 mb-3">
+                <ImageIcon className="w-5 h-5 text-primary" />
+                <h3 className="font-bold text-foreground">הגלריה Live Prew</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">
+                כל המתכונים שתאספו או תשמרו יחכו לכם בגלריה, ממנה תוכלו להפיק ספר מתכונים מודפס.
+              </p>
+
+              {/* Spoonacular sample cards */}
+              <div className="grid grid-cols-2 gap-2">
+                {SAMPLE_GALLERY_IMAGES.slice(0, 4).map((img, i) => (
+                  <div key={i} className="rounded-xl overflow-hidden border border-border">
+                    <img
+                      src={img}
+                      alt={`דוגמה ${i + 1}`}
+                      className="w-full h-20 object-cover"
+                      loading="lazy"
+                    />
+                    <div className="p-2">
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {["בלני אוכמן מתובל", "פסטה עגבניות שרי", "סלט ים-תיכוני", "מרק עדשים מרוקאי"][i]}
+                      </p>
+                      <Badge className="text-[8px] mt-1 bg-orange-light text-orange-dark">
+                        🌍 מהמטבח העולמי
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Heritage Dialog */}
+      {/* ===== BOTTOM NAV BAR ===== */}
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border">
+        <div className="max-w-6xl mx-auto flex items-center justify-around py-2">
+          {[
+            { label: "הספר שלי", icon: BookOpen, path: "/v2-cookbook", active: false },
+            { label: "זיכרון", icon: Camera, action: () => { setHeritageOpen(true); setHeritageMode("choose"); }, active: false },
+            { label: "התחלו מועדפים", icon: Globe, action: () => { setLibraryOpen(true); setSelectedCuisine(null); }, active: false },
+            { label: "הפלזורים", icon: Sparkles, path: "/select-ingredients", active: false },
+            { label: "הספה", icon: ChefHat, path: "/v2-dashboard", active: true },
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={() => item.path ? navigate(item.path) : item.action?.()}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
+                item.active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== HERITAGE DIALOG ===== */}
       <Dialog open={heritageOpen} onOpenChange={(o) => { setHeritageOpen(o); if (!o) resetHeritageForm(); }}>
-        <DialogContent className="max-w-lg backdrop-blur-sm bg-background/95 rounded-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-lg backdrop-blur-md bg-card/95 rounded-2xl max-h-[85vh] overflow-y-auto border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl">שימור זיכרון משפחתי</DialogTitle>
-            <DialogDescription>שמרו את המתכונים של המשפחה לדורות הבאים</DialogDescription>
+            <DialogTitle className="text-xl text-right">שימור זיכרון משפחתי</DialogTitle>
+            <DialogDescription className="text-right">שמרו את המתכונים של המשפחה לדורות הבאים</DialogDescription>
           </DialogHeader>
 
           {heritageMode === "choose" && (
@@ -255,7 +427,6 @@ const V2Dashboard = () => {
           {heritageMode === "photo" && heritagePhoto && (
             <div className="space-y-4 pt-2">
               <img src={heritagePhoto} alt="uploaded recipe" className="w-full max-h-48 object-contain rounded-xl border border-border" />
-              
               <div className="space-y-2">
                 <Label>שם המתכון *</Label>
                 <Input value={heritageTitle} onChange={(e) => setHeritageTitle(e.target.value)} placeholder="למשל: עוגת שוקולד של סבתא רחל" />
@@ -264,7 +435,6 @@ const V2Dashboard = () => {
                 <Label>הסיפור מאחורי המתכון</Label>
                 <Textarea value={heritageStory} onChange={(e) => setHeritageStory(e.target.value)} placeholder="ספרו את הסיפור..." rows={2} />
               </div>
-
               {!ocrResult ? (
                 <div className="flex gap-2">
                   <Button onClick={handleSavePhotoOnly} variant="outline" className="flex-1 rounded-xl">
@@ -318,12 +488,12 @@ const V2Dashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Library Dialog */}
+      {/* ===== LIBRARY DIALOG ===== */}
       <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
-        <DialogContent className="max-w-2xl backdrop-blur-sm bg-background/95 rounded-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl backdrop-blur-md bg-card/95 rounded-2xl max-h-[85vh] overflow-y-auto border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl">מתכונים פופולריים</DialogTitle>
-            <DialogDescription>בחרו קטגוריה וגלו מתכונים מהמטבח העולמי</DialogDescription>
+            <DialogTitle className="text-xl text-right">מתכונים פופולריים</DialogTitle>
+            <DialogDescription className="text-right">בחרו קטגוריה וגלו מתכונים מהמטבח העולמי</DialogDescription>
           </DialogHeader>
 
           {!selectedCuisine ? (
@@ -376,23 +546,16 @@ const V2Dashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Duplicate check dialog */}
+      {/* ===== DUPLICATE CHECK DIALOG ===== */}
       <Dialog open={duplicateDialog.open} onOpenChange={(o) => setDuplicateDialog({ open: o, recipe: null, existingTitle: "" })}>
-        <DialogContent className="max-w-sm backdrop-blur-sm bg-background/95 rounded-2xl">
+        <DialogContent className="max-w-sm backdrop-blur-md bg-card/95 rounded-2xl border-border">
           <DialogHeader>
-            <DialogTitle>מניעת כפילויות</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-right">מניעת כפילויות</DialogTitle>
+            <DialogDescription className="text-right">
               מתכון בשם "{duplicateDialog.existingTitle}" כבר קיים בספר שלך. לשמור כגרסה חדשה?
             </DialogDescription>
           </DialogHeader>
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              className="flex-1 rounded-xl"
-              onClick={() => setDuplicateDialog({ open: false, recipe: null, existingTitle: "" })}
-            >
-              ביטול
-            </Button>
+          <div className="flex gap-2 pt-2 sm:flex-row-reverse">
             <Button
               className="flex-1 rounded-xl"
               onClick={() => {
@@ -405,6 +568,13 @@ const V2Dashboard = () => {
               }}
             >
               שמור כגרסה חדשה
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 rounded-xl"
+              onClick={() => setDuplicateDialog({ open: false, recipe: null, existingTitle: "" })}
+            >
+              ביטול
             </Button>
           </div>
         </DialogContent>
