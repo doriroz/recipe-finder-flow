@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChefHat, Camera, BookOpen, Globe, Sparkles, Upload, PenLine, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { ChefHat, Camera, BookOpen, Globe, Sparkles, Upload, PenLine, ArrowLeft, Search, X, Trash2, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,26 +10,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CUISINE_CATEGORIES } from "@/data/categoryRecipes";
 import { useV2Cookbook } from "@/hooks/useV2Cookbook";
-import type { V2CookbookRecipe } from "@/types/v2cookbook";
+import type { V2CookbookRecipe, RecipeSource } from "@/types/v2cookbook";
 import { SOURCE_BADGES } from "@/types/v2cookbook";
 import { toast } from "sonner";
 import heroBg from "@/assets/v2-hero-bg.jpg";
 
-// Spoonacular sample images for gallery preview
 const SAMPLE_GALLERY_IMAGES = [
-  "https://img.spoonacular.com/recipes/716429-312x231.jpg",
-  "https://img.spoonacular.com/recipes/715497-312x231.jpg",
-  "https://img.spoonacular.com/recipes/644387-312x231.jpg",
-  "https://img.spoonacular.com/recipes/782585-312x231.jpg",
-  "https://img.spoonacular.com/recipes/716426-312x231.jpg",
-  "https://img.spoonacular.com/recipes/795751-312x231.jpg",
-  "https://img.spoonacular.com/recipes/766453-312x231.jpg",
-  "https://img.spoonacular.com/recipes/632269-312x231.jpg",
+  { url: "https://img.spoonacular.com/recipes/716429-312x231.jpg", title: "בלני אוכמניות" },
+  { url: "https://img.spoonacular.com/recipes/715497-312x231.jpg", title: "פסטה עגבניות שרי" },
+  { url: "https://img.spoonacular.com/recipes/644387-312x231.jpg", title: "סלט ים-תיכוני" },
+  { url: "https://img.spoonacular.com/recipes/782585-312x231.jpg", title: "מרק עדשים מרוקאי" },
+  { url: "https://img.spoonacular.com/recipes/716426-312x231.jpg", title: "שקשוקה קלאסית" },
+  { url: "https://img.spoonacular.com/recipes/795751-312x231.jpg", title: "טאקו מקסיקני" },
 ];
 
 const V2Dashboard = () => {
   const navigate = useNavigate();
-  const { recipes, addRecipe, addRecipeForce } = useV2Cookbook();
+  const { recipes, addRecipe, addRecipeForce, removeRecipe } = useV2Cookbook();
   const [heritageOpen, setHeritageOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
@@ -44,10 +41,28 @@ const V2Dashboard = () => {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrResult, setOcrResult] = useState<string | null>(null);
 
+  // Gallery state
+  const [gallerySearch, setGallerySearch] = useState("");
+  const [galleryFilter, setGalleryFilter] = useState<RecipeSource | null>(null);
+
   // Duplicate dialog
   const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; recipe: V2CookbookRecipe | null; existingTitle: string }>({
     open: false, recipe: null, existingTitle: ""
   });
+
+  const filteredRecipes = useMemo(() => {
+    let list = recipes;
+    if (galleryFilter) list = list.filter((r) => r.source === galleryFilter);
+    if (gallerySearch.trim()) {
+      const q = gallerySearch.trim().toLowerCase();
+      list = list.filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.ingredients.some((ing) => ing.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [recipes, gallerySearch, galleryFilter]);
 
   const trySaveRecipe = (recipe: V2CookbookRecipe) => {
     const result = addRecipe(recipe);
@@ -70,10 +85,7 @@ const V2Dashboard = () => {
   };
 
   const handleSaveHeritage = () => {
-    if (!heritageTitle.trim()) {
-      toast.error("נא להזין שם למתכון");
-      return;
-    }
+    if (!heritageTitle.trim()) { toast.error("נא להזין שם למתכון"); return; }
     const recipe: V2CookbookRecipe = {
       id: crypto.randomUUID(),
       title: heritageTitle,
@@ -92,10 +104,7 @@ const V2Dashboard = () => {
   };
 
   const handleSavePhotoOnly = () => {
-    if (!heritageTitle.trim()) {
-      toast.error("נא להזין שם למתכון");
-      return;
-    }
+    if (!heritageTitle.trim()) { toast.error("נא להזין שם למתכון"); return; }
     const recipe: V2CookbookRecipe = {
       id: crypto.randomUUID(),
       title: heritageTitle,
@@ -149,11 +158,11 @@ const V2Dashboard = () => {
 
   const selectedCuisineData = CUISINE_CATEGORIES.find((c) => c.id === selectedCuisine);
 
-  // Gallery images: mix real saved recipes with sample spoonacular images
-  const galleryImages = [
-    ...recipes.filter(r => r.heritageImageUrl).map(r => r.heritageImageUrl!),
-    ...SAMPLE_GALLERY_IMAGES,
-  ].slice(0, 8);
+  const SOURCE_BADGE_STYLES: Record<RecipeSource, string> = {
+    ai: "bg-primary/15 text-primary border-primary/20",
+    heritage: "bg-sage-light text-sage-dark border-secondary/20",
+    library: "bg-orange-light text-orange-dark border-orange-dark/20",
+  };
 
   return (
     <div className="min-h-screen bg-muted" dir="rtl">
@@ -180,32 +189,29 @@ const V2Dashboard = () => {
         </div>
       </div>
 
-      {/* ===== MAIN CONTENT: Two-column layout ===== */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* ===== MAIN CONTENT ===== */}
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-8">
+
+        {/* ===== TWO-COLUMN: Hero + Heritage ===== */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-          {/* ===== LEFT COLUMN (3/5): Hero + Gallery ===== */}
-          <div className="lg:col-span-3 space-y-6">
-
-            {/* HERO SECTION: "מה נבשל היום?" */}
+          {/* LEFT (3/5): Hero */}
+          <div className="lg:col-span-3">
             <div className="relative rounded-2xl overflow-hidden shadow-elevated">
-              {/* Background image */}
               <img
                 src={heroBg}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover blur-sm"
                 width={1920}
                 height={800}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/40 to-foreground/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/40 to-foreground/10" />
 
-              {/* Content overlay */}
               <div className="relative z-10 p-6 md:p-8">
                 <h2 className="text-2xl md:text-3xl font-extrabold text-primary-foreground mb-6">
                   מה נבשל היום?
                 </h2>
 
-                {/* Glassmorphism card with two options */}
                 <div className="bg-card/80 backdrop-blur-md rounded-2xl p-5 shadow-elevated border border-border/50">
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     {/* AI Fridge */}
@@ -243,128 +249,225 @@ const V2Dashboard = () => {
                     </button>
                   </div>
 
-                  {/* CTA */}
-                  <Button
-                    variant="default"
-                    className="w-full rounded-xl text-base font-bold gap-2"
-                    onClick={() => navigate("/select-ingredients")}
-                  >
-                    בנו מתכון!
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground text-center mt-2">
-                    (תהליך: בחירת מצרכים או בחירת סגנון ← הפקת מתכון ← אהבתם? שמרו לספר שלי)
+                  {/* Replaced button with descriptive paragraph */}
+                  <p className="text-xs text-muted-foreground text-center leading-relaxed py-2">
+                    בחרו מצרכים מהמקרר או גלו סגנון מהמטבח העולמי ← הפיקו מתכון ← אהבתם? שמרו לספר הדיגיטלי שלי
                   </p>
                 </div>
               </div>
             </div>
-
-            {/* ===== GALLERY PREVIEW SECTION ===== */}
-            <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-foreground text-lg">הגלריה שלי</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary text-xs gap-1"
-                  onClick={() => navigate("/v2-cookbook")}
-                >
-                  Live Preview →
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mb-4">
-                כל המתכונים שתאספו או תשמרו יחכו לכם בגלריה, ממנה תוכלו להפיק ספר מתכונים מודפס.
-              </p>
-
-              {/* Image grid */}
-              <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                {galleryImages.map((img, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square rounded-xl overflow-hidden border border-border hover:shadow-soft transition-shadow cursor-pointer"
-                    onClick={() => navigate("/v2-cookbook")}
-                  >
-                    <img
-                      src={img}
-                      alt={`מתכון ${i + 1}`}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {recipes.length > 0 && (
-                <p className="text-xs text-muted-foreground text-center mt-3">
-                  {recipes.length} מתכונים בספר שלך
-                </p>
-              )}
-            </div>
           </div>
 
-          {/* ===== RIGHT COLUMN (2/5): Heritage + Gallery Info ===== */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* HERITAGE SECTION */}
-            <div className="bg-gradient-to-b from-accent via-card to-card rounded-2xl p-5 shadow-soft border border-border">
+          {/* RIGHT (2/5): Heritage */}
+          <div className="lg:col-span-2">
+            <div className="bg-gradient-to-b from-accent via-card to-card rounded-2xl p-5 shadow-soft border border-border h-full flex flex-col">
               <h3 className="text-lg font-bold text-foreground mb-1">המורשת הקולינרית שלכם</h3>
               <p className="text-xs text-muted-foreground mb-4">
-                (מתכון זיכרון אינו תהליך בישול, אלא העלאה ישירה לגלריה)
+                שמרו מתכוני זיכרון ישירות לגלריה — ללא תהליך בישול
               </p>
 
-              {/* Heritage action card */}
               <Card
-                className="cursor-pointer border-2 border-dashed border-secondary/30 hover:border-secondary/60 rounded-2xl transition-all hover:shadow-soft group"
+                className="cursor-pointer border-2 border-dashed border-secondary/30 hover:border-secondary/60 rounded-2xl transition-all hover:shadow-soft group flex-1"
                 onClick={() => { setHeritageOpen(true); setHeritageMode("choose"); }}
               >
-                <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
+                <CardContent className="p-5 flex flex-col items-center justify-center gap-3 text-center h-full">
                   <div className="w-14 h-14 rounded-2xl bg-sage-light flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Camera className="w-7 h-7 text-secondary" />
                   </div>
                   <div>
                     <p className="font-bold text-foreground">שימור זיכרון משפחתי</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      העלו מתכון מסבתא!
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">העלו מתכון מסבתא!</p>
                   </div>
                   <Badge className="bg-sage-light text-sage-dark border-secondary/20">
-                    👵 זיכרון משפחתי
+                    👵 אוצר משפחתי
                   </Badge>
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </div>
 
-            {/* GALLERY INFO CARD */}
-            <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <ImageIcon className="w-5 h-5 text-primary" />
-                <h3 className="font-bold text-foreground">הגלריה Live Prew</h3>
+        {/* ===== UNIFIED GALLERY: הספר הדיגיטלי שלי ===== */}
+        <div className="rounded-2xl overflow-hidden border border-border shadow-soft" style={{ background: "linear-gradient(180deg, hsl(var(--accent) / 0.3) 0%, hsl(var(--card)) 100%)" }}>
+          {/* Gallery header with glassmorphism */}
+          <div className="bg-card/70 backdrop-blur-md border-b border-border px-5 pt-5 pb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-bold text-foreground">הספר הדיגיטלי שלי</h3>
+                {recipes.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">{recipes.length}</Badge>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground mb-4">
-                כל המתכונים שתאספו או תשמרו יחכו לכם בגלריה, ממנה תוכלו להפיק ספר מתכונים מודפס.
-              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary text-xs gap-1"
+                onClick={() => navigate("/v2-cookbook")}
+              >
+                צפו בספר המלא →
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              כל המתכונים שתאספו או תשמרו יחכו לכם כאן, ממנה תוכלו להפיק ספר מתכונים מודפס.
+            </p>
 
-              {/* Spoonacular sample cards */}
-              <div className="grid grid-cols-2 gap-2">
-                {SAMPLE_GALLERY_IMAGES.slice(0, 4).map((img, i) => (
-                  <div key={i} className="rounded-xl overflow-hidden border border-border">
-                    <img
-                      src={img}
-                      alt={`דוגמה ${i + 1}`}
-                      className="w-full h-20 object-cover"
-                      loading="lazy"
-                    />
-                    <div className="p-2">
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        {["בלני אוכמן מתובל", "פסטה עגבניות שרי", "סלט ים-תיכוני", "מרק עדשים מרוקאי"][i]}
-                      </p>
-                      <Badge className="text-[8px] mt-1 bg-orange-light text-orange-dark">
-                        🌍 מהמטבח העולמי
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+            {/* Filter bar */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant={galleryFilter === null ? "default" : "outline"}
+                className="rounded-full text-xs"
+                onClick={() => setGalleryFilter(null)}
+              >
+                הכל
+              </Button>
+              <Button
+                size="sm"
+                variant={galleryFilter === "heritage" ? "default" : "outline"}
+                className="rounded-full text-xs gap-1"
+                onClick={() => setGalleryFilter(galleryFilter === "heritage" ? null : "heritage")}
+              >
+                👵 מורשת משפחתית
+              </Button>
+              <Button
+                size="sm"
+                variant={galleryFilter === "ai" ? "default" : "outline"}
+                className="rounded-full text-xs gap-1"
+                onClick={() => setGalleryFilter(galleryFilter === "ai" ? null : "ai")}
+              >
+                🤖 מתכוני AI
+              </Button>
+              <Button
+                size="sm"
+                variant={galleryFilter === "library" ? "default" : "outline"}
+                className="rounded-full text-xs gap-1"
+                onClick={() => setGalleryFilter(galleryFilter === "library" ? null : "library")}
+              >
+                🌍 מהעולם
+              </Button>
+
+              {/* Search */}
+              <div className="relative mr-auto">
+                <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  value={gallerySearch}
+                  onChange={(e) => setGallerySearch(e.target.value)}
+                  placeholder="חפשו מתכון..."
+                  className="pr-8 h-8 text-xs rounded-full w-40"
+                />
+                {gallerySearch && (
+                  <button onClick={() => setGallerySearch("")} className="absolute left-2.5 top-1/2 -translate-y-1/2">
+                    <X className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                )}
               </div>
             </div>
+          </div>
+
+          {/* Gallery grid */}
+          <div className="p-5">
+            {filteredRecipes.length === 0 && recipes.length === 0 ? (
+              /* Empty state */
+              <div className="text-center py-16 space-y-4">
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-accent flex items-center justify-center">
+                  <BookOpen className="w-10 h-10 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground font-medium">הספר שלך עדיין ריק</p>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                  התחילו לבשל או לשמר זיכרון כדי למלא אותו!
+                </p>
+              </div>
+            ) : filteredRecipes.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">אין תוצאות לחיפוש</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredRecipes.map((recipe) => {
+                  const badgeStyle = SOURCE_BADGE_STYLES[recipe.source];
+                  const badgeInfo = SOURCE_BADGES[recipe.source];
+                  return (
+                    <Card
+                      key={recipe.id}
+                      className="rounded-2xl border border-border hover:shadow-elevated hover:scale-[1.03] transition-all cursor-pointer overflow-hidden group"
+                      onClick={() => navigate("/v2-cookbook")}
+                    >
+                      {/* Image */}
+                      {recipe.heritageImageUrl ? (
+                        <div className="h-40 overflow-hidden relative">
+                          <img
+                            src={recipe.heritageImageUrl}
+                            alt={recipe.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <Badge className={`absolute top-2 left-2 ${badgeStyle} text-[10px]`}>
+                            {badgeInfo.emoji} {badgeInfo.label}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="h-32 bg-gradient-to-br from-accent to-muted flex items-center justify-center relative">
+                          {recipe.source === "heritage" ? (
+                            <Camera className="w-10 h-10 text-muted-foreground/40" />
+                          ) : (
+                            <ChefHat className="w-10 h-10 text-muted-foreground/40" />
+                          )}
+                          <Badge className={`absolute top-2 left-2 ${badgeStyle} text-[10px]`}>
+                            {badgeInfo.emoji} {badgeInfo.label}
+                          </Badge>
+                        </div>
+                      )}
+                      <CardContent className="p-4 space-y-2">
+                        <h4 className="font-bold text-foreground leading-tight">{recipe.title}</h4>
+                        {recipe.story && (
+                          <p className="text-xs text-muted-foreground line-clamp-2 italic">"{recipe.story}"</p>
+                        )}
+                        {recipe.cuisineCategory && (
+                          <p className="text-xs text-muted-foreground">{recipe.cuisineCategory}</p>
+                        )}
+                        {recipe.ingredients.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {recipe.ingredients.slice(0, 3).join(", ")}
+                            {recipe.ingredients.length > 3 && ` +${recipe.ingredients.length - 3}`}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between pt-1">
+                          {recipe.cookingTime && (
+                            <span className="text-xs text-muted-foreground">⏱ {recipe.cookingTime} דק׳</span>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeRecipe(recipe.id); toast.success("הוסר מהספר"); }}
+                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Sample images when no real recipes but showing "all" */}
+            {recipes.length === 0 && !galleryFilter && (
+              <div className="mt-6">
+                <p className="text-xs text-muted-foreground mb-3 text-center">דוגמאות מהמטבח העולמי:</p>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {SAMPLE_GALLERY_IMAGES.map((img, i) => (
+                    <div key={i} className="rounded-xl overflow-hidden border border-border hover:shadow-soft transition-shadow">
+                      <img
+                        src={img.url}
+                        alt={img.title}
+                        className="w-full aspect-square object-cover"
+                        loading="lazy"
+                      />
+                      <p className="text-[10px] text-muted-foreground p-1.5 truncate text-center">{img.title}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -375,9 +478,9 @@ const V2Dashboard = () => {
           {[
             { label: "הספר שלי", icon: BookOpen, path: "/v2-cookbook", active: false },
             { label: "זיכרון", icon: Camera, action: () => { setHeritageOpen(true); setHeritageMode("choose"); }, active: false },
-            { label: "התחלו מועדפים", icon: Globe, action: () => { setLibraryOpen(true); setSelectedCuisine(null); }, active: false },
-            { label: "הפלזורים", icon: Sparkles, path: "/select-ingredients", active: false },
-            { label: "הספה", icon: ChefHat, path: "/v2-dashboard", active: true },
+            { label: "מתכונים", icon: Globe, action: () => { setLibraryOpen(true); setSelectedCuisine(null); }, active: false },
+            { label: "מהמקרר", icon: Sparkles, path: "/select-ingredients", active: false },
+            { label: "ראשי", icon: ChefHat, path: "/v2-dashboard", active: true },
           ].map((item) => (
             <button
               key={item.label}
@@ -437,9 +540,7 @@ const V2Dashboard = () => {
               </div>
               {!ocrResult ? (
                 <div className="flex gap-2">
-                  <Button onClick={handleSavePhotoOnly} variant="outline" className="flex-1 rounded-xl">
-                    שמור כזיכרון ויזואלי
-                  </Button>
+                  <Button onClick={handleSavePhotoOnly} variant="outline" className="flex-1 rounded-xl">שמור כזיכרון ויזואלי</Button>
                   <Button onClick={simulateOCR} className="flex-1 rounded-xl gap-2" disabled={ocrLoading}>
                     {ocrLoading ? "מחלץ טקסט..." : "הפוך לטקסט"}
                   </Button>
