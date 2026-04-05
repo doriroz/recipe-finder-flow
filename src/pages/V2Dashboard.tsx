@@ -1,6 +1,19 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChefHat, Camera, BookOpen, Globe, Sparkles, Upload, PenLine, ArrowLeft, Search, X, Trash2, Image as ImageIcon } from "lucide-react";
+import {
+  ChefHat,
+  Camera,
+  BookOpen,
+  Globe,
+  Sparkles,
+  Upload,
+  PenLine,
+  ArrowLeft,
+  Search,
+  X,
+  Trash2,
+  Image as ImageIcon,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,8 +59,14 @@ const V2Dashboard = () => {
   const [galleryFilter, setGalleryFilter] = useState<RecipeSource | null>(null);
 
   // Duplicate dialog
-  const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; recipe: V2CookbookRecipe | null; existingTitle: string }>({
-    open: false, recipe: null, existingTitle: ""
+  const [duplicateDialog, setDuplicateDialog] = useState<{
+    open: boolean;
+    recipe: V2CookbookRecipe | null;
+    existingTitle: string;
+  }>({
+    open: false,
+    recipe: null,
+    existingTitle: "",
   });
 
   const filteredRecipes = useMemo(() => {
@@ -56,9 +75,7 @@ const V2Dashboard = () => {
     if (gallerySearch.trim()) {
       const q = gallerySearch.trim().toLowerCase();
       list = list.filter(
-        (r) =>
-          r.title.toLowerCase().includes(q) ||
-          r.ingredients.some((ing) => ing.toLowerCase().includes(q))
+        (r) => r.title.toLowerCase().includes(q) || r.ingredients.some((ing) => ing.toLowerCase().includes(q)),
       );
     }
     return list;
@@ -85,7 +102,10 @@ const V2Dashboard = () => {
   };
 
   const handleSaveHeritage = () => {
-    if (!heritageTitle.trim()) { toast.error("נא להזין שם למתכון"); return; }
+    if (!heritageTitle.trim()) {
+      toast.error("נא להזין שם למתכון");
+      return;
+    }
     const recipe: V2CookbookRecipe = {
       id: crypto.randomUUID(),
       title: heritageTitle,
@@ -104,7 +124,10 @@ const V2Dashboard = () => {
   };
 
   const handleSavePhotoOnly = () => {
-    if (!heritageTitle.trim()) { toast.error("נא להזין שם למתכון"); return; }
+    if (!heritageTitle.trim()) {
+      toast.error("נא להזין שם למתכון");
+      return;
+    }
     const recipe: V2CookbookRecipe = {
       id: crypto.randomUUID(),
       title: heritageTitle,
@@ -140,7 +163,10 @@ const V2Dashboard = () => {
     setOcrResult(null);
   };
 
-  const handleAddLibraryRecipe = (cat: typeof CUISINE_CATEGORIES[0], recipe: typeof CUISINE_CATEGORIES[0]["recipes"][0]) => {
+  const handleAddLibraryRecipe = (
+    cat: (typeof CUISINE_CATEGORIES)[0],
+    recipe: (typeof CUISINE_CATEGORIES)[0]["recipes"][0],
+  ) => {
     const v2Recipe: V2CookbookRecipe = {
       id: crypto.randomUUID(),
       title: recipe.title,
@@ -191,10 +217,8 @@ const V2Dashboard = () => {
 
       {/* ===== MAIN CONTENT ===== */}
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-8">
-
         {/* ===== TWO-COLUMN: Hero + Heritage ===== */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
           {/* LEFT (3/5): Hero */}
           <div className="lg:col-span-3">
             <div className="relative rounded-2xl overflow-hidden shadow-elevated">
@@ -208,11 +232,9 @@ const V2Dashboard = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/40 to-foreground/10" />
 
               <div className="relative z-10 p-6 md:p-8">
-                <h2 className="text-2xl md:text-3xl font-extrabold text-primary-foreground mb-6">
-                  מה נבשל היום?
-                </h2>
+                <h2 className="text-2xl md:text-3xl font-extrabold text-primary-foreground mb-6">מה נבשל היום?</h2>
 
-                <div className="bg-card/80 backdrop-blur-md rounded-2xl p-5 shadow-elevated border border-border/50">
+                <div className="bg-white/30 backdrop-blur-none rounded-2xl p-5 shadow-elevated border border-border/50">
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     {/* AI Fridge */}
                     <button
@@ -226,14 +248,15 @@ const V2Dashboard = () => {
                         <p className="font-bold text-foreground text-sm">בנו מתכון מהמקרר</p>
                         <p className="text-xs text-muted-foreground mt-0.5">בחרו מה יש לכם במקרר לכם מתכון</p>
                       </div>
-                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
-                        🤖 עוזר AI
-                      </Badge>
+                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">🤖 עוזר AI</Badge>
                     </button>
 
                     {/* Library / Discovery */}
                     <button
-                      onClick={() => { setLibraryOpen(true); setSelectedCuisine(null); }}
+                      onClick={() => {
+                        setLibraryOpen(true);
+                        setSelectedCuisine(null);
+                      }}
                       className="group flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-accent/60 transition-all"
                     >
                       <div className="w-14 h-14 rounded-2xl bg-orange-light flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -262,13 +285,14 @@ const V2Dashboard = () => {
           <div className="lg:col-span-2">
             <div className="bg-gradient-to-b from-accent via-card to-card rounded-2xl p-5 shadow-soft border border-border h-full flex flex-col">
               <h3 className="text-lg font-bold text-foreground mb-1">המורשת הקולינרית שלכם</h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                שמרו מתכוני זיכרון ישירות לגלריה — ללא תהליך בישול
-              </p>
+              <p className="text-xs text-muted-foreground mb-4">שמרו מתכוני זיכרון ישירות לגלריה — ללא תהליך בישול</p>
 
               <Card
                 className="cursor-pointer border-2 border-dashed border-secondary/30 hover:border-secondary/60 rounded-2xl transition-all hover:shadow-soft group flex-1"
-                onClick={() => { setHeritageOpen(true); setHeritageMode("choose"); }}
+                onClick={() => {
+                  setHeritageOpen(true);
+                  setHeritageMode("choose");
+                }}
               >
                 <CardContent className="p-5 flex flex-col items-center justify-center gap-3 text-center h-full">
                   <div className="w-14 h-14 rounded-2xl bg-sage-light flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -278,9 +302,7 @@ const V2Dashboard = () => {
                     <p className="font-bold text-foreground">שימור זיכרון משפחתי</p>
                     <p className="text-xs text-muted-foreground mt-1">העלו מתכון מסבתא!</p>
                   </div>
-                  <Badge className="bg-sage-light text-sage-dark border-secondary/20">
-                    👵 אוצר משפחתי
-                  </Badge>
+                  <Badge className="bg-sage-light text-sage-dark border-secondary/20">👵 אוצר משפחתי</Badge>
                 </CardContent>
               </Card>
             </div>
@@ -288,7 +310,10 @@ const V2Dashboard = () => {
         </div>
 
         {/* ===== UNIFIED GALLERY: הספר הדיגיטלי שלי ===== */}
-        <div className="rounded-2xl overflow-hidden border border-border shadow-soft" style={{ background: "linear-gradient(180deg, hsl(var(--accent) / 0.3) 0%, hsl(var(--card)) 100%)" }}>
+        <div
+          className="rounded-2xl overflow-hidden border border-border shadow-soft"
+          style={{ background: "linear-gradient(180deg, hsl(var(--accent) / 0.3) 0%, hsl(var(--card)) 100%)" }}
+        >
           {/* Gallery header with glassmorphism */}
           <div className="bg-card/70 backdrop-blur-md border-b border-border px-5 pt-5 pb-4">
             <div className="flex items-center justify-between mb-3">
@@ -296,7 +321,9 @@ const V2Dashboard = () => {
                 <BookOpen className="w-5 h-5 text-primary" />
                 <h3 className="text-lg font-bold text-foreground">הספר הדיגיטלי שלי</h3>
                 {recipes.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">{recipes.length}</Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {recipes.length}
+                  </Badge>
                 )}
               </div>
               <Button
@@ -436,7 +463,11 @@ const V2Dashboard = () => {
                             <span className="text-xs text-muted-foreground">⏱ {recipe.cookingTime} דק׳</span>
                           )}
                           <button
-                            onClick={(e) => { e.stopPropagation(); removeRecipe(recipe.id); toast.success("הוסר מהספר"); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeRecipe(recipe.id);
+                              toast.success("הוסר מהספר");
+                            }}
                             className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -455,13 +486,11 @@ const V2Dashboard = () => {
                 <p className="text-xs text-muted-foreground mb-3 text-center">דוגמאות מהמטבח העולמי:</p>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {SAMPLE_GALLERY_IMAGES.map((img, i) => (
-                    <div key={i} className="rounded-xl overflow-hidden border border-border hover:shadow-soft transition-shadow">
-                      <img
-                        src={img.url}
-                        alt={img.title}
-                        className="w-full aspect-square object-cover"
-                        loading="lazy"
-                      />
+                    <div
+                      key={i}
+                      className="rounded-xl overflow-hidden border border-border hover:shadow-soft transition-shadow"
+                    >
+                      <img src={img.url} alt={img.title} className="w-full aspect-square object-cover" loading="lazy" />
                       <p className="text-[10px] text-muted-foreground p-1.5 truncate text-center">{img.title}</p>
                     </div>
                   ))}
@@ -477,14 +506,30 @@ const V2Dashboard = () => {
         <div className="max-w-6xl mx-auto flex items-center justify-around py-2">
           {[
             { label: "הספר שלי", icon: BookOpen, path: "/v2-cookbook", active: false },
-            { label: "זיכרון", icon: Camera, action: () => { setHeritageOpen(true); setHeritageMode("choose"); }, active: false },
-            { label: "מתכונים", icon: Globe, action: () => { setLibraryOpen(true); setSelectedCuisine(null); }, active: false },
+            {
+              label: "זיכרון",
+              icon: Camera,
+              action: () => {
+                setHeritageOpen(true);
+                setHeritageMode("choose");
+              },
+              active: false,
+            },
+            {
+              label: "מתכונים",
+              icon: Globe,
+              action: () => {
+                setLibraryOpen(true);
+                setSelectedCuisine(null);
+              },
+              active: false,
+            },
             { label: "מהמקרר", icon: Sparkles, path: "/select-ingredients", active: false },
             { label: "ראשי", icon: ChefHat, path: "/v2-dashboard", active: true },
           ].map((item) => (
             <button
               key={item.label}
-              onClick={() => item.path ? navigate(item.path) : item.action?.()}
+              onClick={() => (item.path ? navigate(item.path) : item.action?.())}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
                 item.active ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
@@ -497,7 +542,13 @@ const V2Dashboard = () => {
       </div>
 
       {/* ===== HERITAGE DIALOG ===== */}
-      <Dialog open={heritageOpen} onOpenChange={(o) => { setHeritageOpen(o); if (!o) resetHeritageForm(); }}>
+      <Dialog
+        open={heritageOpen}
+        onOpenChange={(o) => {
+          setHeritageOpen(o);
+          if (!o) resetHeritageForm();
+        }}
+      >
         <DialogContent className="max-w-lg backdrop-blur-md bg-card/95 rounded-2xl max-h-[85vh] overflow-y-auto border-border">
           <DialogHeader>
             <DialogTitle className="text-xl text-right">שימור זיכרון משפחתי</DialogTitle>
@@ -514,7 +565,13 @@ const V2Dashboard = () => {
                 <span className="font-medium text-foreground">העלו תמונה של מתכון כתוב</span>
                 <span className="text-xs text-muted-foreground">צילום מתכון בכתב יד, כרטיסייה ישנה</span>
               </button>
-              <input id="heritage-photo-input" type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+              <input
+                id="heritage-photo-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoUpload}
+              />
 
               <button
                 onClick={() => setHeritageMode("manual")}
@@ -529,18 +586,33 @@ const V2Dashboard = () => {
 
           {heritageMode === "photo" && heritagePhoto && (
             <div className="space-y-4 pt-2">
-              <img src={heritagePhoto} alt="uploaded recipe" className="w-full max-h-48 object-contain rounded-xl border border-border" />
+              <img
+                src={heritagePhoto}
+                alt="uploaded recipe"
+                className="w-full max-h-48 object-contain rounded-xl border border-border"
+              />
               <div className="space-y-2">
                 <Label>שם המתכון *</Label>
-                <Input value={heritageTitle} onChange={(e) => setHeritageTitle(e.target.value)} placeholder="למשל: עוגת שוקולד של סבתא רחל" />
+                <Input
+                  value={heritageTitle}
+                  onChange={(e) => setHeritageTitle(e.target.value)}
+                  placeholder="למשל: עוגת שוקולד של סבתא רחל"
+                />
               </div>
               <div className="space-y-2">
                 <Label>הסיפור מאחורי המתכון</Label>
-                <Textarea value={heritageStory} onChange={(e) => setHeritageStory(e.target.value)} placeholder="ספרו את הסיפור..." rows={2} />
+                <Textarea
+                  value={heritageStory}
+                  onChange={(e) => setHeritageStory(e.target.value)}
+                  placeholder="ספרו את הסיפור..."
+                  rows={2}
+                />
               </div>
               {!ocrResult ? (
                 <div className="flex gap-2">
-                  <Button onClick={handleSavePhotoOnly} variant="outline" className="flex-1 rounded-xl">שמור כזיכרון ויזואלי</Button>
+                  <Button onClick={handleSavePhotoOnly} variant="outline" className="flex-1 rounded-xl">
+                    שמור כזיכרון ויזואלי
+                  </Button>
                   <Button onClick={simulateOCR} className="flex-1 rounded-xl gap-2" disabled={ocrLoading}>
                     {ocrLoading ? "מחלץ טקסט..." : "הפוך לטקסט"}
                   </Button>
@@ -553,13 +625,25 @@ const V2Dashboard = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>מצרכים (שורה לכל מצרך)</Label>
-                    <Textarea value={heritageIngredients} onChange={(e) => setHeritageIngredients(e.target.value)} rows={3} placeholder="קמח&#10;סוכר&#10;ביצים" />
+                    <Textarea
+                      value={heritageIngredients}
+                      onChange={(e) => setHeritageIngredients(e.target.value)}
+                      rows={3}
+                      placeholder="קמח&#10;סוכר&#10;ביצים"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>שלבי הכנה (שורה לכל שלב)</Label>
-                    <Textarea value={heritageSteps} onChange={(e) => setHeritageSteps(e.target.value)} rows={3} placeholder="מערבבים...&#10;אופים..." />
+                    <Textarea
+                      value={heritageSteps}
+                      onChange={(e) => setHeritageSteps(e.target.value)}
+                      rows={3}
+                      placeholder="מערבבים...&#10;אופים..."
+                    />
                   </div>
-                  <Button onClick={handleSaveHeritage} className="w-full rounded-xl">שמור לספר שלי 📖</Button>
+                  <Button onClick={handleSaveHeritage} className="w-full rounded-xl">
+                    שמור לספר שלי 📖
+                  </Button>
                 </div>
               )}
             </div>
@@ -569,21 +653,42 @@ const V2Dashboard = () => {
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
                 <Label>שם המתכון *</Label>
-                <Input value={heritageTitle} onChange={(e) => setHeritageTitle(e.target.value)} placeholder="למשל: קוגל ירושלמי של דודה שרה" />
+                <Input
+                  value={heritageTitle}
+                  onChange={(e) => setHeritageTitle(e.target.value)}
+                  placeholder="למשל: קוגל ירושלמי של דודה שרה"
+                />
               </div>
               <div className="space-y-2">
                 <Label>הסיפור מאחורי המתכון</Label>
-                <Textarea value={heritageStory} onChange={(e) => setHeritageStory(e.target.value)} placeholder="ספרו את הסיפור..." rows={2} />
+                <Textarea
+                  value={heritageStory}
+                  onChange={(e) => setHeritageStory(e.target.value)}
+                  placeholder="ספרו את הסיפור..."
+                  rows={2}
+                />
               </div>
               <div className="space-y-2">
                 <Label>מצרכים (שורה לכל מצרך)</Label>
-                <Textarea value={heritageIngredients} onChange={(e) => setHeritageIngredients(e.target.value)} rows={3} placeholder="קמח&#10;סוכר&#10;ביצים" />
+                <Textarea
+                  value={heritageIngredients}
+                  onChange={(e) => setHeritageIngredients(e.target.value)}
+                  rows={3}
+                  placeholder="קמח&#10;סוכר&#10;ביצים"
+                />
               </div>
               <div className="space-y-2">
                 <Label>שלבי הכנה (שורה לכל שלב)</Label>
-                <Textarea value={heritageSteps} onChange={(e) => setHeritageSteps(e.target.value)} rows={3} placeholder="מערבבים...&#10;אופים..." />
+                <Textarea
+                  value={heritageSteps}
+                  onChange={(e) => setHeritageSteps(e.target.value)}
+                  rows={3}
+                  placeholder="מערבבים...&#10;אופים..."
+                />
               </div>
-              <Button onClick={handleSaveHeritage} className="w-full rounded-xl">שמור לספר שלי 📖</Button>
+              <Button onClick={handleSaveHeritage} className="w-full rounded-xl">
+                שמור לספר שלי 📖
+              </Button>
             </div>
           )}
         </DialogContent>
@@ -625,7 +730,10 @@ const V2Dashboard = () => {
                 {selectedCuisineData?.emoji} {selectedCuisineData?.nameHe}
               </h3>
               {selectedCuisineData?.recipes.map((recipe, i) => (
-                <div key={i} className="p-4 rounded-xl border border-border bg-card flex items-center justify-between gap-3">
+                <div
+                  key={i}
+                  className="p-4 rounded-xl border border-border bg-card flex items-center justify-between gap-3"
+                >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground">{recipe.title}</p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -648,7 +756,10 @@ const V2Dashboard = () => {
       </Dialog>
 
       {/* ===== DUPLICATE CHECK DIALOG ===== */}
-      <Dialog open={duplicateDialog.open} onOpenChange={(o) => setDuplicateDialog({ open: o, recipe: null, existingTitle: "" })}>
+      <Dialog
+        open={duplicateDialog.open}
+        onOpenChange={(o) => setDuplicateDialog({ open: o, recipe: null, existingTitle: "" })}
+      >
         <DialogContent className="max-w-sm backdrop-blur-md bg-card/95 rounded-2xl border-border">
           <DialogHeader>
             <DialogTitle className="text-right">מניעת כפילויות</DialogTitle>
