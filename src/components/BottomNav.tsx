@@ -14,7 +14,7 @@ const BottomNav = () => {
   const location = useLocation();
 
   // Hide on cooking mode and post-cooking
-  const hiddenPaths = ["/cooking", "/complete", "/login"];
+  const hiddenPaths = ["/cooking", "/complete", "/login", "/v2-dashboard"];
   if (hiddenPaths.some((p) => location.pathname.startsWith(p))) return null;
 
   return (
