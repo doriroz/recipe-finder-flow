@@ -9,20 +9,20 @@ import { ingredients as mockIngredients, type Ingredient } from "@/data/mockData
 import { useCustomIngredients } from "@/hooks/useCustomIngredients";
 import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
 import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
-import ImageUpload from "@/components/ImageUpload";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import CreditCounter from "@/components/CreditCounter";
 
 const CATEGORY_META: Record<string, { icon: string; hue: string }> = {
-  "ירקות":   { icon: "🥦", hue: "142 45% 82%" },
-  "חלבונים": { icon: "🍗", hue: "32 65% 82%" },
-  "חלבי":    { icon: "🧀", hue: "200 55% 82%" },
-  "דגנים":   { icon: "🌾", hue: "48 70% 81%" },
-  "תבלינים": { icon: "🧂", hue: "355 55% 82%" },
-  "שימורים": { icon: "🥫", hue: "18 60% 81%" },
-  "פירות":   { icon: "🍎", hue: "340 55% 82%" },
-  "שמנים":   { icon: "🫒", hue: "88 50% 81%" },
-  "אחר":     { icon: "✨", hue: "270 45% 82%" },
+  ירקות: { icon: "🥦", hue: "142 45% 82%" },
+  חלבונים: { icon: "🍗", hue: "32 65% 82%" },
+  חלבי: { icon: "🧀", hue: "200 55% 82%" },
+  דגנים: { icon: "🌾", hue: "48 70% 81%" },
+  תבלינים: { icon: "🧂", hue: "355 55% 82%" },
+  שימורים: { icon: "🥫", hue: "18 60% 81%" },
+  פירות: { icon: "🍎", hue: "340 55% 82%" },
+  שמנים: { icon: "🫒", hue: "88 50% 81%" },
+  אחר: { icon: "✨", hue: "270 45% 82%" },
 };
 
 const SelectIngredients = () => {
@@ -32,8 +32,6 @@ const SelectIngredients = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [pendingSelections, setPendingSelections] = useState<Set<number>>(new Set());
-  const [showImageDialog, setShowImageDialog] = useState(false);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
   const { customIngredients } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
 
@@ -44,16 +42,11 @@ const SelectIngredients = () => {
     return [...mockIngredients, ...uniqueCustom];
   }, [customIngredients]);
 
-  const categories = useMemo(
-    () => Array.from(new Set(allIngredients.map((i) => i.category))),
-    [allIngredients]
-  );
+  const categories = useMemo(() => Array.from(new Set(allIngredients.map((i) => i.category))), [allIngredients]);
 
   const filteredBySearch = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    return allIngredients.filter((i) =>
-      i.name.includes(searchQuery.trim())
-    );
+    return allIngredients.filter((i) => i.name.includes(searchQuery.trim()));
   }, [allIngredients, searchQuery]);
 
   const toggle = useCallback((ingredient: Ingredient) => {
@@ -67,15 +60,16 @@ const SelectIngredients = () => {
     setSelected((prev) => prev.filter((i) => i.id !== id));
   }, []);
 
-  const openModal = useCallback((cat: string) => {
-    const preSelected = new Set(
-      allIngredients
-        .filter((i) => i.category === cat && selected.some((s) => s.id === i.id))
-        .map((i) => i.id)
-    );
-    setPendingSelections(preSelected);
-    setOpenCategory(cat);
-  }, [allIngredients, selected]);
+  const openModal = useCallback(
+    (cat: string) => {
+      const preSelected = new Set(
+        allIngredients.filter((i) => i.category === cat && selected.some((s) => s.id === i.id)).map((i) => i.id),
+      );
+      setPendingSelections(preSelected);
+      setOpenCategory(cat);
+    },
+    [allIngredients, selected],
+  );
 
   const confirmSelections = useCallback(() => {
     if (!openCategory) return;
@@ -105,18 +99,8 @@ const SelectIngredients = () => {
     }
   };
 
-  const handleImageGenerate = async () => {
-    if (imageBase64) {
-      await generateRecipe({ imageBase64 });
-      setShowImageDialog(false);
-      setImageBase64(null);
-    }
-  };
-
   const canGenerate = selected.length >= 2;
-  const openMeta = openCategory
-    ? CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%" }
-    : null;
+  const openMeta = openCategory ? (CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%" }) : null;
   const openIngredients = openCategory
     ? allIngredients.filter((i) => i.category === openCategory).sort((a, b) => b.popularityScore - a.popularityScore)
     : [];
@@ -129,7 +113,7 @@ const SelectIngredients = () => {
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Search bar - fixed height, no chips */}
-          <div className="bg-card border-b border-border px-4 md:px-8 flex items-center" style={{ height: '70px' }}>
+          <div className="bg-card border-b border-border px-4 md:px-8 flex items-center" style={{ height: "70px" }}>
             <div className="max-w-3xl mx-auto w-full">
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -145,7 +129,7 @@ const SelectIngredients = () => {
                   variant="outline"
                   size="icon"
                   className="h-12 w-12 rounded-2xl shrink-0 border-border hover:bg-accent"
-                  onClick={() => setShowImageDialog(true)}
+                  onClick={() => navigate("/ingredients")}
                   title="מצא מתכון מתמונה"
                 >
                   <Camera className="w-5 h-5 text-muted-foreground" />
@@ -161,10 +145,13 @@ const SelectIngredients = () => {
                       return (
                         <button
                           key={ing.id}
-                          onClick={() => { toggle(ing); setSearchQuery(""); }}
+                          onClick={() => {
+                            toggle(ing);
+                            setSearchQuery("");
+                          }}
                           className={cn(
                             "w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-muted/60 transition-colors",
-                            isSelected && "bg-accent"
+                            isSelected && "bg-accent",
                           )}
                         >
                           <span className="text-xl">{ing.emoji}</span>
@@ -187,9 +174,7 @@ const SelectIngredients = () => {
                 {categories.map((cat) => {
                   const meta = CATEGORY_META[cat] ?? { icon: "🍽️", hue: "30 30% 82%" };
                   const catIngredients = allIngredients.filter((i) => i.category === cat);
-                  const selectedCount = catIngredients.filter((i) =>
-                    selected.some((s) => s.id === i.id)
-                  ).length;
+                  const selectedCount = catIngredients.filter((i) => selected.some((s) => s.id === i.id)).length;
 
                   return (
                     <button
@@ -220,20 +205,21 @@ const SelectIngredients = () => {
         {/* Desktop sidebar - right side */}
         {!isMobile && (
           <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-l border-border flex flex-col order-first animate-slide-in-right">
-            <div className="px-5 border-b border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card" style={{ height: '70px' }}>
+            <div
+              className="px-5 border-b border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card"
+              style={{ height: "70px" }}
+            >
               <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
               {selected.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  בחרו מצרכים כדי להתחיל 🧑‍🍳
-                </p>
+                <p className="text-sm text-muted-foreground text-center py-8">בחרו מצרכים כדי להתחיל 🧑‍🍳</p>
               ) : (
                 selected.map((ing, index) => (
                   <div
                     key={ing.id}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-muted/60 group animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+                    style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                   >
                     <span className="text-lg leading-none">{ing.emoji}</span>
                     <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
@@ -292,12 +278,7 @@ const SelectIngredients = () => {
                 ))}
               </div>
             )}
-            <Button
-              variant="hero"
-              className="w-full"
-              disabled={!canGenerate || isGenerating}
-              onClick={handleGenerate}
-            >
+            <Button variant="hero" className="w-full" disabled={!canGenerate || isGenerating} onClick={handleGenerate}>
               <Sparkles className="w-4 h-4" />
               {isGenerating ? "יוצר מתכון..." : "מצא לי מתכונים!"}
               {canGenerate && !isGenerating && (
@@ -310,40 +291,16 @@ const SelectIngredients = () => {
         </div>
       )}
 
-      {/* Image Upload Dialog */}
-      <Dialog open={showImageDialog} onOpenChange={(open) => { if (!open) { setShowImageDialog(false); setImageBase64(null); } }}>
-        <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden">
-          <div className="px-6 pt-6 pb-4 bg-gradient-to-l from-primary/10 to-accent/30">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-3 text-right">
-                <Camera className="w-6 h-6 text-primary" />
-                <span className="text-lg font-bold text-foreground">מצא מתכון מתמונה</span>
-              </DialogTitle>
-            </DialogHeader>
-          </div>
-          <div className="px-6 py-5 space-y-4">
-            <p className="text-sm text-muted-foreground text-center">
-              צלמו או העלו תמונה של המצרכים שלכם ונמצא לכם מתכון מתאים
-            </p>
-            <ImageUpload
-              onImageSelect={(base64) => setImageBase64(base64)}
-              disabled={isGenerating}
-            />
-            <Button
-              variant="hero"
-              className="w-full"
-              disabled={!imageBase64 || isGenerating}
-              onClick={handleImageGenerate}
-            >
-              <Sparkles className="w-4 h-4" />
-              {isGenerating ? "מחפש מתכון..." : "מצא מתכון מהתמונה"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Category Dialog */}
-      <Dialog open={!!openCategory} onOpenChange={(open) => { if (!open) { setOpenCategory(null); setPendingSelections(new Set()); } }}>
+      <Dialog
+        open={!!openCategory}
+        onOpenChange={(open) => {
+          if (!open) {
+            setOpenCategory(null);
+            setPendingSelections(new Set());
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden backdrop-blur-sm">
           {openCategory && openMeta && (
             <>
@@ -364,22 +321,11 @@ const SelectIngredients = () => {
                       key={ing.id}
                       onClick={() => togglePending(ing.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-right border",
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-right",
                         isPending
-                          ? "border-current/30"
-                          : "border-transparent"
+                          ? "bg-accent border border-primary/30"
+                          : "hover:bg-muted/40 border border-transparent",
                       )}
-                      style={{
-                        backgroundColor: isPending
-                          ? `hsl(${openMeta.hue} / 0.45)`
-                          : undefined,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isPending) e.currentTarget.style.backgroundColor = `hsl(${openMeta.hue} / 0.2)`;
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isPending) e.currentTarget.style.backgroundColor = '';
-                      }}
                     >
                       <Checkbox checked={isPending} className="pointer-events-none" />
                       <span className="text-xl">{ing.emoji}</span>
@@ -389,23 +335,15 @@ const SelectIngredients = () => {
                 })}
               </div>
 
-              <div
-                className="px-4 pb-5 pt-3 border-t"
-                style={{
-                  background: `hsl(${openMeta.hue} / 0.15)`,
-                  borderColor: `hsl(${openMeta.hue} / 0.3)`,
-                }}
-              >
+              <div className="px-4 pb-5 pt-2 border-t border-border">
                 <p className="text-xs text-muted-foreground text-center mb-2">
                   {pendingSelections.size > 0 ? `נבחרו ${pendingSelections.size} מצרכים` : "בחרו מצרכים"}
                 </p>
                 <Button
-                  className="w-full text-white font-bold"
+                  variant="hero"
+                  className="w-full"
                   disabled={pendingSelections.size === 0}
                   onClick={confirmSelections}
-                  style={{
-                    backgroundColor: `hsl(${openMeta.hue.replace(/\d+%$/, (m) => `${Math.max(parseInt(m) - 30, 35)}%`)})`,
-                  }}
                 >
                   הוסף מצרכים ({pendingSelections.size})
                 </Button>
