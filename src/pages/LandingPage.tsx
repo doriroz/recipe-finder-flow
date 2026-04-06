@@ -52,20 +52,26 @@ const LandingPage = () => {
               <span className="text-primary">לארוחה מושלמת</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed animate-slide-up" style={{ animationDelay: "0.15s", animationFillMode: "both" }}>
+            <p
+              className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed animate-slide-up"
+              style={{ animationDelay: "0.15s", animationFillMode: "both" }}
+            >
               בחרו את מה שיש לכם במקרר, ואנחנו נמצא לכם מתכון מושלם.
               <br />
               בישול פשוט, טעים, ובלי בזבוז!
             </p>
 
-            <div className="flex flex-row items-center justify-start gap-4 animate-scale-in" style={{ animationDelay: "0.3s", animationFillMode: "both" }}>
-              <Button 
+            <div
+              className="flex flex-row items-center justify-start gap-4 animate-scale-in"
+              style={{ animationDelay: "0.3s", animationFillMode: "both" }}
+            >
+              <Button
                 size="lg"
-                onClick={() => navigate("/ingredients")}
+                onClick={() => navigate("/select-ingredients")}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 h-auto rounded-full shadow-elevated hover:shadow-card transition-all duration-300 flex-row-reverse hover:scale-105 hover:-translate-y-1 group"
               >
-                <Sparkles className="w-6 h-6 transition-transform duration-300 group-hover:rotate-12" />
-                ✨ אתגר המקרר עם AI
+                <Sparkles className="w-6 h-6 transition-transform duration-300 group-hover:rotate-12" />✨ אתגר המקרר עם
+                AI
               </Button>
 
               <Button
@@ -88,29 +94,36 @@ const LandingPage = () => {
           </div>
 
           {/* Hero Image with gentle animations */}
-          <div className="order-1 lg:order-2 relative animate-fade-in" style={{ animationDelay: "0.2s", animationFillMode: "both" }}>
+          <div
+            className="order-1 lg:order-2 relative animate-fade-in"
+            style={{ animationDelay: "0.2s", animationFillMode: "both" }}
+          >
             <div className="relative rounded-3xl overflow-hidden shadow-elevated">
-              <img 
-                src={heroImage} 
-                alt="מישהו מחפש מה לבשל במקרר" 
-                className="w-full h-auto object-cover"
-              />
+              <img src={heroImage} alt="מישהו מחפש מה לבשל במקרר" className="w-full h-auto object-cover" />
               {/* Overlay gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
             </div>
-            
+
             {/* Floating decorative elements with gentle pulse animation */}
             <span className="absolute -top-4 -left-4 text-4xl animate-pulse opacity-80">🍳</span>
-            <span className="absolute -bottom-2 -right-4 text-3xl animate-pulse opacity-80" style={{ animationDelay: "0.7s" }}>🥗</span>
+            <span
+              className="absolute -bottom-2 -right-4 text-3xl animate-pulse opacity-80"
+              style={{ animationDelay: "0.7s" }}
+            >
+              🥗
+            </span>
           </div>
         </div>
 
         {/* Features with staggered entrance */}
         <div className="grid md:grid-cols-4 gap-6 mt-20 max-w-5xl mx-auto">
           {features.map((feature, index) => (
-            <div 
+            <div
               key={index}
-              onClick={() => feature.link && navigate(feature.link, feature.link === "/cookbook" ? { state: { from: "/" } } : undefined)}
+              onClick={() =>
+                feature.link &&
+                navigate(feature.link, feature.link === "/cookbook" ? { state: { from: "/" } } : undefined)
+              }
               className={`bg-card rounded-2xl shadow-card p-6 text-center border border-border/30 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 animate-slide-up ${feature.link ? "cursor-pointer" : ""}`}
               style={{ animationDelay: `${0.4 + index * 0.1}s`, animationFillMode: "both" }}
             >
@@ -125,7 +138,10 @@ const LandingPage = () => {
         <HowItWorks />
 
         {/* Encouraging Message */}
-        <div className="mt-16 text-center animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
+        <div
+          className="mt-16 text-center animate-fade-in"
+          style={{ animationDelay: "0.7s", animationFillMode: "both" }}
+        >
           <div className="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-6 py-3 rounded-full border border-secondary/20">
             <Heart className="w-5 h-5" />
             <span className="font-medium">נעשה לכם בישול קל ומהנה</span>
@@ -134,16 +150,10 @@ const LandingPage = () => {
       </main>
 
       {/* Search Overlay */}
-      <RecipeSearchOverlay 
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-      />
+      <RecipeSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Recent Recipes Sidebar */}
-      <RecentRecipesSidebar 
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      <RecentRecipesSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
     </div>
   );
 };
