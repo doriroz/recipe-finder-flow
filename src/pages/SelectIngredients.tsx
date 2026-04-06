@@ -106,9 +106,9 @@ const SelectIngredients = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      {/* App Header */}
-      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+    <div className="h-screen flex flex-col bg-background" dir="rtl">
+      {/* App Header - full width, not part of the grid */}
+      <header className="shrink-0 bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
@@ -130,13 +130,66 @@ const SelectIngredients = () => {
           </div>
         </div>
       </header>
+
       {isGenerating && <GeneratingRecipeLoader />}
 
-      <div className="flex min-h-screen">
-        {/* Main content */}
-        <div className="flex-1 flex flex-col">
-          {/* Search bar - fixed height, no chips */}
-          <div className="bg-card border-b border-border px-4 md:px-8 flex items-center" style={{ height: "70px" }}>
+      {/* Body: sidebar + main, each with independent scroll */}
+      <div className="flex flex-1 min-h-0">
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <div className="w-72 lg:w-80 shrink-0 bg-card border-l border-border flex flex-col order-first">
+            <div
+              className="px-5 border-b border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card shrink-0"
+              style={{ height: "70px" }}
+            >
+              <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
+              {selected.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">בחרו מצרכים כדי להתחיל 🧑‍🍳</p>
+              ) : (
+                selected.map((ing, index) => (
+                  <div
+                    key={ing.id}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-muted/60 group animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
+                  >
+                    <span className="text-lg leading-none">{ing.emoji}</span>
+                    <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
+                    <button
+                      onClick={() => remove(ing.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-0.5"
+                      aria-label={`הסר ${ing.name}`}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="px-4 py-4 border-t border-border shrink-0">
+              <Button
+                variant="hero"
+                className="w-full"
+                disabled={!canGenerate || isGenerating}
+                onClick={handleGenerate}
+              >
+                <Sparkles className="w-4 h-4" />
+                {isGenerating ? "יוצר מתכון..." : "מצא לי מתכונים!"}
+                {canGenerate && !isGenerating && (
+                  <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs mr-1">
+                    {selected.length} מצרכים
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Main content - independent scroll */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Search bar */}
+          <div className="shrink-0 bg-card border-b border-border px-4 md:px-8 flex items-center" style={{ height: "70px" }}>
             <div className="max-w-3xl mx-auto w-full">
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -159,7 +212,6 @@ const SelectIngredients = () => {
                 </Button>
               </div>
 
-              {/* Search results dropdown */}
               {searchQuery.trim() && filteredBySearch.length > 0 && (
                 <div className="relative">
                   <div className="absolute top-2 left-0 right-0 z-20 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto">
@@ -189,7 +241,7 @@ const SelectIngredients = () => {
             </div>
           </div>
 
-          {/* Category grid */}
+          {/* Category grid - scrollable */}
           <main className="flex-1 overflow-y-auto pb-32 md:pb-8">
             <div className="max-w-3xl mx-auto px-4 md:px-8 py-6">
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
@@ -224,57 +276,6 @@ const SelectIngredients = () => {
             </div>
           </main>
         </div>
-
-        {/* Desktop sidebar - right side */}
-        {!isMobile && (
-          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-l border-border flex flex-col order-first animate-slide-in-right">
-            <div
-              className="px-5 border-b border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card"
-              style={{ height: "70px" }}
-            >
-              <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
-            </div>
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
-              {selected.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">בחרו מצרכים כדי להתחיל 🧑‍🍳</p>
-              ) : (
-                selected.map((ing, index) => (
-                  <div
-                    key={ing.id}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-muted/60 group animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
-                  >
-                    <span className="text-lg leading-none">{ing.emoji}</span>
-                    <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
-                    <button
-                      onClick={() => remove(ing.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-0.5"
-                      aria-label={`הסר ${ing.name}`}
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className="px-4 py-4 border-t border-border">
-              <Button
-                variant="hero"
-                className="w-full"
-                disabled={!canGenerate || isGenerating}
-                onClick={handleGenerate}
-              >
-                <Sparkles className="w-4 h-4" />
-                {isGenerating ? "יוצר מתכון..." : "מצא לי מתכונים!"}
-                {canGenerate && !isGenerating && (
-                  <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs mr-1">
-                    {selected.length} מצרכים
-                  </span>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Mobile floating bottom bar */}
