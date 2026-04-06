@@ -9,6 +9,7 @@ import { ingredients as mockIngredients, type Ingredient } from "@/data/mockData
 import { useCustomIngredients } from "@/hooks/useCustomIngredients";
 import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
 import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
+import ImageUpload from "@/components/ImageUpload";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -31,6 +32,8 @@ const SelectIngredients = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [pendingSelections, setPendingSelections] = useState<Set<number>>(new Set());
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
   const { customIngredients } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
 
@@ -102,6 +105,14 @@ const SelectIngredients = () => {
     }
   };
 
+  const handleImageGenerate = async () => {
+    if (imageBase64) {
+      await generateRecipe({ imageBase64 });
+      setShowImageDialog(false);
+      setImageBase64(null);
+    }
+  };
+
   const canGenerate = selected.length >= 2;
   const openMeta = openCategory
     ? CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%" }
@@ -134,7 +145,7 @@ const SelectIngredients = () => {
                   variant="outline"
                   size="icon"
                   className="h-12 w-12 rounded-2xl shrink-0 border-border hover:bg-accent"
-                  onClick={() => navigate("/ingredients")}
+                  onClick={() => setShowImageDialog(true)}
                   title="מצא מתכון מתמונה"
                 >
                   <Camera className="w-5 h-5 text-muted-foreground" />
@@ -299,6 +310,38 @@ const SelectIngredients = () => {
         </div>
       )}
 
+      {/* Image Upload Dialog */}
+      <Dialog open={showImageDialog} onOpenChange={(open) => { if (!open) { setShowImageDialog(false); setImageBase64(null); } }}>
+        <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden">
+          <div className="px-6 pt-6 pb-4 bg-gradient-to-l from-primary/10 to-accent/30">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 text-right">
+                <Camera className="w-6 h-6 text-primary" />
+                <span className="text-lg font-bold text-foreground">מצא מתכון מתמונה</span>
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="px-6 py-5 space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
+              צלמו או העלו תמונה של המצרכים שלכם ונמצא לכם מתכון מתאים
+            </p>
+            <ImageUpload
+              onImageSelect={(base64) => setImageBase64(base64)}
+              disabled={isGenerating}
+            />
+            <Button
+              variant="hero"
+              className="w-full"
+              disabled={!imageBase64 || isGenerating}
+              onClick={handleImageGenerate}
+            >
+              <Sparkles className="w-4 h-4" />
+              {isGenerating ? "מחפש מתכון..." : "מצא מתכון מהתמונה"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Category Dialog */}
       <Dialog open={!!openCategory} onOpenChange={(open) => { if (!open) { setOpenCategory(null); setPendingSelections(new Set()); } }}>
         <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden backdrop-blur-sm">
@@ -321,11 +364,22 @@ const SelectIngredients = () => {
                       key={ing.id}
                       onClick={() => togglePending(ing.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-right",
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-right border",
                         isPending
-                          ? "bg-accent border border-primary/30"
-                          : "hover:bg-muted/40 border border-transparent"
+                          ? "border-current/30"
+                          : "border-transparent"
                       )}
+                      style={{
+                        backgroundColor: isPending
+                          ? `hsl(${openMeta.hue} / 0.45)`
+                          : undefined,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isPending) e.currentTarget.style.backgroundColor = `hsl(${openMeta.hue} / 0.2)`;
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isPending) e.currentTarget.style.backgroundColor = '';
+                      }}
                     >
                       <Checkbox checked={isPending} className="pointer-events-none" />
                       <span className="text-xl">{ing.emoji}</span>
@@ -335,15 +389,23 @@ const SelectIngredients = () => {
                 })}
               </div>
 
-              <div className="px-4 pb-5 pt-2 border-t border-border">
+              <div
+                className="px-4 pb-5 pt-3 border-t"
+                style={{
+                  background: `hsl(${openMeta.hue} / 0.15)`,
+                  borderColor: `hsl(${openMeta.hue} / 0.3)`,
+                }}
+              >
                 <p className="text-xs text-muted-foreground text-center mb-2">
                   {pendingSelections.size > 0 ? `נבחרו ${pendingSelections.size} מצרכים` : "בחרו מצרכים"}
                 </p>
                 <Button
-                  variant="hero"
-                  className="w-full"
+                  className="w-full text-white font-bold"
                   disabled={pendingSelections.size === 0}
                   onClick={confirmSelections}
+                  style={{
+                    backgroundColor: `hsl(${openMeta.hue.replace(/\d+%$/, (m) => `${Math.max(parseInt(m) - 30, 35)}%`)})`,
+                  }}
                 >
                   הוסף מצרכים ({pendingSelections.size})
                 </Button>
