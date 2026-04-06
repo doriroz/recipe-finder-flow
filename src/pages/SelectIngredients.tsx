@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { Search, X, Sparkles, Check, Camera } from "lucide-react";
+import { Search, X, Sparkles, Check, Camera, ArrowRight, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
