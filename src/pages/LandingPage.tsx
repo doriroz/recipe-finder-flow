@@ -17,7 +17,12 @@ const LandingPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const features = [
-    { icon: "🤖", title: "מתכונים עם AI", description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם", link: "/ingredients" },
+    {
+      icon: "🤖",
+      title: "מתכונים עם AI",
+      description: "הכניסו מצרכים ו-AI ייצור מתכון מותאם",
+      link: "/select-ingredients",
+    },
     { icon: "🔍", title: "גלו מתכונים", description: "חפשו מתכונים לפי קטגוריה", link: "/categories" },
     { icon: "🧊", title: "אתגרי המקרר", description: "חזרו לשילובים שניסיתם בעבר", link: "/challenges" },
     { icon: "📚", title: "ספר מתכונים", description: "אספו מתכונים והפכו אותם לספר אישי", link: "/cookbook" },
