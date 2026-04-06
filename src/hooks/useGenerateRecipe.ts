@@ -57,12 +57,17 @@ export const useGenerateRecipe = () => {
         let errorMessage = "שגיאה ביצירת המתכון. נסו שוב.";
         let isTriesExhausted = false;
         try {
-          if (error.context && typeof error.context.json === "function") {
-            const errorBody = await error.context.json();
+          // Try parsing the response body from context
+          if (error.context) {
+            let errorBody: any = null;
+            if (typeof error.context.json === "function") {
+              errorBody = await error.context.json().catch(() => null);
+            }
             if (errorBody?.error) errorMessage = errorBody.error;
             if (errorBody?.tries_exhausted) isTriesExhausted = true;
           }
         } catch (e) {
+          console.warn("Error parsing edge function response:", e);
           if (error.message && error.message !== "Edge Function returned a non-2xx status code") {
             errorMessage = error.message;
           }
@@ -88,6 +93,7 @@ export const useGenerateRecipe = () => {
             },
             duration: 8000,
           });
+          navigate("/upgrade");
         } else {
           toast.error(errorMessage);
         }
