@@ -1,49 +1,25 @@
 
-# 🎬 The Cinematic Dashboard Rebuild Plan
 
-Based on your interview answers:
-- **North Star**: Playful 🎮 – warm, fun, energetic, like a home kitchen with personality
-- **Transitions**: Parallax Depth – layered scrolling with elements floating at different speeds
-- **Card Distinction**: Opacity Split – saved recipes at full opacity/bold, inspiration cards at ~70% with a lighter feel
-- **AI Command Bar**: Active search bar above gallery – "מה נבשל מהספר שלך היום?"
+## Fix Camera Button + Category Dialog Colors
 
----
+### Issue 1: Camera button navigates to wrong page
+The camera icon button on `/select-ingredients` (line 137) navigates to `/ingredients` — an old page. It should instead open an inline image-upload panel directly on the current page, similar to how `/ingredients` handles its "photo" tab.
 
-## Architecture (3 Zones + Bottom Nav)
+**Fix:** Replace the `navigate("/ingredients")` with an in-page Dialog or inline section that shows the `ImageUpload` component and a "Generate recipe from photo" button. This keeps the user on `/select-ingredients` and provides the photo-to-recipe flow right there.
 
-### Zone 1: The Active Engine (Hero)
-- Cinematic title "מה נבשל היום?" with playful bounce
-- Two action cards side-by-side:
-  - **מתכונים פופולריים** (Globe icon, orange badge "מהעולם")
-  - **בנו מתכון מהמקרר** (AI stars icon, purple badge "עוזר AI")
-- Prominent glowing CTA: "בואו נבשל!"
-- Blurred food background with parallax offset
-- Glassmorphism container
+### Issue 2: Category dialog uses color only in header
+Currently the category Dialog only applies the category's hue color to the header area (line 307). The ingredient list items and the confirm button area are plain white/default.
 
-### Zone 2: Heritage Row (Middle)
-- Warm parchment gradient background shift (parallax layer 2)
-- Camera icon + "שימור זיכרון משפחתי" title
-- Minimalist upload row (photo + manual entry)
-- Heritage badge "מורשת משפחתית"
-- Clean direct-upload button
+**Fix:** Brush the entire dialog with the category color:
+- Give each ingredient row a subtle tinted background on hover using the category hue (e.g., `hsl(hue / 10%)`)
+- Tint the selected/checked rows with the category color instead of generic `bg-accent`
+- Apply a light category-colored background to the footer/confirm area
+- Use the category hue for the confirm button's background instead of the default hero variant
 
-### Zone 3: The Living Vault (Gallery)
-- Parchment/beige section background (parallax layer 3)
-- **AI Command Bar**: Active search input "מה נבשל מהספר שלך היום?" with sparkle icon
-- Filter tabs: הכל | מורשת | AI | מהעולם
-- Responsive grid with **Opacity Split**:
-  - Saved recipes: full opacity, bold border, source badge
-  - Inspiration (Spoonacular): 70% opacity, "השראה לספר" badge, lighter styling
-- Hover: scale-105 + shadow lift
-- Empty state with Spoonacular everyday recipes (Quick Dinners, Family Classics, Healthy Snacks)
-- FAB button: "התחל לבשל או לשמר זיכרון!"
+### Files to edit
+- **`src/pages/SelectIngredients.tsx`** — both changes happen here:
+  1. Add `ImageUpload` import + state for `imageBase64` + a Dialog/section for the camera flow that calls `generateRecipe({ imageBase64 })`
+  2. Update the category Dialog to pass category hue colors into row backgrounds, hover states, selected states, and the footer area
 
-### Fixed Bottom Nav
-- 4 tabs: cookbook | discovery | profile | chat
+### No new files or dependencies needed.
 
-### Technical Details
-- CSS parallax via `perspective` + `translateZ` or scroll-based transform
-- Staggered fade-in animations for cards
-- All colors from design system tokens
-- Spoonacular sample images for empty/inspiration state
-- RTL layout maintained throughout
