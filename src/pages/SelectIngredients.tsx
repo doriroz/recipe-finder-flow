@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
-import { Search, X, Sparkles, Check, Camera } from "lucide-react";
+import { Search, X, Sparkles, Check, Camera, ChefHat, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,16 +14,22 @@ import ImageUpload from "@/components/ImageUpload";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const CATEGORY_META: Record<string, { icon: string; hue: string }> = {
-  "ירקות":   { icon: "🥦", hue: "142 45% 82%" },
-  "חלבונים": { icon: "🍗", hue: "32 65% 82%" },
-  "חלבי":    { icon: "🧀", hue: "200 55% 82%" },
-  "דגנים":   { icon: "🌾", hue: "48 70% 81%" },
-  "תבלינים": { icon: "🧂", hue: "355 55% 82%" },
-  "שימורים": { icon: "🥫", hue: "18 60% 81%" },
-  "פירות":   { icon: "🍎", hue: "340 55% 82%" },
-  "שמנים":   { icon: "🫒", hue: "88 50% 81%" },
-  "אחר":     { icon: "✨", hue: "270 45% 82%" },
+const CATEGORY_META: Record<string, { icon: string; hue: string; size: "sm" | "md" | "lg" }> = {
+  "ירקות":   { icon: "🥦", hue: "142 45% 82%", size: "lg" },
+  "חלבונים": { icon: "🍗", hue: "32 65% 82%",  size: "lg" },
+  "חלבי":    { icon: "🧀", hue: "200 55% 82%", size: "md" },
+  "דגנים":   { icon: "🌾", hue: "48 70% 81%",  size: "md" },
+  "תבלינים": { icon: "🧂", hue: "355 55% 82%", size: "sm" },
+  "שימורים": { icon: "🥫", hue: "18 60% 81%",  size: "sm" },
+  "פירות":   { icon: "🍎", hue: "340 55% 82%", size: "md" },
+  "שמנים":   { icon: "🫒", hue: "88 50% 81%",  size: "sm" },
+  "אחר":     { icon: "✨", hue: "270 45% 82%", size: "sm" },
+};
+
+const SIZE_CLASSES = {
+  lg: "col-span-2 row-span-1 min-h-[130px]",
+  md: "col-span-1 row-span-1 min-h-[130px]",
+  sm: "col-span-1 row-span-1 min-h-[110px]",
 };
 
 const SelectIngredients = () => {
@@ -115,7 +122,7 @@ const SelectIngredients = () => {
 
   const canGenerate = selected.length >= 2;
   const openMeta = openCategory
-    ? CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%" }
+    ? CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%", size: "md" as const }
     : null;
   const openIngredients = openCategory
     ? allIngredients.filter((i) => i.category === openCategory).sort((a, b) => b.popularityScore - a.popularityScore)
@@ -128,8 +135,25 @@ const SelectIngredients = () => {
       <div className="flex min-h-screen">
         {/* Main content */}
         <div className="flex-1 flex flex-col">
-          {/* Search bar - fixed height, no chips */}
-          <div className="bg-card border-b border-border px-4 md:px-8 flex items-center" style={{ height: '70px' }}>
+          {/* Glassmorphism Header */}
+          <header className="bg-background/70 backdrop-blur-xl border-b border-primary/15 px-4 md:px-8">
+            <div className="max-w-3xl mx-auto w-full flex items-center justify-between h-14">
+              <div className="flex items-center gap-2">
+                <ChefHat className="w-5 h-5 text-primary" />
+                <span className="font-bold text-foreground text-base">מה שיש</span>
+              </div>
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                חזרה
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </header>
+
+          {/* Search bar */}
+          <div className="bg-card/50 backdrop-blur-sm border-b border-border/50 px-4 md:px-8 flex items-center" style={{ height: '70px' }}>
             <div className="max-w-3xl mx-auto w-full">
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -179,45 +203,122 @@ const SelectIngredients = () => {
             </div>
           </div>
 
-          {/* Category grid */}
+          {/* Category cluster */}
           <main className="flex-1 overflow-y-auto pb-32 md:pb-8">
             <div className="max-w-3xl mx-auto px-4 md:px-8 py-6">
-              <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {categories.map((cat) => {
-                  const meta = CATEGORY_META[cat] ?? { icon: "🍽️", hue: "30 30% 82%" };
-                  const catIngredients = allIngredients.filter((i) => i.category === cat);
-                  const selectedCount = catIngredients.filter((i) =>
-                    selected.some((s) => s.id === i.id)
-                  ).length;
+              <h2 className="text-lg font-bold text-foreground mb-5">בחרו קטגוריה</h2>
 
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => openModal(cat)}
-                      className="relative rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer select-none"
-                      style={{
-                        background: `hsl(${meta.hue})`,
-                        minHeight: "140px",
-                        boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.08)",
-                      }}
-                    >
-                      {selectedCount > 0 && (
-                        <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold">
-                          {selectedCount}
-                        </span>
-                      )}
-                      <span className="text-5xl">{meta.icon}</span>
-                      <span className="font-semibold text-foreground text-sm">{cat}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              {isMobile ? (
+                /* Mobile: vertical stacked list with staggered animations */
+                <div className="space-y-3">
+                  {categories.map((cat, idx) => {
+                    const meta = CATEGORY_META[cat] ?? { icon: "🍽️", hue: "30 30% 82%", size: "md" as const };
+                    const catIngredients = allIngredients.filter((i) => i.category === cat);
+                    const selectedCount = catIngredients.filter((i) =>
+                      selected.some((s) => s.id === i.id)
+                    ).length;
+
+                    return (
+                      <motion.button
+                        key={cat}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{
+                          delay: idx * 0.06,
+                          duration: 0.35,
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 24,
+                        }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => openModal(cat)}
+                        className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer select-none relative"
+                        style={{
+                          background: `hsl(${meta.hue})`,
+                          boxShadow: "0 2px 12px -3px hsl(0 0% 0% / 0.1)",
+                        }}
+                      >
+                        <span className="text-3xl">{meta.icon}</span>
+                        <span className="font-semibold text-foreground text-base flex-1 text-right">{cat}</span>
+                        {selectedCount > 0 && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="bg-primary text-primary-foreground text-xs px-2.5 py-1 rounded-full font-bold"
+                          >
+                            {selectedCount}
+                          </motion.span>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Desktop: fluid pebble cluster with layout animations */
+                <LayoutGroup>
+                  <div className="grid grid-cols-4 gap-3 auto-rows-auto">
+                    {categories.map((cat, idx) => {
+                      const meta = CATEGORY_META[cat] ?? { icon: "🍽️", hue: "30 30% 82%", size: "md" as const };
+                      const sizeClass = SIZE_CLASSES[meta.size];
+                      const catIngredients = allIngredients.filter((i) => i.category === cat);
+                      const selectedCount = catIngredients.filter((i) =>
+                        selected.some((s) => s.id === i.id)
+                      ).length;
+
+                      return (
+                        <motion.button
+                          key={cat}
+                          layoutId={`pebble-${cat}`}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{
+                            layout: { type: "spring", stiffness: 300, damping: 28 },
+                            opacity: { duration: 0.3, delay: idx * 0.05 },
+                            scale: { duration: 0.3, delay: idx * 0.05 },
+                          }}
+                          whileHover={{ scale: 1.04, y: -3 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => openModal(cat)}
+                          className={cn(
+                            "relative rounded-[1.5rem] p-5 flex flex-col items-center justify-center gap-2 cursor-pointer select-none",
+                            sizeClass
+                          )}
+                          style={{
+                            background: `hsl(${meta.hue})`,
+                            boxShadow: selectedCount > 0
+                              ? `0 4px 20px -4px hsl(${meta.hue.split(' ')[0]} 60% 50% / 0.35)`
+                              : "0 2px 10px -2px hsl(0 0% 0% / 0.08)",
+                          }}
+                        >
+                          <AnimatePresence>
+                            {selectedCount > 0 && (
+                              <motion.span
+                                key="badge"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0 }}
+                                className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold leading-none"
+                              >
+                                {selectedCount}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
+                          <span className={cn(
+                            "leading-none",
+                            meta.size === "lg" ? "text-5xl" : meta.size === "md" ? "text-4xl" : "text-3xl"
+                          )}>{meta.icon}</span>
+                          <span className="font-semibold text-foreground text-sm">{cat}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </LayoutGroup>
+              )}
             </div>
           </main>
         </div>
 
-        {/* Desktop sidebar - right side */}
+        {/* Desktop sidebar */}
         {!isMobile && (
           <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 bg-card border-l border-border flex flex-col order-first animate-slide-in-right">
             <div className="px-5 border-b border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card" style={{ height: '70px' }}>
@@ -230,10 +331,13 @@ const SelectIngredients = () => {
                 </p>
               ) : (
                 selected.map((ing, index) => (
-                  <div
+                  <motion.div
                     key={ing.id}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-muted/60 group animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -12 }}
+                    transition={{ delay: index * 0.04, duration: 0.25 }}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-muted/60 group"
                   >
                     <span className="text-lg leading-none">{ing.emoji}</span>
                     <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
@@ -244,7 +348,7 @@ const SelectIngredients = () => {
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                  </div>
+                  </motion.div>
                 ))
               )}
             </div>
