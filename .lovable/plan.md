@@ -1,42 +1,25 @@
 
-## Magnetic Honeycomb Ingredient Picker — Implementation Plan
 
-### Phase 1: Organic Layout + Animations
-**Goal:** Replace the current rigid 2-column grid with a fluid "Pebble" cluster layout using framer-motion layout animations.
+## Fix Camera Button + Category Dialog Colors
 
-**Changes:**
-- **`src/components/ingredient-input/CategoryBrowser.tsx`** — Replace `grid grid-cols-2` with a flexbox-based organic cluster where cards have varying sizes based on ingredient count. Use `framer-motion` `layoutId` and `layout` props for smooth repositioning when cards are added/removed.
-- Cards get organic rounded shapes (border-radius variations), subtle size differences, and staggered entrance animations.
-- **Mobile:** Transition to a vertical stacked list with staggered `fade-in + slide-up` entrance animations instead of the cluster.
-- **Glassmorphism header** on `/select-ingredients` — `backdrop-blur-xl bg-background/70` non-sticky header integrated into the page canvas.
+### Issue 1: Camera button navigates to wrong page
+The camera icon button on `/select-ingredients` (line 137) navigates to `/ingredients` — an old page. It should instead open an inline image-upload panel directly on the current page, similar to how `/ingredients` handles its "photo" tab.
 
-### Phase 2: Spoonacular Magnetic Pairings
-**Goal:** When an ingredient is selected, fetch related ingredients via Spoonacular and visually highlight related categories.
+**Fix:** Replace the `navigate("/ingredients")` with an in-page Dialog or inline section that shows the `ImageUpload` component and a "Generate recipe from photo" button. This keeps the user on `/select-ingredients` and provides the photo-to-recipe flow right there.
 
-**Changes:**
-- **`supabase/functions/ingredient-pairings/index.ts`** — New edge function that calls `recipes/findByIngredients` with the selected ingredients, extracts commonly co-occurring ingredient categories, and returns them.
-- **`src/hooks/useIngredientPairings.ts`** — New hook that calls the edge function and returns related category names.
-- **`src/components/ingredient-input/CategoryBrowser.tsx`** — When pairings data is available:
-  - Related categories get `scale(1.03)` + a subtle colored glow (box-shadow pulse)
-  - Irrelevant categories dim to `opacity: 0.4`
-  - Use `framer-motion` `animate` for smooth transitions
+### Issue 2: Category dialog uses color only in header
+Currently the category Dialog only applies the category's hue color to the header area (line 307). The ingredient list items and the confirm button area are plain white/default.
 
-### Phase 3: Admin Category Management
-**Goal:** Admin users can add new categories via a "+" button.
+**Fix:** Brush the entire dialog with the category color:
+- Give each ingredient row a subtle tinted background on hover using the category hue (e.g., `hsl(hue / 10%)`)
+- Tint the selected/checked rows with the category color instead of generic `bg-accent`
+- Apply a light category-colored background to the footer/confirm area
+- Use the category hue for the confirm button's background instead of the default hero variant
 
-**Changes:**
-- **`src/components/ingredient-input/CategoryBrowser.tsx`** — Add a "+" card at the end of the cluster, visible only when `useIsAdmin()` returns true.
-- **`src/components/ingredient-input/AddCategoryDialog.tsx`** — New dialog with fields: category name, emoji icon, subtitle, hue color picker. Inserts into the `ingredients` table with the new category.
-- New categories trigger framer-motion layout animation to smoothly reposition all cards.
+### Files to edit
+- **`src/pages/SelectIngredients.tsx`** — both changes happen here:
+  1. Add `ImageUpload` import + state for `imageBase64` + a Dialog/section for the camera flow that calls `generateRecipe({ imageBase64 })`
+  2. Update the category Dialog to pass category hue colors into row backgrounds, hover states, selected states, and the footer area
 
-### Phase 4: Balance Meter + Camera Disable Mode
-**Goal:** Add nutritional balance indicator and handle camera/image search conflict.
+### No new files or dependencies needed.
 
-**Changes:**
-- **`src/components/ingredient-input/BalanceMeter.tsx`** — New component showing a simple visual meter of how balanced the selection is (protein/carbs/veggies ratio based on selected ingredient categories). On mobile, this lives inside a floating bottom drawer.
-- **`src/components/ingredient-input/CategoryBrowser.tsx`** — Accept a `disabled` prop. When true (camera mode active), all category cards get `opacity: 0.3`, `pointer-events: none`, and a banner says "בחירה ידנית מנוטרלת — מצב מצלמה פעיל".
-
-### Notes
-- Spoonacular API key already exists as a Supabase secret (`SPOONACULAR_API_KEY`). The user-provided key will be updated there.
-- No database schema changes needed for Phase 1-2. Phase 3 uses existing `ingredients` table.
-- Each phase is independently shippable.
