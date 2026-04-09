@@ -38,7 +38,6 @@ const SelectIngredients = () => {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const { customIngredients } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
-  const { relatedCategories, hasSelection } = useIngredientPairings(selected, allIngredients);
 
   const allIngredients = useMemo<Ingredient[]>(() => {
     const custom = customIngredients.map((c) => ({ ...c, popularityScore: 50 }));
