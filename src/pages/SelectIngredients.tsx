@@ -216,7 +216,7 @@ const SelectIngredients = () => {
         {!isMobile && (
           <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 border-l flex flex-col order-first animate-slide-in-right">
             <div
-              className="px-5 border-b border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card"
+              className="px-5 border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card"
               style={{ height: "70px" }}
             >
               <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
