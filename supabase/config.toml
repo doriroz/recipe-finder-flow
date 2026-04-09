@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.debug-matching]
 verify_jwt = false
+
+[functions.ingredient-pairings]
+verify_jwt = false

@@ -113,24 +113,37 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
             selected.some((s) => s.id === i.id)
           ).length;
 
+          // Magnetic pairing logic
+          const isRelated = !hasSelection || relatedCategories.has(cat);
+          const isDimmed = hasSelection && !isRelated;
+
           return (
             <motion.button
               key={cat}
               initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.97 }}
+              animate={{
+                opacity: isDimmed ? 0.4 : 1,
+                y: 0,
+                scale: isRelated && hasSelection && selectedCount === 0 ? 1.03 : 1,
+              }}
+              whileHover={{ scale: isDimmed ? 1 : 1.03, y: isDimmed ? 0 : -2 }}
+              whileTap={{ scale: isDimmed ? 0.98 : 0.97 }}
               transition={{
-                opacity: { duration: 0.22, delay: idx * 0.04 },
+                opacity: { duration: 0.4, ease: "easeOut" },
                 y: { duration: 0.22, delay: idx * 0.04 },
                 scale: { type: "spring", stiffness: 400, damping: 25 },
               }}
               onClick={() => openModal(cat)}
-              className="rounded-2xl overflow-hidden cursor-pointer select-none flex flex-col items-center justify-center text-center p-5 gap-2 relative"
+              className={cn(
+                "rounded-2xl overflow-hidden cursor-pointer select-none flex flex-col items-center justify-center text-center p-5 gap-2 relative transition-shadow duration-500",
+                isDimmed && "grayscale-[30%]"
+              )}
               style={{
                 background: `hsl(${meta.hue})`,
                 minHeight: "120px",
-                boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)",
+                boxShadow: isRelated && hasSelection && selectedCount === 0
+                  ? `0 0 20px 4px hsl(${meta.hue} / 0.5), 0 2px 10px -2px hsl(0 0% 0% / 0.12)`
+                  : "0 2px 10px -2px hsl(0 0% 0% / 0.12)",
               }}
             >
               {/* Selected badge */}
@@ -147,6 +160,18 @@ const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserPro
                   </motion.span>
                 )}
               </AnimatePresence>
+
+              {/* Glow pulse for related categories */}
+              {isRelated && hasSelection && selectedCount === 0 && (
+                <motion.div
+                  className="absolute inset-0 rounded-2xl pointer-events-none"
+                  style={{
+                    background: `radial-gradient(ellipse at center, hsl(${meta.hue} / 0.3) 0%, transparent 70%)`,
+                  }}
+                  animate={{ opacity: [0.4, 0.8, 0.4] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+              )}
 
               {/* Big emoji */}
               <span className="text-4xl leading-none">{meta.icon}</span>
