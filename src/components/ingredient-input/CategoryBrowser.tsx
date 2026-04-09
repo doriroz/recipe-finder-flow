@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useIngredientPairings } from "@/hooks/useIngredientPairings";
 
 interface Ingredient {
   id: number;
