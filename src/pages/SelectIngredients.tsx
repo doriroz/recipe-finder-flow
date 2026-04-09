@@ -188,24 +188,56 @@ const SelectIngredients = () => {
             <div className="max-w-3xl mx-auto px-4 md:px-8 py-6">
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {categories.map((cat) => {
+                {categories.map((cat, idx) => {
                   const meta = CATEGORY_META[cat] ?? { icon: "🍽️", hue: "30 30% 82%" };
                   const catIngredients = allIngredients.filter((i) => i.category === cat);
                   const selectedCount = catIngredients.filter((i) =>
                     selected.some((s) => s.id === i.id)
                   ).length;
 
+                  const isRelated = !hasSelection || relatedCategories.has(cat);
+                  const isDimmed = hasSelection && !isRelated;
+
                   return (
-                    <button
+                    <motion.button
                       key={cat}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{
+                        opacity: isDimmed ? 0.4 : 1,
+                        y: 0,
+                        scale: isRelated && hasSelection && selectedCount === 0 ? 1.03 : 1,
+                      }}
+                      whileHover={{ scale: isDimmed ? 1 : 1.04, y: isDimmed ? 0 : -2 }}
+                      whileTap={{ scale: isDimmed ? 0.98 : 0.97 }}
+                      transition={{
+                        opacity: { duration: 0.4, ease: "easeOut" },
+                        y: { duration: 0.22, delay: idx * 0.04 },
+                        scale: { type: "spring", stiffness: 400, damping: 25 },
+                      }}
                       onClick={() => openModal(cat)}
-                      className="relative rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer select-none"
+                      className={cn(
+                        "relative rounded-2xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer select-none transition-shadow duration-500",
+                        isDimmed && "grayscale-[30%]"
+                      )}
                       style={{
                         background: `hsl(${meta.hue})`,
                         minHeight: "140px",
-                        boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.08)",
+                        boxShadow: isRelated && hasSelection && selectedCount === 0
+                          ? `0 0 20px 4px hsl(${meta.hue} / 0.5), 0 2px 10px -2px hsl(0 0% 0% / 0.08)`
+                          : "0 2px 10px -2px hsl(0 0% 0% / 0.08)",
                       }}
                     >
+                      {/* Glow pulse for related categories */}
+                      {isRelated && hasSelection && selectedCount === 0 && (
+                        <motion.div
+                          className="absolute inset-0 rounded-2xl pointer-events-none"
+                          style={{
+                            background: `radial-gradient(ellipse at center, hsl(${meta.hue} / 0.3) 0%, transparent 70%)`,
+                          }}
+                          animate={{ opacity: [0.4, 0.8, 0.4] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                      )}
                       {selectedCount > 0 && (
                         <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold">
                           {selectedCount}
@@ -213,7 +245,7 @@ const SelectIngredients = () => {
                       )}
                       <span className="text-5xl">{meta.icon}</span>
                       <span className="font-semibold text-foreground text-sm">{cat}</span>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
