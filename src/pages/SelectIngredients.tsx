@@ -220,6 +220,9 @@ const SelectIngredients = () => {
               style={{ height: "70px" }}
             >
               <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
+              <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs mr-1">
+                {selected.length} מצרכים
+              </span>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
               {selected.length === 0 ? (
