@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Search, X, Sparkles, Check, Camera } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,6 +13,7 @@ import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import ImageUpload from "@/components/ImageUpload";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIngredientPairings } from "@/hooks/useIngredientPairings";
 
 const CATEGORY_META: Record<string, { icon: string; hue: string }> = {
   "ירקות":   { icon: "🥦", hue: "142 45% 82%" },
