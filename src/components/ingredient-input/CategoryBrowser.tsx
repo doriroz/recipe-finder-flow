@@ -35,6 +35,7 @@ const CATEGORY_META: Record<string, { icon: string; subtitle: string; hue: strin
 const CategoryBrowser = ({ ingredients, selected, onToggle }: CategoryBrowserProps) => {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [pendingSelections, setPendingSelections] = useState<Set<number>>(new Set());
+  const { relatedCategories, hasSelection } = useIngredientPairings(selected, ingredients);
 
   const categories = Array.from(new Set(ingredients.map((i) => i.category)));
 
