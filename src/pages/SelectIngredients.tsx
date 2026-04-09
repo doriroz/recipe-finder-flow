@@ -220,11 +220,22 @@ const SelectIngredients = () => {
               style={{ height: "70px" }}
             >
               <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
-              <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs mr-1">
-                {selected.length} מצרכים
-              </span>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
+              <Button
+                variant="hero"
+                className="w-full"
+                disabled={!canGenerate || isGenerating}
+                onClick={handleGenerate}
+              >
+                <Sparkles className="w-4 h-4" />
+                {isGenerating ? "יוצר מתכון..." : "מצא לי מתכונים!"}
+                {canGenerate && !isGenerating && (
+                  <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs mr-1">
+                    {selected.length} מצרכים
+                  </span>
+                )}
+              </Button>
               {selected.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">בחרו מצרכים כדי להתחיל 🧑‍🍳</p>
               ) : (
