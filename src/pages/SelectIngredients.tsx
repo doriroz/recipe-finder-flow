@@ -46,7 +46,7 @@ const SelectIngredients = () => {
     return [...mockIngredients, ...uniqueCustom];
   }, [customIngredients]);
 
-  const categories = useMemo(
+  const { relatedCategories, hasSelection } = useIngredientPairings(selected, allIngredients);
     () => Array.from(new Set(allIngredients.map((i) => i.category))),
     [allIngredients]
   );
