@@ -155,7 +155,7 @@ const SelectIngredients = () => {
                   onClick={() => setShowImageDialog(true)}
                   title="מצא מתכון מתמונה"
                 >
-                  <Camera className="w-5 h-5 text-white" />
+                  <Camera className="w-5 h-5 text-white hover:text-black" />
                 </Button>
               </div>
 
