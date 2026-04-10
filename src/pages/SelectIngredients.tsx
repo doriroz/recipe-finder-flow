@@ -129,7 +129,7 @@ const SelectIngredients = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-primary" dir="rtl">
       {isGenerating && <GeneratingRecipeLoader />}
 
       <div className="flex min-h-screen">
