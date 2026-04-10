@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Sparkles, Check, Camera, Plus, Star } from "lucide-react";
+import { Search, X, Sparkles, Check, Camera, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,15 +17,15 @@ import ImageUpload from "@/components/ImageUpload";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_META: Record<string, { icon: string; hue: string; subtitle: string }> = {
-  ירקות:   { icon: "🥦", hue: "142 45% 82%", subtitle: "טריים ומזינים" },
-  חלבונים: { icon: "🍗", hue: "32 65% 82%",  subtitle: "בשר, דגים וביצים" },
-  חלבי:    { icon: "🧀", hue: "200 55% 82%", subtitle: "גבינות וחלב" },
-  דגנים:   { icon: "🌾", hue: "48 70% 81%",  subtitle: "פחמימות ואנרגיה" },
+  ירקות: { icon: "🥦", hue: "142 45% 82%", subtitle: "טריים ומזינים" },
+  חלבונים: { icon: "🍗", hue: "32 65% 82%", subtitle: "בשר, דגים וביצים" },
+  חלבי: { icon: "🧀", hue: "200 55% 82%", subtitle: "גבינות וחלב" },
+  דגנים: { icon: "🌾", hue: "48 70% 81%", subtitle: "פחמימות ואנרגיה" },
   תבלינים: { icon: "🧂", hue: "355 55% 82%", subtitle: "ארומה וטעם" },
-  שימורים: { icon: "🥫", hue: "18 60% 81%",  subtitle: "מוכנים לשימוש" },
-  פירות:   { icon: "🍎", hue: "340 55% 82%", subtitle: "מתוק וטרי" },
-  שמנים:   { icon: "🫒", hue: "88 50% 81%",  subtitle: "שמנים ורטבים" },
-  אחר:     { icon: "✨", hue: "270 45% 82%", subtitle: "עוד מצרכים" },
+  שימורים: { icon: "🥫", hue: "18 60% 81%", subtitle: "מוכנים לשימוש" },
+  פירות: { icon: "🍎", hue: "340 55% 82%", subtitle: "מתוק וטרי" },
+  שמנים: { icon: "🫒", hue: "88 50% 81%", subtitle: "שמנים ורטבים" },
+  אחר: { icon: "✨", hue: "270 45% 82%", subtitle: "עוד מצרכים" },
 };
 
 // Bento grid sizing: hero categories span 2 cols, secondary span 1
@@ -121,7 +121,9 @@ const SelectIngredients = () => {
   };
 
   const canGenerate = selected.length >= 2;
-  const openMeta = openCategory ? (CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%", subtitle: "" }) : null;
+  const openMeta = openCategory
+    ? (CATEGORY_META[openCategory] ?? { icon: "🍽️", hue: "30 30% 82%", subtitle: "" })
+    : null;
   const openIngredients = openCategory
     ? allIngredients.filter((i) => i.category === openCategory).sort((a, b) => b.popularityScore - a.popularityScore)
     : [];
@@ -166,7 +168,10 @@ const SelectIngredients = () => {
                       return (
                         <button
                           key={ing.id}
-                          onClick={() => { toggle(ing); setSearchQuery(""); }}
+                          onClick={() => {
+                            toggle(ing);
+                            setSearchQuery("");
+                          }}
                           className={cn(
                             "w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-muted/60 transition-colors",
                             isSelected && "bg-accent",
@@ -191,11 +196,7 @@ const SelectIngredients = () => {
 
               {/* Adaptive Bento Grid */}
               <div
-                className={cn(
-                  isMobile
-                    ? "flex flex-col gap-3"
-                    : "grid gap-3"
-                )}
+                className={cn(isMobile ? "flex flex-col gap-3" : "grid gap-3")}
                 style={
                   isMobile
                     ? undefined
@@ -235,41 +236,41 @@ const SelectIngredients = () => {
                       key={cat}
                       initial={{ opacity: 0, y: 20, scale: 0.95 }}
                       animate={{
-                        opacity: isDimmed ? 0.6 : 1,
+                        opacity: isDimmed ? 0.7 : 1,
                         y: 0,
-                        scale: isGlowing ? 1.08 : 1,
-                        filter: isDimmed ? "blur(2px)" : "blur(0px)",
+                        scale: isGlowing ? 1.05 : 1,
+                        filter: isDimmed ? "grayscale(80%) blur(0.5px)" : "grayscale(0%) blur(0px)",
                       }}
                       whileHover={{
-                        scale: isDisabledByCamera ? 1 : isDimmed ? 1.01 : 1.04,
-                        y: isDisabledByCamera || isDimmed ? 0 : -4,
+                        scale: isDisabledByCamera ? 1 : isDimmed ? 1 : 1.03,
+                        y: isDisabledByCamera || isDimmed ? 0 : -3,
                       }}
                       whileTap={{ scale: isDisabledByCamera ? 1 : 0.97 }}
                       transition={{
-                        opacity: { duration: 0.4, ease: "easeOut" },
-                        filter: { duration: 0.4, ease: "easeOut" },
+                        opacity: { duration: 0.5, ease: "easeOut" },
+                        filter: { duration: 0.5, ease: "easeOut" },
                         y: { duration: 0.3, delay: idx * 0.04 },
                         scale: {
                           type: "spring",
-                          stiffness: 260,
-                          damping: 18,
-                          bounce: 0.5,
+                          stiffness: 300,
+                          damping: 20,
+                          bounce: 0.4,
                         },
                       }}
                       onClick={() => openModal(cat)}
                       disabled={isDisabledByCamera}
                       className={cn(
-                        "relative rounded-2xl overflow-hidden cursor-pointer select-none flex flex-col items-center justify-center text-center gap-2",
-                        isDisabledByCamera && "opacity-50 cursor-not-allowed",
+                        "relative rounded-2xl overflow-hidden cursor-pointer select-none flex flex-col items-center justify-center text-center gap-2 transition-shadow duration-500",
+                        isDisabledByCamera && "opacity-50 cursor-not-allowed grayscale-[40%]",
                       )}
                       style={{
                         ...gridStyle,
                         background: `hsl(${meta.hue})`,
                         boxShadow: isGlowing
-                          ? `0 0 28px 8px hsl(${meta.hue} / 0.6), 0 8px 24px -6px hsl(0 0% 0% / 0.18)`
+                          ? `0 0 24px 6px hsl(${meta.hue} / 0.55), 0 4px 16px -4px hsl(0 0% 0% / 0.15)`
                           : selectedCount > 0
-                            ? `0 0 14px 3px hsl(${meta.hue} / 0.35), 0 4px 14px -4px hsl(0 0% 0% / 0.12)`
-                            : "0 4px 14px -4px hsl(0 0% 0% / 0.1), 0 1px 4px hsl(0 0% 0% / 0.06)",
+                            ? `0 0 12px 2px hsl(${meta.hue} / 0.3), 0 2px 10px -2px hsl(0 0% 0% / 0.1)`
+                            : "0 2px 10px -2px hsl(0 0% 0% / 0.08)",
                       }}
                     >
                       {/* Selected badge */}
@@ -287,33 +288,15 @@ const SelectIngredients = () => {
                         )}
                       </AnimatePresence>
 
-                      {/* Match sparkle badge for paired categories */}
-                      <AnimatePresence>
-                        {isGlowing && (
-                          <motion.span
-                            key="match-badge"
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                            className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-card/90 backdrop-blur-sm text-xs px-2 py-1 rounded-full font-semibold shadow-sm border border-border"
-                            style={{ color: `hsl(${meta.hue.replace(/\d+%$/, (m) => `${Math.max(parseInt(m) - 35, 30)}%`)})` }}
-                          >
-                            <Star className="w-3 h-3 fill-current" />
-                            <span>מתאים!</span>
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-
                       {/* Glow pulse ring for matched categories */}
                       {isGlowing && (
                         <motion.div
                           className="absolute inset-0 rounded-2xl pointer-events-none"
                           style={{
-                            background: `radial-gradient(ellipse at center, hsl(${meta.hue} / 0.3) 0%, transparent 60%)`,
+                            background: `radial-gradient(ellipse at center, hsl(${meta.hue} / 0.35) 0%, transparent 65%)`,
                           }}
-                          animate={{ opacity: [0.3, 0.7, 0.3] }}
-                          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                          animate={{ opacity: [0.4, 0.85, 0.4] }}
+                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                         />
                       )}
 
@@ -327,9 +310,7 @@ const SelectIngredients = () => {
                         <p className={cn("font-bold text-foreground leading-tight", isHero ? "text-base" : "text-sm")}>
                           {cat}
                         </p>
-                        {!isCompact && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{meta.subtitle}</p>
-                        )}
+                        {!isCompact && <p className="text-xs text-muted-foreground mt-0.5">{meta.subtitle}</p>}
                       </div>
                     </motion.button>
                   );
@@ -344,7 +325,9 @@ const SelectIngredients = () => {
                     whileTap={{ scale: 0.95 }}
                     className="rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
                     style={{ minHeight: "120px" }}
-                    onClick={() => {/* TODO: admin add category dialog */}}
+                    onClick={() => {
+                      /* TODO: admin add category dialog */
+                    }}
                   >
                     <Plus className="w-8 h-8" />
                     <span className="text-xs font-medium">הוסף קטגוריה</span>
@@ -423,7 +406,13 @@ const SelectIngredients = () => {
                   >
                     <span>{ing.emoji}</span>
                     <span>{ing.name}</span>
-                    <button onClick={() => remove(ing.id)} className="mr-0.5 hover:text-destructive" aria-label={`הסר ${ing.name}`}>×</button>
+                    <button
+                      onClick={() => remove(ing.id)}
+                      className="mr-0.5 hover:text-destructive"
+                      aria-label={`הסר ${ing.name}`}
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
               </div>
@@ -432,7 +421,9 @@ const SelectIngredients = () => {
               <Sparkles className="w-4 h-4" />
               {isGenerating ? "יוצר מתכון..." : "מצא לי מתכונים!"}
               {canGenerate && !isGenerating && (
-                <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs mr-1">{selected.length} מצרכים</span>
+                <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs mr-1">
+                  {selected.length} מצרכים
+                </span>
               )}
             </Button>
           </div>
@@ -440,7 +431,15 @@ const SelectIngredients = () => {
       )}
 
       {/* Image Upload Dialog */}
-      <Dialog open={showImageDialog} onOpenChange={(open) => { if (!open) { setShowImageDialog(false); setImageBase64(null); } }}>
+      <Dialog
+        open={showImageDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowImageDialog(false);
+            setImageBase64(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden">
           <div className="px-6 pt-6 pb-4 bg-gradient-to-l from-primary/10 to-accent/30">
             <DialogHeader>
@@ -451,9 +450,16 @@ const SelectIngredients = () => {
             </DialogHeader>
           </div>
           <div className="px-6 py-5 space-y-4">
-            <p className="text-sm text-muted-foreground text-center">צלמו או העלו תמונה של המצרכים שלכם ונמצא לכם מתכון מתאים</p>
+            <p className="text-sm text-muted-foreground text-center">
+              צלמו או העלו תמונה של המצרכים שלכם ונמצא לכם מתכון מתאים
+            </p>
             <ImageUpload onImageSelect={(base64) => setImageBase64(base64)} disabled={isGenerating} />
-            <Button variant="hero" className="w-full" disabled={!imageBase64 || isGenerating} onClick={handleImageGenerate}>
+            <Button
+              variant="hero"
+              className="w-full"
+              disabled={!imageBase64 || isGenerating}
+              onClick={handleImageGenerate}
+            >
               <Sparkles className="w-4 h-4" />
               {isGenerating ? "מחפש מתכון..." : "מצא מתכון מהתמונה"}
             </Button>
@@ -462,7 +468,15 @@ const SelectIngredients = () => {
       </Dialog>
 
       {/* Category Dialog */}
-      <Dialog open={!!openCategory} onOpenChange={(open) => { if (!open) { setOpenCategory(null); setPendingSelections(new Set()); } }}>
+      <Dialog
+        open={!!openCategory}
+        onOpenChange={(open) => {
+          if (!open) {
+            setOpenCategory(null);
+            setPendingSelections(new Set());
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden backdrop-blur-sm">
           {openCategory && openMeta && (
             <>
@@ -489,8 +503,12 @@ const SelectIngredients = () => {
                       style={{
                         backgroundColor: isPending ? `hsl(${openMeta.hue} / 0.45)` : undefined,
                       }}
-                      onMouseEnter={(e) => { if (!isPending) e.currentTarget.style.backgroundColor = `hsl(${openMeta.hue} / 0.2)`; }}
-                      onMouseLeave={(e) => { if (!isPending) e.currentTarget.style.backgroundColor = ""; }}
+                      onMouseEnter={(e) => {
+                        if (!isPending) e.currentTarget.style.backgroundColor = `hsl(${openMeta.hue} / 0.2)`;
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isPending) e.currentTarget.style.backgroundColor = "";
+                      }}
                     >
                       <Checkbox checked={isPending} className="pointer-events-none" />
                       <span className="text-xl">{ing.emoji}</span>
@@ -511,7 +529,9 @@ const SelectIngredients = () => {
                   className="w-full text-white font-bold"
                   disabled={pendingSelections.size === 0}
                   onClick={confirmSelections}
-                  style={{ backgroundColor: `hsl(${openMeta.hue.replace(/\d+%$/, (m) => `${Math.max(parseInt(m) - 30, 35)}%`)})` }}
+                  style={{
+                    backgroundColor: `hsl(${openMeta.hue.replace(/\d+%$/, (m) => `${Math.max(parseInt(m) - 30, 35)}%`)})`,
+                  }}
                 >
                   הוסף מצרכים ({pendingSelections.size})
                 </Button>
