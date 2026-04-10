@@ -239,7 +239,7 @@ const SelectIngredients = () => {
                         opacity: isDimmed ? 0.7 : 1,
                         y: 0,
                         scale: isGlowing ? 1.05 : 1,
-                        filter: isDimmed ? "grayscale(80%) blur(0.5px)" : "grayscale(0%) blur(0px)",
+                        filter: isDimmed ? "grayscale(50%) blur(0.8px)" : "grayscale(0%) blur(0px)",
                       }}
                       whileHover={{
                         scale: isDisabledByCamera ? 1 : isDimmed ? 1 : 1.03,
