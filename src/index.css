@@ -13,7 +13,7 @@
   :root {
     /* Cream/Warm White Background */
     --background: 30 50% 98%;
-
+    --peach-wash: 25°, 46%, 93%;
     --foreground: 25 30% 15%;
 
     /* Card surfaces - slightly warmer */
