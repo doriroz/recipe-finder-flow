@@ -151,7 +151,7 @@ const SelectIngredients = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12 rounded-2xl shrink-0 border-border hover:bg-accent"
+                  className="h-12 w-12 rounded-2xl shrink-0 border-border bg-primary text-primary-foreground hover:bg-accent"
                   onClick={() => setShowImageDialog(true)}
                   title="מצא מתכון מתמונה"
                 >
