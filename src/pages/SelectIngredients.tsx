@@ -207,7 +207,7 @@ const SelectIngredients = () => {
               {/* Uniform 3x3 Grid */}
               <div
                 className={cn(
-                  isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-3 gap-3"
+                  isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-[repeat(3,minmax(150px,1fr))] gap-3",
                 )}
               >
                 {FIXED_CATEGORIES.map((cat, idx) => {
@@ -262,9 +262,7 @@ const SelectIngredients = () => {
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.07]"
                         />
                       )}
-                      {!meta.image && (
-                        <div className="absolute inset-0" style={{ background: `hsl(${meta.hue})` }} />
-                      )}
+                      {!meta.image && <div className="absolute inset-0" style={{ background: `hsl(${meta.hue})` }} />}
 
                       {/* Dark gradient overlay for text readability */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent" />
@@ -298,9 +296,7 @@ const SelectIngredients = () => {
 
                       {/* Text overlay at bottom center */}
                       <div className="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-end pb-3 px-3">
-                        <p className="font-bold text-white text-sm leading-tight drop-shadow-md">
-                          {cat}
-                        </p>
+                        <p className="font-bold text-white text-sm leading-tight drop-shadow-md">{cat}</p>
                         <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">{meta.subtitle}</p>
                       </div>
                     </motion.button>
@@ -473,9 +469,7 @@ const SelectIngredients = () => {
             <>
               <div className="px-6 pt-6 pb-4" style={{ background: `hsl(${openMeta.hue})` }}>
                 <DialogHeader>
-                  <DialogTitle className="text-lg font-bold text-foreground text-right">
-                    {openCategory}
-                  </DialogTitle>
+                  <DialogTitle className="text-lg font-bold text-foreground text-right">{openCategory}</DialogTitle>
                 </DialogHeader>
               </div>
 
