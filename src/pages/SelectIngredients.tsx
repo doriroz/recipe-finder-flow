@@ -224,7 +224,7 @@ const SelectIngredients = () => {
                       key={cat}
                       initial={{ opacity: 0, y: 20, scale: 0.95 }}
                       animate={{
-                        opacity: isDimmed ? 0.6 : 1,
+                        //opacity: isDimmed ? 0.6 : 1,
                         y: 0,
                         scale: isGlowing ? 1.08 : 1,
                         //filter: isDimmed ? "blur(2px)" : "blur(0px)",
