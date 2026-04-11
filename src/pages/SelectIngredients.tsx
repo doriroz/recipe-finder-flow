@@ -204,38 +204,22 @@ const SelectIngredients = () => {
             <div className="max-w-3xl mx-auto px-4 md:px-8 py-6">
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
 
-              {/* Adaptive Bento Grid */}
+              {/* Uniform 3x3 Grid */}
               <div
-                className={cn(isMobile ? "flex flex-col gap-3" : "grid gap-3")}
-                style={
-                  isMobile
-                    ? undefined
-                    : {
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gridAutoFlow: "dense",
-                      }
-                }
+                className={cn(
+                  isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-3 gap-3"
+                )}
               >
-                {categories.map((cat, idx) => {
+                {FIXED_CATEGORIES.map((cat, idx) => {
                   const meta = CATEGORY_META[cat] ?? { hue: "30 30% 82%", subtitle: "", image: "" };
                   const catIngredients = allIngredients.filter((i) => i.category === cat);
                   const selectedCount = catIngredients.filter((i) => selected.some((s) => s.id === i.id)).length;
-
-                  const isHero = HERO_CATEGORIES.has(cat);
-                  const isCompact = COMPACT_CATEGORIES.has(cat);
 
                   // Pairing logic
                   const isRelated = !hasSelection || relatedCategories.has(cat);
                   const isDimmed = hasSelection && !isRelated;
                   const isGlowing = hasSelection && isRelated && selectedCount === 0;
                   const isDisabledByCamera = showImageDialog;
-
-                  const gridStyle: React.CSSProperties = isMobile
-                    ? {}
-                    : {
-                        gridColumn: isHero ? "span 2" : "span 1",
-                        gridRow: "span 1",
-                      };
 
                   return (
                     <motion.button
@@ -262,7 +246,6 @@ const SelectIngredients = () => {
                         isDisabledByCamera && "opacity-50 cursor-not-allowed",
                       )}
                       style={{
-                        ...gridStyle,
                         boxShadow: isGlowing
                           ? `0 0 24px 6px hsl(${meta.hue} / 0.55), 0 4px 16px -4px hsl(0 0% 0% / 0.15)`
                           : selectedCount > 0
