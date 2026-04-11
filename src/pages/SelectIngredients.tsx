@@ -147,7 +147,7 @@ const SelectIngredients = () => {
         <div className="flex-1 flex flex-col bg-accent">
           {/* Search bar */}
           <div className="border-border px-4 md:px-8 flex items-center" style={{ height: "70px" }}>
-            <div className="max-w-[63rem] mx-auto w-full">
+            <div className="max-w-[63em] mx-auto w-full">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
