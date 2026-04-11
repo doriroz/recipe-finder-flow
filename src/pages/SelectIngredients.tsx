@@ -39,9 +39,8 @@ const CATEGORY_META: Record<string, { hue: string; subtitle: string; image: stri
   אחר: { hue: "270 45% 82%", subtitle: "עוד מצרכים", image: "" },
 };
 
-// Bento grid sizing: hero categories span 2 cols, secondary span 1
-const HERO_CATEGORIES = new Set(["ירקות", "חלבונים"]);
-const COMPACT_CATEGORIES = new Set(["תבלינים", "שמנים", "אחר"]);
+// Fixed 9 categories to always render
+const FIXED_CATEGORIES = ["חלבי", "ירקות", "פירות", "דגנים", "חלבונים", "שימורים", "שמנים", "תבלינים", "מאפים"];
 
 const SelectIngredients = () => {
   const navigate = useNavigate();
