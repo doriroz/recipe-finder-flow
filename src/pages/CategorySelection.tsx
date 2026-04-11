@@ -76,13 +76,14 @@ const CategorySelection = () => {
         unit: "",
       }));
 
-      const instructions = recipe.instructions && recipe.instructions.length > 0
-        ? recipe.instructions
-        : [
-            `הכינו את כל המצרכים: ${recipe.ingredients.join(", ")}`,
-            `בשלו למשך ${recipe.cookingTime} דקות בערך`,
-            "הגישו וטעמו!",
-          ];
+      const instructions =
+        recipe.instructions && recipe.instructions.length > 0
+          ? recipe.instructions
+          : [
+              `הכינו את כל המצרכים: ${recipe.ingredients.join(", ")}`,
+              `בשלו למשך ${recipe.cookingTime} דקות בערך`,
+              "הגישו וטעמו!",
+            ];
 
       const { data, error } = await supabase
         .from("recipes")
@@ -117,7 +118,7 @@ const CategorySelection = () => {
         (cat) =>
           cat.nameHe.includes(query.trim()) ||
           cat.name.toLowerCase().includes(query.trim().toLowerCase()) ||
-          cat.subtitle.includes(query.trim())
+          cat.subtitle.includes(query.trim()),
       )
     : CUISINE_CATEGORIES;
 
@@ -125,7 +126,9 @@ const CategorySelection = () => {
 
   useEffect(() => {
     if (!selectedCategory) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") closeModal(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [selectedCategory, closeModal]);
@@ -136,7 +139,9 @@ const CategorySelection = () => {
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [selectedCategory]);
 
   return (
@@ -163,7 +168,7 @@ const CategorySelection = () => {
       </header>
 
       {/* Page title bar - matching tab bar position */}
-      <div className="sticky top-0 z-30 bg-background border-b border-border" style={{ height: '48px' }}>
+      <div className="sticky top-0 z-30 bg-background border-border" style={{ height: "48px" }}>
         <div className="container mx-auto px-4 flex items-center justify-center h-full">
           <h1 className="text-sm font-semibold text-foreground">בחירת קטגוריה 🍽️</h1>
         </div>
@@ -182,7 +187,7 @@ const CategorySelection = () => {
             className={cn(
               "w-full bg-card border border-border rounded-full py-3 pr-12 pl-12 text-foreground",
               "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
-              "transition-all"
+              "transition-all",
             )}
           />
           {query && (
@@ -222,45 +227,43 @@ const CategorySelection = () => {
             {!isSearching && hasSearched && results.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground mb-3">נמצאו {results.length} תוצאות:</p>
-              {results.map((result, i) => (
-                <motion.div
-                  key={result.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06, duration: 0.18 }}
-                  onClick={() => handleResultClick(result)}
-                  className={cn(
-                    "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-sm transition-all duration-150 text-right cursor-pointer",
-                    savingResult && savingResult !== result.id && "opacity-50 pointer-events-none"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="font-bold text-foreground text-sm">{result.title}</p>
-                    {savingResult === result.id && (
-                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                {results.map((result, i) => (
+                  <motion.div
+                    key={result.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06, duration: 0.18 }}
+                    onClick={() => handleResultClick(result)}
+                    className={cn(
+                      "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-sm transition-all duration-150 text-right cursor-pointer",
+                      savingResult && savingResult !== result.id && "opacity-50 pointer-events-none",
                     )}
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    {result.cooking_time && (
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-foreground text-sm">{result.title}</p>
+                      {savingResult === result.id && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      {result.cooking_time && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {result.cooking_time} דק׳
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        {result.cooking_time} דק׳
+                        <ChefHat className="w-3.5 h-3.5" />
+                        {result.difficulty || "בינוני"}
                       </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <ChefHat className="w-3.5 h-3.5" />
-                      {result.difficulty || "בינוני"}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Leaf className="w-3.5 h-3.5" />
-                      {result.ingredients.length} מצרכים
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
+                      <span className="flex items-center gap-1">
+                        <Leaf className="w-3.5 h-3.5" />
+                        {result.ingredients.length} מצרכים
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Category grid */}
@@ -290,16 +293,12 @@ const CategorySelection = () => {
                 <p className="font-bold text-foreground text-sm leading-tight">{cat.nameHe}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{cat.subtitle}</p>
               </div>
-              <span className="text-[10px] text-muted-foreground/70">
-                {cat.recipes.length} מתכונים
-              </span>
+              <span className="text-[10px] text-muted-foreground/70">{cat.recipes.length} מתכונים</span>
             </motion.button>
           ))}
         </div>
 
-        {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>
-        )}
+        {filtered.length === 0 && <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>}
       </main>
 
       {/* Floating modal — portal */}
@@ -367,7 +366,7 @@ const CategorySelection = () => {
                       onClick={() => handleRecipeClick(recipe)}
                       className={cn(
                         "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-white/30 hover:bg-white/50 border border-transparent transition-all duration-150 text-right cursor-pointer",
-                        loadingRecipe && loadingRecipe !== recipe.title && "opacity-50 pointer-events-none"
+                        loadingRecipe && loadingRecipe !== recipe.title && "opacity-50 pointer-events-none",
                       )}
                     >
                       <div className="flex items-center justify-between">
@@ -397,7 +396,7 @@ const CategorySelection = () => {
             </>
           )}
         </AnimatePresence>,
-        document.body
+        document.body,
       )}
     </div>
   );
