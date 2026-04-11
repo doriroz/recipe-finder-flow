@@ -494,7 +494,6 @@ const SelectIngredients = () => {
                   <DialogTitle className="text-lg font-bold text-foreground text-right">
                     {openCategory}
                   </DialogTitle>
-                  </DialogTitle>
                 </DialogHeader>
               </div>
 
