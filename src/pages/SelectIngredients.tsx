@@ -16,16 +16,27 @@ import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import ImageUpload from "@/components/ImageUpload";
 import { cn } from "@/lib/utils";
 
-const CATEGORY_META: Record<string, { icon: string; hue: string; subtitle: string }> = {
-  ירקות: { icon: "🥦", hue: "142 45% 82%", subtitle: "טריים ומזינים" },
-  חלבונים: { icon: "🍗", hue: "32 65% 82%", subtitle: "בשר, דגים וביצים" },
-  חלבי: { icon: "🧀", hue: "200 55% 82%", subtitle: "גבינות וחלב" },
-  דגנים: { icon: "🌾", hue: "48 70% 81%", subtitle: "פחמימות ואנרגיה" },
-  תבלינים: { icon: "🧂", hue: "355 55% 82%", subtitle: "ארומה וטעם" },
-  שימורים: { icon: "🥫", hue: "18 60% 81%", subtitle: "מוכנים לשימוש" },
-  פירות: { icon: "🍎", hue: "340 55% 82%", subtitle: "מתוק וטרי" },
-  שמנים: { icon: "🫒", hue: "88 50% 81%", subtitle: "שמנים ורטבים" },
-  אחר: { icon: "✨", hue: "270 45% 82%", subtitle: "עוד מצרכים" },
+import dairyImg from "@/assets/categories/dairy.jpg";
+import vegetablesImg from "@/assets/categories/vegetables.jpg";
+import fruitsImg from "@/assets/categories/fruits.jpg";
+import grainsImg from "@/assets/categories/grains.jpg";
+import proteinsImg from "@/assets/categories/proteins.jpg";
+import cannedImg from "@/assets/categories/canned.jpg";
+import oilsImg from "@/assets/categories/oils.jpg";
+import spicesImg from "@/assets/categories/spices.jpg";
+import bakeryImg from "@/assets/categories/bakery.jpg";
+
+const CATEGORY_META: Record<string, { hue: string; subtitle: string; image: string }> = {
+  חלבי: { hue: "200 55% 82%", subtitle: "גבינות וחלב", image: dairyImg },
+  ירקות: { hue: "142 45% 82%", subtitle: "טריים ומזינים", image: vegetablesImg },
+  פירות: { hue: "340 55% 82%", subtitle: "מתוקים וצבעוניים", image: fruitsImg },
+  דגנים: { hue: "48 70% 81%", subtitle: "פחמימות ואנרגיה", image: grainsImg },
+  חלבונים: { hue: "32 65% 82%", subtitle: "בשר, דגים וביצים", image: proteinsImg },
+  שימורים: { hue: "18 60% 81%", subtitle: "מוצרים עמידים", image: cannedImg },
+  שמנים: { hue: "88 50% 81%", subtitle: "שומנים בריאים", image: oilsImg },
+  תבלינים: { hue: "355 55% 82%", subtitle: "טעמים וריחות", image: spicesImg },
+  מאפים: { hue: "30 60% 82%", subtitle: "טרי מהתנור", image: bakeryImg },
+  אחר: { hue: "270 45% 82%", subtitle: "עוד מצרכים", image: "" },
 };
 
 // Bento grid sizing: hero categories span 2 cols, secondary span 1
