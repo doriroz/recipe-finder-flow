@@ -298,7 +298,7 @@ const SelectIngredients = () => {
 
                       {/* Text overlay at bottom center */}
                       <div className="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-end pb-3 px-3">
-                        <p className={cn("font-bold text-white leading-tight drop-shadow-md", isHero ? "text-base" : "text-sm")}>
+                        <p className="font-bold text-white text-sm leading-tight drop-shadow-md">
                           {cat}
                         </p>
                         <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">{meta.subtitle}</p>
