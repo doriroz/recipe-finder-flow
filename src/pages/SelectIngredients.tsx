@@ -62,9 +62,11 @@ const SelectIngredients = () => {
     return [...mockIngredients, ...uniqueCustom];
   }, [customIngredients]);
 
+  console.log("allIngredients : " + allIngredients);
   const categories = useMemo(() => Array.from(new Set(allIngredients.map((i) => i.category))), [allIngredients]);
 
   const { relatedCategories, hasSelection } = useIngredientPairings(selected, allIngredients);
+  console.log("relatedCategories : " + relatedCategories);
 
   const filteredBySearch = useMemo(() => {
     if (!searchQuery.trim()) return [];
