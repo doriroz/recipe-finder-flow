@@ -207,7 +207,7 @@ const SelectIngredients = () => {
               {/* Uniform 3x3 Grid */}
               <div
                 className={cn(
-                  isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-[repeat(3,minmax(150px,1fr))] gap-3",
+                  isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-[repeat(3,minmax(300px,1fr))] gap-3",
                 )}
               >
                 {FIXED_CATEGORIES.map((cat, idx) => {
