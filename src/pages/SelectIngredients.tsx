@@ -143,6 +143,28 @@ const SelectIngredients = () => {
       {isGenerating && <GeneratingRecipeLoader />}
 
       <div className="flex min-h-screen">
+        <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="flex items-center gap-1 hover:bg-primary/10"
+              >
+                <ArrowRight className="w-4 h-4" />
+                חזרה
+              </Button>
+              <div className="flex items-center gap-2">
+                <CreditCounter />
+                <div className="flex items-center gap-2">
+                  <ChefHat className="w-6 h-6 text-primary" />
+                  <span className="font-bold text-foreground">מה שיש</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
         {/* Main content */}
         <div className="flex-1 flex flex-col bg-accent">
           {/* Search bar */}
