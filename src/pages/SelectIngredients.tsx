@@ -218,7 +218,7 @@ const SelectIngredients = () => {
                 }
               >
                 {categories.map((cat, idx) => {
-                  const meta = CATEGORY_META[cat] ?? { icon: "🍽️", hue: "30 30% 82%", subtitle: "" };
+                  const meta = CATEGORY_META[cat] ?? { hue: "30 30% 82%", subtitle: "", image: "" };
                   const catIngredients = allIngredients.filter((i) => i.category === cat);
                   const selectedCount = catIngredients.filter((i) => selected.some((s) => s.id === i.id)).length;
 
@@ -231,15 +231,11 @@ const SelectIngredients = () => {
                   const isGlowing = hasSelection && isRelated && selectedCount === 0;
                   const isDisabledByCamera = showImageDialog;
 
-                  // Desktop grid spanning
                   const gridStyle: React.CSSProperties = isMobile
-                    ? {
-                        minHeight: isHero ? "130px" : isCompact ? "90px" : "110px",
-                      }
+                    ? {}
                     : {
                         gridColumn: isHero ? "span 2" : "span 1",
-                        gridRow: isHero ? "span 1" : "span 1",
-                        minHeight: isHero ? "170px" : isCompact ? "120px" : "140px",
+                        gridRow: "span 1",
                       };
 
                   return (
@@ -247,43 +243,50 @@ const SelectIngredients = () => {
                       key={cat}
                       initial={{ opacity: 0, y: 20, scale: 0.95 }}
                       animate={{
-                        opacity: isDimmed ? 0.7 : 1,
+                        opacity: isDimmed ? 0.6 : 1,
                         y: 0,
-                        scale: isGlowing ? 1.05 : 1,
-                        filter: isDimmed ? "grayscale(20%) blur(0.5px)" : "grayscale(0%) blur(0px)",
-                      }}
-                      whileHover={{
-                        scale: isDisabledByCamera ? 1 : isDimmed ? 1 : 1.03,
-                        y: isDisabledByCamera || isDimmed ? 0 : -3,
+                        scale: isGlowing ? 1.08 : 1,
+                        filter: isDimmed ? "blur(2px)" : "blur(0px)",
                       }}
                       whileTap={{ scale: isDisabledByCamera ? 1 : 0.97 }}
                       transition={{
                         opacity: { duration: 0.5, ease: "easeOut" },
                         filter: { duration: 0.5, ease: "easeOut" },
                         y: { duration: 0.3, delay: idx * 0.04 },
-                        scale: {
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 20,
-                          bounce: 0.4,
-                        },
+                        scale: { type: "spring", stiffness: 260, damping: 18, bounce: 0.5 },
                       }}
                       onClick={() => openModal(cat)}
                       disabled={isDisabledByCamera}
                       className={cn(
-                        "relative rounded-2xl overflow-hidden cursor-pointer select-none flex flex-col items-center justify-center text-center gap-2 transition-shadow duration-500",
-                        isDisabledByCamera && "opacity-50 cursor-not-allowed grayscale-[40%]",
+                        "group relative rounded-2xl overflow-hidden cursor-pointer select-none",
+                        "aspect-[16/9]",
+                        isDisabledByCamera && "opacity-50 cursor-not-allowed",
                       )}
                       style={{
                         ...gridStyle,
-                        background: `hsl(${meta.hue})`,
                         boxShadow: isGlowing
                           ? `0 0 24px 6px hsl(${meta.hue} / 0.55), 0 4px 16px -4px hsl(0 0% 0% / 0.15)`
                           : selectedCount > 0
                             ? `0 0 12px 2px hsl(${meta.hue} / 0.3), 0 2px 10px -2px hsl(0 0% 0% / 0.1)`
-                            : "0 2px 10px -2px hsl(0 0% 0% / 0.08)",
+                            : "0 4px 12px -2px hsl(0 0% 0% / 0.12)",
                       }}
                     >
+                      {/* Background image with zoom-on-hover */}
+                      {meta.image && (
+                        <img
+                          src={meta.image}
+                          alt={cat}
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.07]"
+                        />
+                      )}
+                      {!meta.image && (
+                        <div className="absolute inset-0" style={{ background: `hsl(${meta.hue})` }} />
+                      )}
+
+                      {/* Dark gradient overlay for text readability */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent" />
+
                       {/* Selected badge */}
                       <AnimatePresence>
                         {selectedCount > 0 && (
@@ -292,7 +295,7 @@ const SelectIngredients = () => {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             exit={{ scale: 0 }}
-                            className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs px-2.5 py-1 rounded-full font-bold leading-none"
+                            className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-xs px-2.5 py-1 rounded-full font-bold leading-none"
                           >
                             {selectedCount}
                           </motion.span>
@@ -302,7 +305,7 @@ const SelectIngredients = () => {
                       {/* Glow pulse ring for matched categories */}
                       {isGlowing && (
                         <motion.div
-                          className="absolute inset-0 rounded-2xl pointer-events-none"
+                          className="absolute inset-0 rounded-2xl pointer-events-none z-10"
                           style={{
                             background: `radial-gradient(ellipse at center, hsl(${meta.hue} / 0.35) 0%, transparent 65%)`,
                           }}
@@ -311,17 +314,12 @@ const SelectIngredients = () => {
                         />
                       )}
 
-                      {/* Emoji */}
-                      <span className={cn("leading-none", isHero ? "text-6xl" : isCompact ? "text-3xl" : "text-5xl")}>
-                        {meta.icon}
-                      </span>
-
-                      {/* Text */}
-                      <div>
-                        <p className={cn("font-bold text-foreground leading-tight", isHero ? "text-base" : "text-sm")}>
+                      {/* Text overlay at bottom center */}
+                      <div className="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-end pb-3 px-3">
+                        <p className={cn("font-bold text-white leading-tight drop-shadow-md", isHero ? "text-base" : "text-sm")}>
                           {cat}
                         </p>
-                        {!isCompact && <p className="text-xs text-muted-foreground mt-0.5">{meta.subtitle}</p>}
+                        <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">{meta.subtitle}</p>
                       </div>
                     </motion.button>
                   );
@@ -494,7 +492,7 @@ const SelectIngredients = () => {
               <div className="px-6 pt-6 pb-4" style={{ background: `hsl(${openMeta.hue})` }}>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-3 text-right">
-                    <span className="text-3xl">{openMeta.icon}</span>
+                    <span className="text-lg font-bold text-foreground">{openCategory}</span>
                     <span className="text-lg font-bold text-foreground">{openCategory}</span>
                   </DialogTitle>
                 </DialogHeader>
