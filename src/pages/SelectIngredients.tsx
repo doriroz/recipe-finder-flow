@@ -206,9 +206,7 @@ const SelectIngredients = () => {
 
               {/* Uniform 3x3 Grid */}
               <div
-                className={cn(
-                  isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-[repeat(3,minmax(300px,1fr))] gap-3",
-                )}
+                className={cn(isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3")}
               >
                 {FIXED_CATEGORIES.map((cat, idx) => {
                   const meta = CATEGORY_META[cat] ?? { hue: "30 30% 82%", subtitle: "", image: "" };
