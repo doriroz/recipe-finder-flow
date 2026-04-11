@@ -201,7 +201,7 @@ const SelectIngredients = () => {
 
           {/* Bento Category Grid */}
           <main className="flex-1 overflow-y-auto pb-32 md:pb-8">
-            <div className="max-w-3xl mx-auto px-4 md:px-8 py-6">
+            <div className="max-w-[63rem] mx-auto px-4 md:px-8 py-6">
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
 
               {/* Uniform 3x3 Grid */}
