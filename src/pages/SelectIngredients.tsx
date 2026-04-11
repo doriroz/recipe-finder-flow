@@ -39,9 +39,8 @@ const CATEGORY_META: Record<string, { hue: string; subtitle: string; image: stri
   אחר: { hue: "270 45% 82%", subtitle: "עוד מצרכים", image: "" },
 };
 
-// Bento grid sizing: hero categories span 2 cols, secondary span 1
-const HERO_CATEGORIES = new Set(["ירקות", "חלבונים"]);
-const COMPACT_CATEGORIES = new Set(["תבלינים", "שמנים", "אחר"]);
+// Fixed 9 categories to always render
+const FIXED_CATEGORIES = ["חלבי", "ירקות", "פירות", "דגנים", "חלבונים", "שימורים", "שמנים", "תבלינים", "מאפים"];
 
 const SelectIngredients = () => {
   const navigate = useNavigate();
@@ -205,38 +204,22 @@ const SelectIngredients = () => {
             <div className="max-w-3xl mx-auto px-4 md:px-8 py-6">
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
 
-              {/* Adaptive Bento Grid */}
+              {/* Uniform 3x3 Grid */}
               <div
-                className={cn(isMobile ? "flex flex-col gap-3" : "grid gap-3")}
-                style={
-                  isMobile
-                    ? undefined
-                    : {
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gridAutoFlow: "dense",
-                      }
-                }
+                className={cn(
+                  isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-3 gap-3"
+                )}
               >
-                {categories.map((cat, idx) => {
+                {FIXED_CATEGORIES.map((cat, idx) => {
                   const meta = CATEGORY_META[cat] ?? { hue: "30 30% 82%", subtitle: "", image: "" };
                   const catIngredients = allIngredients.filter((i) => i.category === cat);
                   const selectedCount = catIngredients.filter((i) => selected.some((s) => s.id === i.id)).length;
-
-                  const isHero = HERO_CATEGORIES.has(cat);
-                  const isCompact = COMPACT_CATEGORIES.has(cat);
 
                   // Pairing logic
                   const isRelated = !hasSelection || relatedCategories.has(cat);
                   const isDimmed = hasSelection && !isRelated;
                   const isGlowing = hasSelection && isRelated && selectedCount === 0;
                   const isDisabledByCamera = showImageDialog;
-
-                  const gridStyle: React.CSSProperties = isMobile
-                    ? {}
-                    : {
-                        gridColumn: isHero ? "span 2" : "span 1",
-                        gridRow: "span 1",
-                      };
 
                   return (
                     <motion.button
@@ -263,7 +246,6 @@ const SelectIngredients = () => {
                         isDisabledByCamera && "opacity-50 cursor-not-allowed",
                       )}
                       style={{
-                        ...gridStyle,
                         boxShadow: isGlowing
                           ? `0 0 24px 6px hsl(${meta.hue} / 0.55), 0 4px 16px -4px hsl(0 0% 0% / 0.15)`
                           : selectedCount > 0
@@ -316,7 +298,7 @@ const SelectIngredients = () => {
 
                       {/* Text overlay at bottom center */}
                       <div className="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-end pb-3 px-3">
-                        <p className={cn("font-bold text-white leading-tight drop-shadow-md", isHero ? "text-base" : "text-sm")}>
+                        <p className="font-bold text-white text-sm leading-tight drop-shadow-md">
                           {cat}
                         </p>
                         <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">{meta.subtitle}</p>
