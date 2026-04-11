@@ -491,9 +491,9 @@ const SelectIngredients = () => {
             <>
               <div className="px-6 pt-6 pb-4" style={{ background: `hsl(${openMeta.hue})` }}>
                 <DialogHeader>
-                  <DialogTitle className="flex items-center gap-3 text-right">
-                    <span className="text-lg font-bold text-foreground">{openCategory}</span>
-                    <span className="text-lg font-bold text-foreground">{openCategory}</span>
+                  <DialogTitle className="text-lg font-bold text-foreground text-right">
+                    {openCategory}
+                  </DialogTitle>
                   </DialogTitle>
                 </DialogHeader>
               </div>
