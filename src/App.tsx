@@ -32,7 +32,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="pb-16">
+        <div className="pb-0">
+          {/*<div className="pb-16"> */}
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/ingredients" element={<IngredientInput />} />
