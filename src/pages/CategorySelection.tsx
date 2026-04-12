@@ -9,6 +9,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useRecipeSearch, SearchRecipeResult } from "@/hooks/useRecipeSearch";
 import { Button } from "@/components/ui/button";
+const CATEGORY_IMAGES: Record<string, string> = {
+  italian: "https://images.unsplash.com/photo-1498579150354-977475b7ea0b?auto=format&fit=crop&w=600&q=80",
+  asian: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=600&q=80",
+  mediterranean: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
+  american: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80",
+  mexican: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80",
+  breakfast: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80",
+  desserts: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80",
+  salads: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
+  soups: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=600&q=80",
+};
+
 const CategorySelection = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -268,34 +280,40 @@ const CategorySelection = () => {
 
         {/* Category grid */}
         <div className="grid grid-cols-3 gap-3">
-          {filtered.map((cat, idx) => (
-            <motion.button
-              key={cat.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{
-                opacity: { duration: 0.22, delay: idx * 0.04 },
-                y: { duration: 0.22, delay: idx * 0.04 },
-                scale: { type: "spring", stiffness: 400, damping: 25 },
-              }}
-              onClick={() => setSelectedCategory(cat)}
-              className="rounded-2xl overflow-hidden cursor-pointer select-none flex flex-col items-center justify-center text-center p-5 gap-2 relative"
-              style={{
-                background: `hsl(${cat.hue})`,
-                minHeight: "120px",
-                boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)",
-              }}
-            >
-              <span className="text-4xl leading-none">{cat.emoji}</span>
-              <div>
-                <p className="font-bold text-foreground text-sm leading-tight">{cat.nameHe}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{cat.subtitle}</p>
-              </div>
-              <span className="text-[10px] text-muted-foreground/70">{cat.recipes.length} מתכונים</span>
-            </motion.button>
-          ))}
+          {filtered.map((cat, idx) => {
+            const imgUrl = CATEGORY_IMAGES[cat.id] || "";
+            return (
+              <motion.button
+                key={cat.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{
+                  opacity: { duration: 0.22, delay: idx * 0.04 },
+                  y: { duration: 0.22, delay: idx * 0.04 },
+                }}
+                onClick={() => setSelectedCategory(cat)}
+                className="group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-video"
+                style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
+              >
+                {/* Background image with hover zoom */}
+                <img
+                  src={imgUrl}
+                  alt={cat.nameHe}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[400ms] ease-in-out group-hover:scale-110"
+                  loading="lazy"
+                />
+                {/* Gradient overlay for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                {/* Static text content */}
+                <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col items-center text-center">
+                  <p className="font-bold text-white text-sm leading-tight">{cat.nameHe}</p>
+                  <p className="text-xs text-white/80 mt-0.5">{cat.subtitle}</p>
+                  <span className="text-[10px] text-white/60 mt-1">{cat.recipes.length} מתכונים</span>
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
 
         {filtered.length === 0 && <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>}
