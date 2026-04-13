@@ -279,7 +279,7 @@ const CategorySelection = () => {
         )}
 
         {/* Category grid */}
-        <div className="grid grid-cols-[reapet(3,minmax(0,1fr))] gap-3">
+        <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
           {filtered.map((cat, idx) => {
             const imgUrl = CATEGORY_IMAGES[cat.id] || "";
             return (
