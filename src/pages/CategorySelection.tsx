@@ -101,6 +101,7 @@ const CategorySelection = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [showRecipeDialog, setShowRecipeDialog] = useState(false);
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [savingResult, setSavingResult] = useState<string | null>(null);
