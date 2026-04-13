@@ -293,7 +293,7 @@ const CategorySelection = () => {
                   y: { duration: 0.22, delay: idx * 0.04 },
                 }}
                 onClick={() => setSelectedCategory(cat)}
-                className="group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-video"
+                className="group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9]"
                 style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
               >
                 {/* Background image with hover zoom */}
