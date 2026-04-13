@@ -279,43 +279,44 @@ const CategorySelection = () => {
         )}
 
         {/* Category grid */}
-        <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
-          {filtered.map((cat, idx) => {
-            const imgUrl = CATEGORY_IMAGES[cat.id] || "";
-            return (
-              <motion.button
-                key={cat.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{
-                  opacity: { duration: 0.22, delay: idx * 0.04 },
-                  y: { duration: 0.22, delay: idx * 0.04 },
-                }}
-                onClick={() => setSelectedCategory(cat)}
-                className="group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9]"
-                style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
-              >
-                {/* Background image with hover zoom */}
-                <img
-                  src={imgUrl}
-                  alt={cat.nameHe}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[400ms] ease-in-out group-hover:scale-110"
-                  loading="lazy"
-                />
-                {/* Gradient overlay for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
-                {/* Static text content */}
-                <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col items-center text-center">
-                  <p className="font-bold text-white text-sm leading-tight">{cat.nameHe}</p>
-                  <p className="text-xs text-white/80 mt-0.5">{cat.subtitle}</p>
-                  <span className="text-[10px] text-white/60 mt-1">{cat.recipes.length} מתכונים</span>
-                </div>
-              </motion.button>
-            );
-          })}
+        <div className="max-w-[63rem] mx-auto px-4 md:px-8 py-6">
+          <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
+            {filtered.map((cat, idx) => {
+              const imgUrl = CATEGORY_IMAGES[cat.id] || "";
+              return (
+                <motion.button
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{
+                    opacity: { duration: 0.22, delay: idx * 0.04 },
+                    y: { duration: 0.22, delay: idx * 0.04 },
+                  }}
+                  onClick={() => setSelectedCategory(cat)}
+                  className="group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9]"
+                  style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
+                >
+                  {/* Background image with hover zoom */}
+                  <img
+                    src={imgUrl}
+                    alt={cat.nameHe}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-[400ms] ease-in-out group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  {/* Gradient overlay for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                  {/* Static text content */}
+                  <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col items-center text-center">
+                    <p className="font-bold text-white text-sm leading-tight">{cat.nameHe}</p>
+                    <p className="text-xs text-white/80 mt-0.5">{cat.subtitle}</p>
+                    <span className="text-[10px] text-white/60 mt-1">{cat.recipes.length} מתכונים</span>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
-
         {filtered.length === 0 && <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>}
       </main>
 
