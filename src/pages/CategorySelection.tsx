@@ -158,9 +158,33 @@ const CategorySelection = () => {
 
   const handleViewRecipes = () => {
     if (!selectedCategory) return;
-    navigate(`/categories/${selectedCategory.id}`, {
-      state: { from: "/categories" },
-    });
+    setShowRecipeDialog(true);
+  };
+
+  const handleRecipeClick = async (recipe: CategoryRecipe) => {
+    if (loadingRecipe) return;
+    setLoadingRecipe(recipe.title);
+    try {
+      const { data, error } = await supabase
+        .from("recipes")
+        .insert({
+          title: recipe.title,
+          ingredients: recipe.ingredients.map((name) => ({ name, quantity: "" })),
+          instructions: recipe.instructions,
+          cooking_time: recipe.cookingTime,
+        })
+        .select("id")
+        .single();
+      if (error || !data) {
+        toast({ title: "שגיאה בשמירת המתכון", variant: "destructive" });
+        return;
+      }
+      navigate(`/recipe?id=${data.id}`, { state: { source: "local", from: "/categories" } });
+    } catch {
+      toast({ title: "שגיאה בשמירת המתכון", variant: "destructive" });
+    } finally {
+      setLoadingRecipe(null);
+    }
   };
 
   const filtered = query.trim()
