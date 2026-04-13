@@ -437,90 +437,54 @@ const CategorySelection = () => {
           </div>
           {filtered.length === 0 && <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>}
         </main>
-
-        {/* Right Sidebar — fixed 25% width */}
-        <aside className="w-[25%] min-w-[280px] max-w-[340px] border-r border-border bg-card flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
-          <AnimatePresence mode="wait">
-            {selectedCategory && sidebarData ? (
-              <motion.div
-                key={selectedCategory.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="flex flex-col h-full p-5"
-                dir="rtl"
-              >
-                {/* Sidebar Header */}
-                <div className="flex items-center gap-3 mb-5">
-                  <span className="text-3xl">{selectedCategory.emoji}</span>
-                  <div>
-                    <h2 className="font-bold text-foreground text-lg leading-tight">{selectedCategory.nameHe}</h2>
-                    <p className="text-xs text-muted-foreground">{selectedCategory.subtitle}</p>
-                  </div>
-                </div>
-
-                <div className="h-px bg-border mb-5" />
-
-                {/* Key Spices */}
-                <div className="mb-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">🧂 תבלינים מרכזיים</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {sidebarData.spices.map((spice) => (
-                      <div
-                        key={spice.name}
-                        className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1.5"
-                      >
-                        <span className="text-base">{spice.emoji}</span>
-                        <span className="text-sm text-foreground font-medium">{spice.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Pro Tip */}
-                <div className="mb-6 bg-accent/50 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold text-foreground">טיפ של שף</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{sidebarData.tip}</p>
-                </div>
-
-                {/* Recipe count */}
-                <p className="text-xs text-muted-foreground mb-4 text-center">
-                  {selectedCategory.recipes.length} מתכונים זמינים
-                </p>
-
-                {/* CTA */}
-                <div className="mt-auto">
-                  <Button
-                    onClick={handleViewRecipes}
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl py-3 font-bold text-sm"
-                  >
-                    צפה במתכונים ←
-                  </Button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="flex flex-col items-center justify-center h-full p-6 text-center"
-                dir="rtl"
-              >
-                <span className="text-4xl mb-4">👨‍🍳</span>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  בחר מטבח כדי לראות טיפים של שפים ותבלינים מומלצים
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </aside>
       </div>
+
+      {/* Recipe popup dialog */}
+      <Dialog open={showRecipeDialog} onOpenChange={setShowRecipeDialog}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              {selectedCategory?.emoji} {selectedCategory?.nameHe}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            {selectedCategory?.recipes.map((recipe, i) => (
+              <motion.button
+                key={recipe.title}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => handleRecipeClick(recipe)}
+                disabled={!!loadingRecipe}
+                className={cn(
+                  "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border",
+                  "hover:border-primary/30 hover:shadow-sm transition-all duration-150 text-right",
+                  loadingRecipe && loadingRecipe !== recipe.title && "opacity-50 pointer-events-none",
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-bold text-foreground text-sm">{recipe.title}</p>
+                  {loadingRecipe === recipe.title && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {recipe.cookingTime} דק׳
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <ChefHat className="w-3.5 h-3.5" />
+                    {recipe.difficulty}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Leaf className="w-3.5 h-3.5" />
+                    {recipe.ingredients.length} מצרכים
+                  </span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
