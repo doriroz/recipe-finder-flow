@@ -226,9 +226,79 @@ const CategorySelection = () => {
         </div>
       </div>
 
-      {/* Main layout: grid + sidebar */}
+      {/* Main layout: sidebar (right in RTL = first child) + grid */}
       <div className="flex min-h-[calc(100vh-110px)]">
-        {/* Left content area (grid + search) */}
+        {/* Sidebar — first child = right side in RTL */}
+        <aside className="w-[25%] min-w-[280px] max-w-[340px] border-l border-border bg-card flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
+          <AnimatePresence mode="wait">
+            {selectedCategory && sidebarData ? (
+              <motion.div
+                key={selectedCategory.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="flex flex-col h-full p-5"
+                dir="rtl"
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="text-3xl">{selectedCategory.emoji}</span>
+                  <div>
+                    <h2 className="font-bold text-foreground text-lg leading-tight">{selectedCategory.nameHe}</h2>
+                    <p className="text-xs text-muted-foreground">{selectedCategory.subtitle}</p>
+                  </div>
+                </div>
+                <div className="h-px bg-border mb-5" />
+                <div className="mb-5">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">🧂 תבלינים מרכזיים</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {sidebarData.spices.map((spice) => (
+                      <div key={spice.name} className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1.5">
+                        <span className="text-base">{spice.emoji}</span>
+                        <span className="text-sm text-foreground font-medium">{spice.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mb-6 bg-accent/50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-semibold text-foreground">טיפ של שף</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{sidebarData.tip}</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4 text-center">
+                  {selectedCategory.recipes.length} מתכונים זמינים
+                </p>
+                <div className="mt-auto">
+                  <Button
+                    onClick={handleViewRecipes}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl py-3 font-bold text-sm"
+                  >
+                    צפה במתכונים ←
+                  </Button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="flex flex-col items-center justify-center h-full p-6 text-center"
+                dir="rtl"
+              >
+                <span className="text-4xl mb-4">👨‍🍳</span>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  בחר מטבח כדי לראות טיפים של שפים ותבלינים מומלצים
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </aside>
+
+        {/* Content area (grid + search) */}
         <main className="flex-1 px-4 py-4 space-y-4 pb-8 overflow-y-auto">
           {/* Search bar — aligned to grid width */}
           <div className="max-w-[63rem] mx-auto px-4 md:px-8">
