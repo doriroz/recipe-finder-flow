@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles } from "lucide-react";
+import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
