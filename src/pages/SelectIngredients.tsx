@@ -1,4 +1,4 @@
-mport { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Sparkles, Check, Camera, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
