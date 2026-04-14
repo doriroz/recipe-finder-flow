@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Sparkles, Check, Camera, Plus } from "lucide-react";
+import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat } from "lucide-react";
+import CreditCounter from "@/components/CreditCounter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
