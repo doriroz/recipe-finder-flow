@@ -315,7 +315,12 @@ const CategorySelection = () => {
               <input
                 type="text"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  if (e.target.value.trim()) {
+                    setSelectedCategoryId(null);
+                  }
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="חפשו מתכון... (הקישו Enter לחיפוש)"
                 className={cn(
@@ -448,7 +453,9 @@ const CategorySelection = () => {
               })}
             </div>
           </div>
-          {filtered.length === 0 && <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>}
+          {filtered.length === 0 && !(hasSearched && results.length > 0) && (
+            <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>
+          )}
         </main>
       </div>
 
