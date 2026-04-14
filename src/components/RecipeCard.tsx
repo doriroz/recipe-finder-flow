@@ -262,7 +262,15 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         </div>
 
         <ul className="space-y-2">
-          {recipe.ingredients.map((ingredient, index) =>
+          {recipe.ingredients
+            .filter((ing, idx, arr) => {
+              const name = typeof ing === "string" ? ing.trim() : ing.name?.trim();
+              return arr.findIndex(other => {
+                const otherName = typeof other === "string" ? other.trim() : other.name?.trim();
+                return otherName === name;
+              }) === idx;
+            })
+            .map((ingredient, index) =>
           <li
             key={index}
             className={`flex items-center gap-2 py-2 px-3 rounded-lg transition-colors ${
