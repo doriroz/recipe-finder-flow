@@ -165,6 +165,13 @@ const CategorySelection = () => {
     if (loadingRecipe) return;
     setLoadingRecipe(recipe.title);
     try {
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+      if (!userId) {
+        toast({ title: "יש להתחבר כדי לצפות במתכון", variant: "destructive" });
+        setLoadingRecipe(null);
+        return;
+      }
       const { data, error } = await supabase
         .from("recipes")
         .insert({
@@ -172,6 +179,7 @@ const CategorySelection = () => {
           ingredients: recipe.ingredients.map((name) => ({ name, quantity: "" })),
           instructions: recipe.instructions,
           cooking_time: recipe.cookingTime,
+          user_id: userId,
         })
         .select("id")
         .single();
@@ -413,7 +421,7 @@ const CategorySelection = () => {
                     className={cn(
                       "group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9] transition-all duration-200",
                       isSelected
-                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                        ? "ring-[3px] ring-primary ring-offset-2 ring-offset-background shadow-lg"
                         : "ring-0",
                     )}
                     style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
