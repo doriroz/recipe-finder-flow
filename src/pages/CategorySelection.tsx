@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles } from "lucide-react";
+import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
@@ -165,6 +165,13 @@ const CategorySelection = () => {
     if (loadingRecipe) return;
     setLoadingRecipe(recipe.title);
     try {
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+      if (!userId) {
+        toast({ title: "יש להתחבר כדי לצפות במתכון", variant: "destructive" });
+        setLoadingRecipe(null);
+        return;
+      }
       const { data, error } = await supabase
         .from("recipes")
         .insert({
@@ -172,6 +179,7 @@ const CategorySelection = () => {
           ingredients: recipe.ingredients.map((name) => ({ name, quantity: "" })),
           instructions: recipe.instructions,
           cooking_time: recipe.cookingTime,
+          user_id: userId,
         })
         .select("id")
         .single();
@@ -413,7 +421,7 @@ const CategorySelection = () => {
                     className={cn(
                       "group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9] transition-all duration-200",
                       isSelected
-                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                        ? "ring-[3px] ring-primary ring-offset-2 ring-offset-background shadow-lg"
                         : "ring-0",
                     )}
                     style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
@@ -425,6 +433,11 @@ const CategorySelection = () => {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                    {isSelected && (
+                      <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center shadow-md z-10">
+                        <Check className="w-4 h-4" />
+                      </div>
+                    )}
                     <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col items-center text-center">
                       <p className="font-bold text-white text-sm leading-tight">{cat.nameHe}</p>
                       <p className="text-xs text-white/80 mt-0.5">{cat.subtitle}</p>
