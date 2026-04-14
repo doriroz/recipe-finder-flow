@@ -365,13 +365,13 @@ serve(async (req) => {
         console.warn("LOVABLE_API_KEY not configured, skipping translation");
       } else {
         try {
-          // Translate Hebrew search term to English (MyMemory, fine for short terms)
-          const englishQuery = await translateText(searchTerm, "he|en");
+          // Use the already-translated English query
+          const spoonQuery = isHebrew ? englishSearchTerm : searchTerm;
 
           const needed = 3 - results.length;
           const spoonUrl = new URL("https://api.spoonacular.com/recipes/complexSearch");
-          spoonUrl.searchParams.set("query", englishQuery);
-          spoonUrl.searchParams.set("number", String(needed + 3)); // request extra in case some are rejected
+          spoonUrl.searchParams.set("query", spoonQuery);
+          spoonUrl.searchParams.set("number", String(needed + 3));
           spoonUrl.searchParams.set("addRecipeInformation", "true");
           spoonUrl.searchParams.set("fillIngredients", "true");
           spoonUrl.searchParams.set("instructionsRequired", "true");
