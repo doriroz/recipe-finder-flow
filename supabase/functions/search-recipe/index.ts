@@ -277,7 +277,15 @@ serve(async (req) => {
     const results: RecipeResult[] = [];
     const seenTitles = new Set<string>();
 
-    // Step 1: Search existing user recipes (deduplicate by title)
+    // Pre-translate Hebrew search term to English for recipe_library lookups
+    const isHebrew = /[\u0590-\u05FF]/.test(searchTerm);
+    let englishSearchTerm = searchTerm;
+    if (isHebrew) {
+      englishSearchTerm = await translateText(searchTerm, "he|en");
+      console.log(`Translated search: "${searchTerm}" → "${englishSearchTerm}"`);
+    }
+
+    // Step 1: Search existing user recipes by Hebrew title
     const { data: existingRecipes, error: searchError } = await supabase
       .from("recipes")
       .select("*")
@@ -307,31 +315,44 @@ serve(async (req) => {
       }
     }
 
-    // Step 1b: Search recipe_library for more variety
+    // Step 1b: Search recipe_library — try Hebrew title first, then English title
     if (results.length < 5) {
-      const { data: libraryRecipes } = await supabaseAdmin
+      const { data: libraryRecipesHe } = await supabaseAdmin
         .from("recipe_library")
         .select("*")
         .ilike("title", `%${searchTerm}%`)
         .limit(5);
 
-      if (libraryRecipes) {
-        for (const recipe of libraryRecipes) {
-          const normalizedTitle = recipe.title.trim();
-          if (seenTitles.has(normalizedTitle)) continue;
-          seenTitles.add(normalizedTitle);
-          const instructions = recipe.instructions || [];
-          results.push({
-            id: recipe.id,
-            title: recipe.title,
-            ingredients: recipe.ingredients as any[],
-            instructions,
-            substitutions: recipe.substitutions as any[] | null,
-            cooking_time: recipe.cooking_time,
-            difficulty: recipe.difficulty || estimateDifficulty(recipe.cooking_time, instructions.length),
-            source: "existing",
-          });
-        }
+      const heIds = new Set((libraryRecipesHe || []).map(r => r.id));
+      let libraryRecipesEn: any[] = [];
+      
+      // Also search with the English translation if the query was Hebrew
+      if (isHebrew && englishSearchTerm !== searchTerm && results.length + (libraryRecipesHe?.length || 0) < 5) {
+        const { data } = await supabaseAdmin
+          .from("recipe_library")
+          .select("*")
+          .ilike("title", `%${englishSearchTerm}%`)
+          .limit(5);
+        libraryRecipesEn = (data || []).filter(r => !heIds.has(r.id));
+      }
+
+      const allLibrary = [...(libraryRecipesHe || []), ...libraryRecipesEn];
+
+      for (const recipe of allLibrary) {
+        const normalizedTitle = recipe.title.trim();
+        if (seenTitles.has(normalizedTitle)) continue;
+        seenTitles.add(normalizedTitle);
+        const instructions = recipe.instructions || [];
+        results.push({
+          id: recipe.id,
+          title: recipe.title,
+          ingredients: recipe.ingredients as any[],
+          instructions,
+          substitutions: recipe.substitutions as any[] | null,
+          cooking_time: recipe.cooking_time,
+          difficulty: recipe.difficulty || estimateDifficulty(recipe.cooking_time, instructions.length),
+          source: "existing",
+        });
       }
     }
 
