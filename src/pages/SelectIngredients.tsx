@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+mport { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Sparkles, Check, Camera, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -146,7 +146,7 @@ const SelectIngredients = () => {
       {isGenerating && <GeneratingRecipeLoader />}
 
       <div className="flex min-h-screen">
-        {/* <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+        <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
@@ -167,7 +167,7 @@ const SelectIngredients = () => {
             </div>
           </div>
         </div>
-      </header> */}
+      </header> 
         {/* Main content */}
         <div className="flex-1 flex flex-col bg-accent">
           {/* Search bar */}
