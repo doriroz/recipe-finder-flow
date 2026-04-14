@@ -433,6 +433,11 @@ const CategorySelection = () => {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                    {isSelected && (
+                      <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center shadow-md z-10">
+                        <Check className="w-4 h-4" />
+                      </div>
+                    )}
                     <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col items-center text-center">
                       <p className="font-bold text-white text-sm leading-tight">{cat.nameHe}</p>
                       <p className="text-xs text-white/80 mt-0.5">{cat.subtitle}</p>
