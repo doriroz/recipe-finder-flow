@@ -227,235 +227,242 @@ const CategorySelection = () => {
         </div>
       </header>
 
-      {/* Page title */}
-      <div className="sticky top-0 z-30 bg-background border-border" style={{ height: "48px" }}>
-        <div className="container mx-auto px-4 flex items-center justify-center h-full">
-          <h1 className="text-sm font-semibold text-foreground">בחירת קטגוריה 🍽️</h1>
+      <div className="bg-gradient-to-br from-background via-cream to-accent">
+        {/* Page title */}
+        <div className="sticky top-0 z-30 bg-background border-border" style={{ height: "48px" }}>
+          <div className="container mx-auto px-4 flex items-center justify-center h-full">
+            <h1 className="text-sm font-semibold text-foreground">בחירת קטגוריה 🍽️</h1>
+          </div>
         </div>
-      </div>
 
-      {/* Main layout: sidebar (right in RTL = first child) + grid */}
-      <div className="flex min-h-[calc(100vh-110px)] bg-gradient-to-br from-background via-cream to-accent">
-        {/* Sidebar — first child = right side in RTL */}
-        {/* border-l border-border */}
-        <aside className="w-[25%] min-w-[280px] max-w-[340px] bg-card flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
-          <AnimatePresence mode="wait">
-            {selectedCategory && sidebarData ? (
-              <motion.div
-                key={selectedCategory.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="flex flex-col h-full p-5"
-                dir="rtl"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <span className="text-3xl">{selectedCategory.emoji}</span>
-                  <div>
-                    <h2 className="font-bold text-foreground text-lg leading-tight">{selectedCategory.nameHe}</h2>
-                    <p className="text-xs text-muted-foreground">{selectedCategory.subtitle}</p>
+        {/* Main layout: sidebar (right in RTL = first child) + grid */}
+        <div className="flex min-h-[calc(100vh-110px)] bg-gradient-to-br from-background via-cream to-accent">
+          {/* Sidebar — first child = right side in RTL */}
+          {/* border-l border-border */}
+          <aside className="w-[25%] min-w-[280px] max-w-[340px] bg-card flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
+            <AnimatePresence mode="wait">
+              {selectedCategory && sidebarData ? (
+                <motion.div
+                  key={selectedCategory.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex flex-col h-full p-5"
+                  dir="rtl"
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="text-3xl">{selectedCategory.emoji}</span>
+                    <div>
+                      <h2 className="font-bold text-foreground text-lg leading-tight">{selectedCategory.nameHe}</h2>
+                      <p className="text-xs text-muted-foreground">{selectedCategory.subtitle}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="h-px bg-border mb-5" />
-                <div className="mb-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">🧂 תבלינים מרכזיים</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {sidebarData.spices.map((spice) => (
-                      <div key={spice.name} className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1.5">
-                        <span className="text-base">{spice.emoji}</span>
-                        <span className="text-sm text-foreground font-medium">{spice.name}</span>
-                      </div>
+                  <div className="h-px bg-border mb-5" />
+                  <div className="mb-5">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">🧂 תבלינים מרכזיים</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {sidebarData.spices.map((spice) => (
+                        <div
+                          key={spice.name}
+                          className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1.5"
+                        >
+                          <span className="text-base">{spice.emoji}</span>
+                          <span className="text-sm text-foreground font-medium">{spice.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-6 bg-accent/50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-semibold text-foreground">טיפ של שף</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{sidebarData.tip}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4 text-center">
+                    {selectedCategory.recipes.length} מתכונים זמינים
+                  </p>
+                  <div className="mt-auto">
+                    <Button
+                      onClick={handleViewRecipes}
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl py-3 font-bold text-sm"
+                    >
+                      צפה במתכונים ←
+                    </Button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex flex-col items-center justify-center h-full p-6 text-center"
+                  dir="rtl"
+                >
+                  <span className="text-4xl mb-4">👨‍🍳</span>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    בחר מטבח כדי לראות טיפים של שפים ותבלינים מומלצים
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </aside>
+
+          {/* Content area (grid + search) */}
+          <main className="flex-1 px-4 py-4 space-y-4 pb-8 overflow-y-auto">
+            {/* Search bar — aligned to grid width */}
+            <div className="max-w-[63rem] mx-auto px-4 md:px-8">
+              <div className="relative">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    if (e.target.value.trim()) {
+                      setSelectedCategoryId(null);
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="חפשו מתכון... (הקישו Enter לחיפוש)"
+                  className={cn(
+                    "w-full bg-card border border-border rounded-full py-3 pr-12 pl-12 text-foreground",
+                    "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
+                    "transition-all",
+                  )}
+                />
+                {query && (
+                  <button
+                    onClick={handleClearQuery}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Search results */}
+            {(isSearching || (hasSearched && !isSearching)) && (
+              <div className="max-w-[63rem] mx-auto px-4 md:px-8">
+                {isSearching && (
+                  <div className="flex flex-col items-center gap-3 py-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground text-sm">מחפש מתכונים...</p>
+                  </div>
+                )}
+
+                {!isSearching && hasSearched && error && (
+                  <div className="text-center py-6">
+                    <p className="text-destructive text-sm">{error}</p>
+                  </div>
+                )}
+
+                {!isSearching && hasSearched && !error && results.length === 0 && (
+                  <div className="flex flex-col items-center gap-2 py-8">
+                    <SearchX className="w-10 h-10 text-muted-foreground/50" />
+                    <p className="text-foreground font-medium">לא מצאנו מתכונים עבור "{query}" 😕</p>
+                    <p className="text-muted-foreground text-sm">נסו מילים אחרות או חפשו בקטגוריות למטה</p>
+                  </div>
+                )}
+
+                {!isSearching && hasSearched && results.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground mb-3">נמצאו {results.length} תוצאות:</p>
+                    {results.map((result, i) => (
+                      <motion.div
+                        key={result.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.06, duration: 0.18 }}
+                        onClick={() => handleResultClick(result)}
+                        className={cn(
+                          "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-sm transition-all duration-150 text-right cursor-pointer",
+                          savingResult && savingResult !== result.id && "opacity-50 pointer-events-none",
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="font-bold text-foreground text-sm">{result.title}</p>
+                          {savingResult === result.id && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          {result.cooking_time && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              {result.cooking_time} דק׳
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <ChefHat className="w-3.5 h-3.5" />
+                            {result.difficulty || "בינוני"}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Leaf className="w-3.5 h-3.5" />
+                            {result.ingredients.length} מצרכים
+                          </span>
+                        </div>
+                      </motion.div>
                     ))}
                   </div>
-                </div>
-                <div className="mb-6 bg-accent/50 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold text-foreground">טיפ של שף</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{sidebarData.tip}</p>
-                </div>
-                <p className="text-xs text-muted-foreground mb-4 text-center">
-                  {selectedCategory.recipes.length} מתכונים זמינים
-                </p>
-                <div className="mt-auto">
-                  <Button
-                    onClick={handleViewRecipes}
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl py-3 font-bold text-sm"
-                  >
-                    צפה במתכונים ←
-                  </Button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="flex flex-col items-center justify-center h-full p-6 text-center"
-                dir="rtl"
-              >
-                <span className="text-4xl mb-4">👨‍🍳</span>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  בחר מטבח כדי לראות טיפים של שפים ותבלינים מומלצים
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </aside>
-
-        {/* Content area (grid + search) */}
-        <main className="flex-1 px-4 py-4 space-y-4 pb-8 overflow-y-auto">
-          {/* Search bar — aligned to grid width */}
-          <div className="max-w-[63rem] mx-auto px-4 md:px-8">
-            <div className="relative">
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  if (e.target.value.trim()) {
-                    setSelectedCategoryId(null);
-                  }
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder="חפשו מתכון... (הקישו Enter לחיפוש)"
-                className={cn(
-                  "w-full bg-card border border-border rounded-full py-3 pr-12 pl-12 text-foreground",
-                  "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
-                  "transition-all",
                 )}
-              />
-              {query && (
-                <button
-                  onClick={handleClearQuery}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
+              </div>
+            )}
 
-          {/* Search results */}
-          {(isSearching || (hasSearched && !isSearching)) && (
-            <div className="max-w-[63rem] mx-auto px-4 md:px-8">
-              {isSearching && (
-                <div className="flex flex-col items-center gap-3 py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <p className="text-muted-foreground text-sm">מחפש מתכונים...</p>
-                </div>
-              )}
-
-              {!isSearching && hasSearched && error && (
-                <div className="text-center py-6">
-                  <p className="text-destructive text-sm">{error}</p>
-                </div>
-              )}
-
-              {!isSearching && hasSearched && !error && results.length === 0 && (
-                <div className="flex flex-col items-center gap-2 py-8">
-                  <SearchX className="w-10 h-10 text-muted-foreground/50" />
-                  <p className="text-foreground font-medium">לא מצאנו מתכונים עבור "{query}" 😕</p>
-                  <p className="text-muted-foreground text-sm">נסו מילים אחרות או חפשו בקטגוריות למטה</p>
-                </div>
-              )}
-
-              {!isSearching && hasSearched && results.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground mb-3">נמצאו {results.length} תוצאות:</p>
-                  {results.map((result, i) => (
-                    <motion.div
-                      key={result.id}
-                      initial={{ opacity: 0, y: 8 }}
+            {/* Category grid */}
+            <div className="max-w-[63rem] mx-auto px-4 md:px-8 py-6">
+              <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
+                {filtered.map((cat, idx) => {
+                  const imgUrl = CATEGORY_IMAGES[cat.id] || "";
+                  const isSelected = selectedCategoryId === cat.id;
+                  return (
+                    <motion.button
+                      key={cat.id}
+                      initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.06, duration: 0.18 }}
-                      onClick={() => handleResultClick(result)}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{
+                        opacity: { duration: 0.22, delay: idx * 0.04 },
+                        y: { duration: 0.22, delay: idx * 0.04 },
+                      }}
+                      onClick={() => handleCardClick(cat)}
                       className={cn(
-                        "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-sm transition-all duration-150 text-right cursor-pointer",
-                        savingResult && savingResult !== result.id && "opacity-50 pointer-events-none",
+                        "group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9] transition-all duration-200",
+                        isSelected
+                          ? "ring-[3px] ring-primary ring-offset-2 ring-offset-background shadow-lg"
+                          : "ring-0",
                       )}
+                      style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
                     >
-                      <div className="flex items-center justify-between">
-                        <p className="font-bold text-foreground text-sm">{result.title}</p>
-                        {savingResult === result.id && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                      <img
+                        src={imgUrl}
+                        alt={cat.nameHe}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-[400ms] ease-in-out group-hover:scale-110"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                      {isSelected && (
+                        <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center shadow-md z-10">
+                          <Check className="w-4 h-4" />
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col items-center text-center">
+                        <p className="font-bold text-white text-sm leading-tight">{cat.nameHe}</p>
+                        <p className="text-xs text-white/80 mt-0.5">{cat.subtitle}</p>
+                        <span className="text-[10px] text-white/60 mt-1">{cat.recipes.length} מתכונים</span>
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        {result.cooking_time && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            {result.cooking_time} דק׳
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <ChefHat className="w-3.5 h-3.5" />
-                          {result.difficulty || "בינוני"}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Leaf className="w-3.5 h-3.5" />
-                          {result.ingredients.length} מצרכים
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+                    </motion.button>
+                  );
+                })}
+              </div>
             </div>
-          )}
-
-          {/* Category grid */}
-          <div className="max-w-[63rem] mx-auto px-4 md:px-8 py-6">
-            <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
-              {filtered.map((cat, idx) => {
-                const imgUrl = CATEGORY_IMAGES[cat.id] || "";
-                const isSelected = selectedCategoryId === cat.id;
-                return (
-                  <motion.button
-                    key={cat.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{
-                      opacity: { duration: 0.22, delay: idx * 0.04 },
-                      y: { duration: 0.22, delay: idx * 0.04 },
-                    }}
-                    onClick={() => handleCardClick(cat)}
-                    className={cn(
-                      "group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9] transition-all duration-200",
-                      isSelected ? "ring-[3px] ring-primary ring-offset-2 ring-offset-background shadow-lg" : "ring-0",
-                    )}
-                    style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
-                  >
-                    <img
-                      src={imgUrl}
-                      alt={cat.nameHe}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-[400ms] ease-in-out group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
-                    {isSelected && (
-                      <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center shadow-md z-10">
-                        <Check className="w-4 h-4" />
-                      </div>
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col items-center text-center">
-                      <p className="font-bold text-white text-sm leading-tight">{cat.nameHe}</p>
-                      <p className="text-xs text-white/80 mt-0.5">{cat.subtitle}</p>
-                      <span className="text-[10px] text-white/60 mt-1">{cat.recipes.length} מתכונים</span>
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-          {filtered.length === 0 && !(hasSearched && results.length > 0) && (
-            <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>
-          )}
-        </main>
+            {filtered.length === 0 && !(hasSearched && results.length > 0) && (
+              <p className="text-center text-muted-foreground mt-8">לא נמצאו קטגוריות תואמות</p>
+            )}
+          </main>
+        </div>
       </div>
 
       {/* Recipe popup dialog */}
