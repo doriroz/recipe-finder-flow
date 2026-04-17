@@ -145,7 +145,8 @@ const SelectIngredients = () => {
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       {isGenerating && <GeneratingRecipeLoader />}
-      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+      {/* bg-gradient-to-l from-primary/10 via-accent to-card */}
+      <header className="bg-[#FFF9F0] border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
