@@ -164,9 +164,9 @@ const SelectIngredients = () => {
           </div>
         </div>
       </header>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen bg-accent">
         {/* Main content */}
-        <div className="flex-1 flex flex-col bg-accent">
+        <div className="flex-1 flex flex-col">
           {/* Search bar border-border */}
           <div className="px-4 md:px-8 flex items-center" style={{ height: "70px" }}>
             <div className="max-w-3xl mx-auto w-full">
