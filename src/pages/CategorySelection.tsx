@@ -229,14 +229,15 @@ const CategorySelection = () => {
 
       <div className="bg-gradient-to-br from-background via-cream to-accent">
         {/* Page title */}
-        <div className="sticky top-0 z-30 bg-background border-border" style={{ height: "48px" }}>
+        {/* bg-background */}
+        <div className="sticky top-0 z-30 border-border" style={{ height: "48px" }}>
           <div className="container mx-auto px-4 flex items-center justify-center h-full">
             <h1 className="text-sm font-semibold text-foreground">בחירת קטגוריה 🍽️</h1>
           </div>
         </div>
 
         {/* Main layout: sidebar (right in RTL = first child) + grid */}
-        <div className="flex min-h-[calc(100vh-110px)] bg-gradient-to-br from-background via-cream to-accent">
+        <div className="flex min-h-[calc(100vh-110px)]">
           {/* Sidebar — first child = right side in RTL */}
           {/* border-l border-border */}
           <aside className="w-[25%] min-w-[280px] max-w-[340px] bg-card flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
