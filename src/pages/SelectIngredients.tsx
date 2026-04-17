@@ -164,7 +164,8 @@ const SelectIngredients = () => {
           </div>
         </div>
       </header>
-      <div className="flex min-h-screen bg-accent">
+      {/* bg-accent */}
+      <div className="flex min-h-screen bg-gradient-to-l from-primary/10 via-accent to-card">
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Search bar border-border */}
