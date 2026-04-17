@@ -39,12 +39,13 @@ const CookbookBuilder = () => {
 
   const isLoading = authLoading || loadingGallery;
 
-  const filteredItems = galleryItems?.filter((item) => {
-    const title = item.recipe?.title?.toLowerCase() || "";
-    const notes = item.user_notes?.toLowerCase() || "";
-    const query = searchQuery.toLowerCase();
-    return title.includes(query) || notes.includes(query);
-  }) || [];
+  const filteredItems =
+    galleryItems?.filter((item) => {
+      const title = item.recipe?.title?.toLowerCase() || "";
+      const notes = item.user_notes?.toLowerCase() || "";
+      const query = searchQuery.toLowerCase();
+      return title.includes(query) || notes.includes(query);
+    }) || [];
 
   // Initialize recipes when entering customize step
   useEffect(() => {
@@ -76,7 +77,8 @@ const CookbookBuilder = () => {
   if (!user && !authLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+        {/* bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft */}
+        <header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Button
@@ -98,12 +100,8 @@ const CookbookBuilder = () => {
 
         <main className="container mx-auto px-4 py-12 text-center">
           <div className="text-6xl mb-6">📚</div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            יש להתחבר כדי ליצור ספר מתכונים
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            התחברו כדי לבחור מתכונים מהגלריה שלכם
-          </p>
+          <h1 className="text-2xl font-bold text-foreground mb-4">יש להתחבר כדי ליצור ספר מתכונים</h1>
+          <p className="text-muted-foreground mb-8">התחברו כדי לבחור מתכונים מהגלריה שלכם</p>
           <Button variant="default" onClick={() => navigate("/login")}>
             התחברות
           </Button>
@@ -164,15 +162,11 @@ const CookbookBuilder = () => {
               ) : filteredItems.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                   <span className="text-6xl mb-4">📖</span>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    אין מתכונים בגלריה
-                  </h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">אין מתכונים בגלריה</h3>
                   <p className="text-muted-foreground mb-4 text-center">
                     בשלו מתכונים ושמרו אותם לגלריה כדי ליצור ספר מתכונים
                   </p>
-                  <Button onClick={() => navigate("/ingredients")}>
-                    התחילו לבשל
-                  </Button>
+                  <Button onClick={() => navigate("/ingredients")}>התחילו לבשל</Button>
                 </div>
               ) : (
                 <>
@@ -197,7 +191,11 @@ const CookbookBuilder = () => {
                               {cookbook.draftSavedAt && (
                                 <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                                   <Clock className="w-3 h-3" />
-                                  נשמרה {formatDistanceToNow(new Date(cookbook.draftSavedAt), { locale: he, addSuffix: true })}
+                                  נשמרה{" "}
+                                  {formatDistanceToNow(new Date(cookbook.draftSavedAt), {
+                                    locale: he,
+                                    addSuffix: true,
+                                  })}
                                 </p>
                               )}
                             </div>
@@ -251,9 +249,7 @@ const CookbookBuilder = () => {
                               : cookbook.selectAll(filteredItems)
                           }
                         >
-                          {cookbook.selectedItems.length === filteredItems.length
-                            ? "נקה הכל"
-                            : "בחר הכל"}
+                          {cookbook.selectedItems.length === filteredItems.length ? "נקה הכל" : "בחר הכל"}
                         </Button>
                       </div>
                     </div>
@@ -285,12 +281,7 @@ const CookbookBuilder = () => {
                         exit={{ opacity: 0, y: 50 }}
                         className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
                       >
-                        <Button
-                          size="lg"
-                          variant="hero"
-                          onClick={cookbook.nextStep}
-                          className="shadow-2xl gap-2"
-                        >
+                        <Button size="lg" variant="hero" onClick={cookbook.nextStep} className="shadow-2xl gap-2">
                           <BookOpen className="w-5 h-5" />
                           צור ספר מתכונים ({cookbook.selectedItems.length})
                         </Button>
@@ -314,20 +305,14 @@ const CookbookBuilder = () => {
               {/* Main Editor */}
               <div className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-lg mx-auto">
-                  <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">
-                    עיצוב השער
-                  </h2>
+                  <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">עיצוב השער</h2>
                   <CookbookCoverEditor
                     settings={cookbook.settings}
                     recipes={cookbook.recipes}
                     onUpdateSettings={cookbook.updateSettings}
                     onUpdateTheme={cookbook.updateTheme}
                   />
-                  <Button
-                    className="w-full mt-8"
-                    size="lg"
-                    onClick={cookbook.nextStep}
-                  >
+                  <Button className="w-full mt-8" size="lg" onClick={cookbook.nextStep}>
                     המשך לתצוגה מקדימה
                   </Button>
                 </div>
