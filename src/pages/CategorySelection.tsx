@@ -235,7 +235,7 @@ const CategorySelection = () => {
       </div>
 
       {/* Main layout: sidebar (right in RTL = first child) + grid */}
-      <div className="flex min-h-[calc(100vh-110px)]">
+      <div className="flex min-h-[calc(100vh-110px)] bg-gradient-to-br from-background via-cream to-accent">
         {/* Sidebar — first child = right side in RTL */}
         {/* border-l border-border */}
         <aside className="w-[25%] min-w-[280px] max-w-[340px] bg-card flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
