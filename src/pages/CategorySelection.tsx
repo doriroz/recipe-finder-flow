@@ -69,7 +69,7 @@ const CUISINE_SIDEBAR_DATA: Record<string, { spices: { name: string; emoji: stri
       { name: "וניל", emoji: "🍦" },
       { name: "אגוז מוסקט", emoji: "🥜" },
     ],
-    tip: "ביצים בטמפרטורת החדר מתערבבות טוב יותר ונותנות תוצאה אווריר ית.",
+    tip: "ביצים בטמפרטורת החדר מתערבבות טוב יותר ונותנות תוצאה אוורירית.",
   },
   desserts: {
     spices: [
@@ -207,7 +207,7 @@ const CategorySelection = () => {
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       {/* App Header */}
-      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+      <header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
@@ -425,9 +425,7 @@ const CategorySelection = () => {
                     onClick={() => handleCardClick(cat)}
                     className={cn(
                       "group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9] transition-all duration-200",
-                      isSelected
-                        ? "ring-[3px] ring-primary ring-offset-2 ring-offset-background shadow-lg"
-                        : "ring-0",
+                      isSelected ? "ring-[3px] ring-primary ring-offset-2 ring-offset-background shadow-lg" : "ring-0",
                     )}
                     style={{ boxShadow: "0 2px 10px -2px hsl(0 0% 0% / 0.12)" }}
                   >
