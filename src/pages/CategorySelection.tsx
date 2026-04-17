@@ -239,8 +239,8 @@ const CategorySelection = () => {
         {/* Main layout: sidebar (right in RTL = first child) + grid */}
         <div className="flex min-h-[calc(100vh-110px)]">
           {/* Sidebar — first child = right side in RTL */}
-          {/* border-l border-border */}
-          <aside className="w-[25%] min-w-[280px] max-w-[340px] bg-card flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
+          {/* border-l border-border bg-card */}
+          <aside className="w-[25%] min-w-[280px] max-w-[340px] flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
             <AnimatePresence mode="wait">
               {selectedCategory && sidebarData ? (
                 <motion.div
