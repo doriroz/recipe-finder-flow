@@ -168,7 +168,7 @@ const SelectIngredients = () => {
         {/* Main content */}
         <div className="flex-1 flex flex-col bg-accent">
           {/* Search bar */}
-          <div className="px-4 md:px-8 flex items-center" style={{ height: "70px" }}>
+          <div className="border-border px-4 md:px-8 flex items-center" style={{ height: "70px" }}>
             <div className="max-w-3xl mx-auto w-full">
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -349,8 +349,9 @@ const SelectIngredients = () => {
         {/* Desktop sidebar */}
         {!isMobile && (
           <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 border-l flex flex-col order-first animate-slide-in-right">
+            {/*border-border */}
             <div
-              className="px-5 border-border flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card"
+              className="px-5 flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card"
               style={{ height: "70px" }}
             >
               <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
