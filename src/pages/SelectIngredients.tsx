@@ -166,7 +166,8 @@ const SelectIngredients = () => {
         </div>
       </header>
       {/* bg-accent */}
-      <div className="flex min-h-screen bg-gradient-to-l from-primary/10 via-accent to-card">
+      {/* bg-gradient-to-l from-primary/10 via-accent to-card */}
+      <div className="flex min-h-screen bg-gradient-to-br from-background via-cream to-accent">
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Search bar border-border */}
