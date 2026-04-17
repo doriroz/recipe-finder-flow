@@ -348,7 +348,8 @@ const SelectIngredients = () => {
 
         {/* Desktop sidebar */}
         {!isMobile && (
-          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 border-l flex flex-col order-first animate-slide-in-right">
+      {/* border-l */}     
+          <div className="w-72 lg:w-80 shrink-0 h-screen sticky top-0 flex flex-col order-first animate-slide-in-right">
             {/*border-border */}
             <div
               className="px-5 flex items-center bg-gradient-to-l from-primary/10 via-accent/60 to-card"
