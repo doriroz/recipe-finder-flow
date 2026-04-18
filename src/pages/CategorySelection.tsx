@@ -299,7 +299,7 @@ const CategorySelection = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="flex flex-col items-center justify-center h-full p-6 text-center"
+                  className="hidden md:flex flex-col items-center justify-center h-full p-6 text-center"
                   dir="rtl"
                 >
                   <span className="text-4xl mb-4">👨‍🍳</span>
