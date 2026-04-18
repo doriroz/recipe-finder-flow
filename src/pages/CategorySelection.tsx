@@ -412,8 +412,8 @@ const CategorySelection = () => {
             )}
 
             {/* Category grid */}
-            <div className="max-w-[63rem] mx-auto px-4 md:px-8 py-6">
-              <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
+            <div className="max-w-[63rem] mx-auto px-2 md:px-8 py-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {filtered.map((cat, idx) => {
                   const imgUrl = CATEGORY_IMAGES[cat.id] || "";
                   const isSelected = selectedCategoryId === cat.id;
