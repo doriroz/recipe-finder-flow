@@ -237,10 +237,9 @@ const CategorySelection = () => {
         </div>
 
         {/* Main layout: sidebar (right in RTL = first child) + grid */}
-        <div className="flex min-h-[calc(100vh-110px)]">
-          {/* Sidebar — first child = right side in RTL */}
-          {/* border-l border-border bg-card */}
-          <aside className="w-[25%] min-w-[280px] max-w-[340px] flex flex-col h-[calc(100vh-110px)] sticky top-[110px]">
+        <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-110px)]">
+          {/* Sidebar — first child = right side in RTL on desktop, below grid on mobile */}
+          <aside className="w-full md:w-[25%] md:min-w-[280px] md:max-w-[340px] flex flex-col md:h-[calc(100vh-110px)] md:sticky md:top-[110px] border-t md:border-t-0 md:border-l border-border bg-card/30">
             <AnimatePresence mode="wait">
               {selectedCategory && sidebarData ? (
                 <motion.div
@@ -300,7 +299,7 @@ const CategorySelection = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="flex flex-col items-center justify-center h-full p-6 text-center"
+                  className="hidden md:flex flex-col items-center justify-center h-full p-6 text-center"
                   dir="rtl"
                 >
                   <span className="text-4xl mb-4">👨‍🍳</span>
@@ -413,8 +412,8 @@ const CategorySelection = () => {
             )}
 
             {/* Category grid */}
-            <div className="max-w-[63rem] mx-auto px-4 md:px-8 py-6">
-              <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
+            <div className="max-w-[63rem] mx-auto px-2 md:px-8 py-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {filtered.map((cat, idx) => {
                   const imgUrl = CATEGORY_IMAGES[cat.id] || "";
                   const isSelected = selectedCategoryId === cat.id;
