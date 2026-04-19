@@ -343,6 +343,7 @@ const V2Dashboard = () => {
               <BookOpen className="w-5 h-5" />
               צפה בכל הספר שלי
             </Button>
+            </div>
           </section>
         </div>
 
