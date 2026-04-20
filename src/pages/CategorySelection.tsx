@@ -220,14 +220,16 @@ const CategorySelection = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1 hover:bg-primary/10"
+              className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
             >
               <ArrowRight className="w-4 h-4" />
               חזרה
             </Button>
             <div className="flex items-center gap-2">
-              <ChefHat className="w-6 h-6 text-primary" />
-              <span className="font-bold text-foreground">מה שיש</span>
+              <div className="w-8 h-8 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                <ChefHat className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-primary-foreground">מה שיש</span>
             </div>
           </div>
         </div>
