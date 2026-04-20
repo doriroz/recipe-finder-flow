@@ -226,8 +226,9 @@ const V2Dashboard = () => {
               {/* Left card: Globe — popular recipes */}
               <button
                 onClick={() => {
-                  setLibraryOpen(true);
-                  setSelectedCuisine(null);
+                  onClick={() => navigate("/categories")}
+                  {/*setLibraryOpen(true);
+                     setSelectedCuisine(null); */}
                 }}
                 className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-card/20 backdrop-blur-md border border-primary-foreground/20 hover:bg-card/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
               >
