@@ -40,38 +40,27 @@ const V2Cookbook = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      {/* ===== TOP HEADER (vibrant orange gradient — matches /v2-dashboard) ===== */}
-      <header
-        className="relative z-20 shrink-0"
-        style={{
-          background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
-        }}
+    {/*bg-background*/}
+    <div className="min-h-screen" dir="rtl"
+      style={{
+              background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)",
+            }}
       >
-        <div className="px-4 md:px-6 py-3 flex items-center justify-between">
-          {/* Right side: title + book icon */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-primary-foreground" />
+      {/* Header */}
+      <div className="bg-gradient-to-l from-accent via-background to-background border-b border-border">
+        <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => navigate("/v2-dashboard")}>
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-6 h-6 text-primary" />
+              <h1 className="text-xl font-bold text-foreground">הספר שלי</h1>
             </div>
-            <span className="text-lg md:text-xl font-bold text-primary-foreground">הספר שלי</span>
-            <Badge variant="secondary" className="text-xs bg-primary-foreground/20 text-primary-foreground border-0 backdrop-blur-sm">
-              {recipes.length} מתכונים
-            </Badge>
           </div>
-
-          {/* Left side: back to dashboard */}
-          <Button
-            variant="secondary"
-            size="sm"
-            className="rounded-2xl gap-1.5 bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-soft font-bold"
-            onClick={() => navigate("/v2-dashboard")}
-          >
-            <ArrowRight className="w-4 h-4" />
-            חזרה
-          </Button>
+          <Badge variant="secondary" className="text-sm">{recipes.length} מתכונים</Badge>
         </div>
-      </header>
+      </div>
 
       {/* Search & Filters */}
       <div className="max-w-5xl mx-auto px-4 py-4 space-y-3">
