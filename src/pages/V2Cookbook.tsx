@@ -58,17 +58,6 @@ const V2Cookbook = () => {
         <div className="container mx-auto px-4 py-3">
           {/*<div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">*/}
           <div className="flex items-center justify-between">
-            {/* LEFT: Title + icon + count */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold text-primary-foreground">הספר שלי</h1>
-              <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-xs backdrop-blur-sm">
-                {recipes.length} מתכונים
-              </Badge>
-            </div>
-
             {/* RIGHT: Back button */}
             <Button
               variant="ghost"
@@ -80,6 +69,16 @@ const V2Cookbook = () => {
               חזרה
               <ArrowRight className="w-5 h-5" />
             </Button>
+            {/* LEFT: Title + icon + count */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-xl font-bold text-primary-foreground">הספר שלי</h1>
+              <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-xs backdrop-blur-sm">
+                {recipes.length} מתכונים
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
