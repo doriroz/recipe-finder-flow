@@ -43,7 +43,7 @@ const V2Cookbook = () => {
     {/*bg-background*/}
     <div className="min-h-screen" dir="rtl"
       style={{
-              background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)",
+              background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)"
             }}
       >
       {/* Header */}
