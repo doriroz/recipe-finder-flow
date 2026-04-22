@@ -48,35 +48,34 @@ const V2Cookbook = () => {
         background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)",
       }}
     >
-      {/* Header — matches /v2-dashboard palette. Title on LEFT, Back on RIGHT */}
+      {/* Header — full-width orange gradient. Title on RIGHT (RTL start), Back link on LEFT */}
       <header
         className="relative z-20"
         style={{
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          {/* LEFT: Title + icon + count */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+        <div className="px-4 md:px-6 py-4 flex items-center justify-between">
+          {/* RIGHT (RTL start): Title + chef-hat icon */}
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-primary-foreground">הספר שלי</h1>
+            <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold text-primary-foreground">הספר שלי</h1>
-            <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-xs backdrop-blur-sm">
-              {recipes.length} מתכונים
+            <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-[10px] backdrop-blur-sm">
+              {recipes.length}
             </Badge>
           </div>
 
-          {/* RIGHT: Back button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-xl bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground hover:bg-primary-foreground/30"
+          {/* LEFT (RTL end): Back as text + arrow */}
+          <button
             onClick={() => navigate("/v2-dashboard")}
             aria-label="חזרה"
+            className="flex items-center gap-1.5 text-primary-foreground text-sm font-medium hover:opacity-80 transition-opacity"
           >
-            <ArrowRight className="w-5 h-5" />
-          </Button>
+            <span>חזרה</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
