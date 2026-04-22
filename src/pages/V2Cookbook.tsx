@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChefHat, Search, Plus, BookOpen, Trash2, ArrowRight, X } from "lucide-react";
+import { ChefHat, Search, BookOpen, Trash2, ArrowRight, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,11 @@ import { useV2Cookbook } from "@/hooks/useV2Cookbook";
 import { SOURCE_BADGES } from "@/types/v2cookbook";
 import type { V2CookbookRecipe, RecipeSource } from "@/types/v2cookbook";
 import { toast } from "sonner";
+import addRecipeBook from "@/assets/add-recipe-book.png";
 
 const V2Cookbook = () => {
   const navigate = useNavigate();
-  const { recipes, removeRecipe, refresh } = useV2Cookbook();
+  const { recipes, removeRecipe } = useV2Cookbook();
   const [search, setSearch] = useState("");
   const [filterSource, setFilterSource] = useState<RecipeSource | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<V2CookbookRecipe | null>(null);
@@ -40,27 +41,44 @@ const V2Cookbook = () => {
   };
 
   return (
-    {/*bg-background*/}
-    <div className="min-h-screen" dir="rtl"
-style={{
-              background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)"
-            }}      
+    <div
+      className="min-h-screen"
+      dir="rtl"
+      style={{
+        background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)",
+      }}
+    >
+      {/* Header — matches /v2-dashboard palette. Title on LEFT, Back on RIGHT */}
+      <header
+        className="relative z-20"
+        style={{
+          background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
+        }}
       >
-      {/* Header */}
-      <div className="bg-gradient-to-l from-accent via-background to-background border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+          {/* LEFT: Title + icon + count */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => navigate("/v2-dashboard")}>
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-primary" />
-              <h1 className="text-xl font-bold text-foreground">הספר שלי</h1>
+            <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-primary-foreground" />
             </div>
+            <h1 className="text-xl font-bold text-primary-foreground">הספר שלי</h1>
+            <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-xs backdrop-blur-sm">
+              {recipes.length} מתכונים
+            </Badge>
           </div>
-          <Badge variant="secondary" className="text-sm">{recipes.length} מתכונים</Badge>
+
+          {/* RIGHT: Back button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-xl bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground hover:bg-primary-foreground/30"
+            onClick={() => navigate("/v2-dashboard")}
+            aria-label="חזרה"
+          >
+            <ArrowRight className="w-5 h-5" />
+          </Button>
         </div>
-      </div>
+      </header>
 
       {/* Search & Filters */}
       <div className="max-w-5xl mx-auto px-4 py-4 space-y-3">
@@ -102,7 +120,7 @@ style={{
       </div>
 
       {/* Recipe Grid */}
-      <div className="max-w-5xl mx-auto px-4 pb-24">
+      <div className="max-w-5xl mx-auto px-4 pb-32">
         {filtered.length === 0 ? (
           <div className="text-center py-20 space-y-4">
             <div className="w-16 h-16 mx-auto rounded-2xl bg-muted flex items-center justify-center">
@@ -112,7 +130,7 @@ style={{
               {recipes.length === 0 ? "הספר ריק — הוסיפו מתכון ראשון!" : "אין תוצאות לחיפוש"}
             </p>
             {recipes.length === 0 && (
-              <Button className="rounded-xl" onClick={() => navigate("/v2-dashboard")}>
+              <Button className="rounded-xl" onClick={() => navigate("/add-recipe")}>
                 הוסיפו מתכון
               </Button>
             )}
@@ -127,7 +145,6 @@ style={{
                   className="rounded-2xl border border-border hover:shadow-elevated transition-all cursor-pointer overflow-hidden group"
                   onClick={() => setSelectedRecipe(recipe)}
                 >
-                  {/* Heritage photo */}
                   {recipe.heritageImageUrl && (
                     <div className="h-36 overflow-hidden">
                       <img
@@ -161,7 +178,10 @@ style={{
                         <span className="text-xs text-muted-foreground">⏱ {recipe.cookingTime} דק׳</span>
                       )}
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(recipe.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(recipe.id);
+                        }}
                         className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -175,12 +195,25 @@ style={{
         )}
       </div>
 
-      {/* FAB */}
+      {/* Floating Add button — book illustration, integrated with palette */}
       <button
-        onClick={() => navigate("/v2-dashboard")}
-        className="fixed bottom-20 left-6 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-elevated hover:scale-105 transition-transform"
+        onClick={() => navigate("/add-recipe")}
+        aria-label="הוסיפו מתכון"
+        className="fixed bottom-6 left-6 z-40 group"
       >
-        <Plus className="w-6 h-6" />
+        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-primary to-[hsl(28_95%_65%)] shadow-elevated flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
+          <img
+            src={addRecipeBook}
+            alt=""
+            width={512}
+            height={512}
+            loading="lazy"
+            className="w-14 h-14 object-contain drop-shadow-md"
+          />
+          <span className="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-primary-foreground text-primary text-lg font-bold flex items-center justify-center shadow-md">
+            +
+          </span>
+        </div>
       </button>
 
       {/* Recipe Detail Dialog */}
@@ -201,7 +234,11 @@ style={{
               </DialogHeader>
 
               {selectedRecipe.heritageImageUrl && (
-                <img src={selectedRecipe.heritageImageUrl} alt={selectedRecipe.title} className="w-full max-h-56 object-contain rounded-xl border border-border" />
+                <img
+                  src={selectedRecipe.heritageImageUrl}
+                  alt={selectedRecipe.title}
+                  className="w-full max-h-56 object-contain rounded-xl border border-border"
+                />
               )}
 
               {selectedRecipe.ingredients.length > 0 && (
