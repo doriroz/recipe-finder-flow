@@ -207,64 +207,6 @@ const V2Dashboard = () => {
 
       {/* ===== DUAL COLUMN LAYOUT ===== */}
       <div className="flex-1 flex flex-col md:flex-row min-h-0">
-        {/* ============ RIGHT COLUMN (45%) — Active Kitchen Hero ============ */}
-        <aside className="w-full md:w-[45%] relative overflow-hidden order-1 md:order-2 min-h-[60vh] md:min-h-0">
-          {/* Background image (blurred kitchen) */}
-          <div className="absolute inset-0">
-            <img src={heroBg} alt="Kitchen background" className="w-full h-full object-cover scale-110 blur-[2px]" />
-            <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/30 to-foreground/50" />
-          </div>
-
-          {/* Content */}
-          <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 py-10 md:py-8 gap-6">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-primary-foreground text-center drop-shadow-lg">
-              מה נבשל היום?
-            </h1>
-
-            {/* Two glass cards side-by-side */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4 w-full max-w-md">
-              {/* Left card: Globe — popular recipes */}
-              <button
-                onClick={() => navigate("/categories")}
-                className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-card/20 backdrop-blur-md border border-primary-foreground/20 hover:bg-card/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-primary-foreground/90 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Globe className="w-6 h-6 text-primary" />
-                </div>
-                <p className="font-bold text-primary-foreground text-sm text-center leading-tight">
-                  גלו מתכונים
-                  <br />
-                  פופולריים
-                </p>
-              </button>
-
-              {/* Right card: Sparkles — AI fridge */}
-              <button
-                onClick={() => navigate("/select-ingredients")}
-                className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-card/20 backdrop-blur-md border border-primary-foreground/20 hover:bg-card/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-primary-foreground/90 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <p className="font-bold text-primary-foreground text-sm text-center leading-tight">
-                  בנו מתכון
-                  <br />
-                  מהמקרר
-                </p>
-              </button>
-            </div>
-
-            {/* Big CTA button */}
-            <Button
-              size="lg"
-              className="w-full max-w-xs rounded-full text-base font-bold gap-2 shadow-elevated bg-primary hover:bg-primary/90 text-primary-foreground py-6"
-              onClick={() => navigate("/select-ingredients")}
-            >
-              <ChefHat className="w-5 h-5" />
-              בנו מתכון!
-            </Button>
-          </div>
-        </aside>
         {/* ============ LEFT COLUMN (55%) — stack: Heritage (top) + Gallery (bottom) ============ */}
         <div className="w-full md:w-[55%] flex flex-col order-2 md:order-1">
           {/* --- Heritage row (top) --- */}
@@ -437,6 +379,65 @@ const V2Dashboard = () => {
             </div>
           </section>
         </div>
+
+        {/* ============ RIGHT COLUMN (45%) — Active Kitchen Hero ============ */}
+        <aside className="w-full md:w-[45%] relative overflow-hidden order-1 md:order-2 min-h-[60vh] md:min-h-0">
+          {/* Background image (blurred kitchen) */}
+          <div className="absolute inset-0">
+            <img src={heroBg} alt="Kitchen background" className="w-full h-full object-cover scale-110 blur-[2px]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/30 to-foreground/50" />
+          </div>
+
+          {/* Content */}
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 py-10 md:py-8 gap-6">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-primary-foreground text-center drop-shadow-lg">
+              מה נבשל היום?
+            </h1>
+
+            {/* Two glass cards side-by-side */}
+            <div className="grid grid-cols-2 gap-3 md:gap-4 w-full max-w-md">
+              {/* Left card: Globe — popular recipes */}
+              <button
+                onClick={() => navigate("/categories")}
+                className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-card/20 backdrop-blur-md border border-primary-foreground/20 hover:bg-card/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary-foreground/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Globe className="w-6 h-6 text-primary" />
+                </div>
+                <p className="font-bold text-primary-foreground text-sm text-center leading-tight">
+                  גלו מתכונים
+                  <br />
+                  פופולריים
+                </p>
+              </button>
+
+              {/* Right card: Sparkles — AI fridge */}
+              <button
+                onClick={() => navigate("/select-ingredients")}
+                className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-card/20 backdrop-blur-md border border-primary-foreground/20 hover:bg-card/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary-foreground/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <p className="font-bold text-primary-foreground text-sm text-center leading-tight">
+                  בנו מתכון
+                  <br />
+                  מהמקרר
+                </p>
+              </button>
+            </div>
+
+            {/* Big CTA button */}
+            <Button
+              size="lg"
+              className="w-full max-w-xs rounded-full text-base font-bold gap-2 shadow-elevated bg-primary hover:bg-primary/90 text-primary-foreground py-6"
+              onClick={() => navigate("/select-ingredients")}
+            >
+              <ChefHat className="w-5 h-5" />
+              בנו מתכון!
+            </Button>
+          </div>
+        </aside>
       </div>
 
       {/* ===== HERITAGE DIALOG ===== */}
