@@ -209,7 +209,7 @@ const V2Dashboard = () => {
       <div className="flex-1 flex flex-col md:flex-row min-h-0">
         {/* ============ LEFT COLUMN (55%) — stack: Heritage (top) + Gallery (bottom) ============ */}
         {/*<div className="w-full md:w-[55%] flex flex-col order-2 md:order-1">*/}
-        <div className="w-full md:w-[55%] flex flex-col order-1 md:order-1">
+        <div className="w-full md:w-[55%] flex flex-col">
           {/* --- Heritage row (top) --- */}
           <section
             className="relative px-4 md:px-6 py-5 md:py-6 border-b border-border/40 overflow-hidden"
@@ -383,7 +383,7 @@ const V2Dashboard = () => {
 
         {/* ============ RIGHT COLUMN (45%) — Active Kitchen Hero ============ */}
         {/*<aside className="w-full md:w-[45%] relative overflow-hidden order-1 md:order-2 min-h-[60vh] md:min-h-0">*/}
-        <aside className="w-full md:w-[45%] relative overflow-hidden order-2 md:order-2 min-h-[60vh] md:min-h-0">
+        <aside className="w-full md:w-[45%] relative overflow-hidden min-h-[60vh] md:min-h-0">
           {/* Background image (blurred kitchen) */}
           <div className="absolute inset-0">
             <img src={heroBg} alt="Kitchen background" className="w-full h-full object-cover scale-110 blur-[2px]" />
