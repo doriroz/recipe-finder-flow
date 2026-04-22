@@ -55,7 +55,7 @@ const V2Cookbook = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="container mx-auto px-6 py-3">
+        <div className="container mx-auto px-4 py-3">
           {/*<div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">*/}
           <div className="flex items-center justify-between">
             {/* LEFT: Title + icon + count */}
