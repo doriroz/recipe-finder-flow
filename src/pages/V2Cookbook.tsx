@@ -77,6 +77,7 @@ const V2Cookbook = () => {
               onClick={() => navigate("/v2-dashboard")}
               aria-label="חזרה"
             >
+              חזרה
               <ArrowRight className="w-5 h-5" />
             </Button>
           </div>
