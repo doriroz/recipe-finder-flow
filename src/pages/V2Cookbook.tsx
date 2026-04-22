@@ -63,7 +63,6 @@ const V2Cookbook = () => {
               variant="ghost"
               size="sm"
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-              {/*className="rounded-xl bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground hover:bg-primary-foreground/30"*/}
               onClick={() => navigate("/v2-dashboard")}
               aria-label="חזרה"
             >
