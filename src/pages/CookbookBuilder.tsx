@@ -16,20 +16,29 @@ import CookbookPreview from "@/components/cookbook/CookbookPreview";
 import CookbookCheckout from "@/components/cookbook/CookbookCheckout";
 import CookbookStepIndicator from "@/components/cookbook/CookbookStepIndicator";
 import type { CookbookRecipe } from "@/types/cookbook";
+import type { UserGalleryItem } from "@/types/recipe";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 const CookbookBuilder = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const cameFrom = (location.state as { from?: string })?.from || "/gallery";
+  const navState = (location.state as
+    | { from?: string; galleryOverride?: UserGalleryItem[] }
+    | null) || {};
+  const cameFrom = navState.from || "/gallery";
+  const galleryOverride = navState.galleryOverride;
   const backToOriginLabel = (() => {
     if (cameFrom === "/" || cameFrom === "/home") return "לדף הבית";
     if (cameFrom === "/gallery") return "לגלריה";
+    if (cameFrom === "/v2-cookbook") return "לספר שלי";
     if (cameFrom === "/upgrade") return "לשדרוג";
     return "חזרה";
   })();
   const { user, loading: authLoading } = useAuth();
-  const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
+  const { data: fetchedGallery, isLoading: loadingGallery } = useUserGallery();
+  // When entering from /v2-cookbook the user's localStorage book is the
+  // source of truth — not their cloud gallery.
+  const galleryItems = galleryOverride ?? fetchedGallery;
   const cookbook = useCookbook(user?.id);
   const { track } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,7 +46,7 @@ const CookbookBuilder = () => {
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  const isLoading = authLoading || loadingGallery;
+  const isLoading = galleryOverride ? authLoading : authLoading || loadingGallery;
 
   const filteredItems =
     galleryItems?.filter((item) => {
