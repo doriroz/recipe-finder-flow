@@ -22,9 +22,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 const CookbookBuilder = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const navState = (location.state as
-    | { from?: string; galleryOverride?: UserGalleryItem[] }
-    | null) || {};
+  const navState = (location.state as { from?: string; galleryOverride?: UserGalleryItem[] } | null) || {};
   const cameFrom = navState.from || "/gallery";
   const galleryOverride = navState.galleryOverride;
   const backToOriginLabel = (() => {
@@ -86,7 +84,13 @@ const CookbookBuilder = () => {
   if (!user && !authLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+        {/*<header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">*/}
+        <header
+          className="relative z-20"
+          style={{
+            background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
+          }}
+        >
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Button
