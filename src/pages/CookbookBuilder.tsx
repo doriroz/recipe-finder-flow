@@ -125,7 +125,13 @@ const CookbookBuilder = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
+      {/*<header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">*/}
+      <header
+        className="relative z-20"
+        style={{
+          background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
+        }}
+      >
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
