@@ -1,41 +1,43 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Sparkles, Globe2, Heart, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import HeritageUploadDialog from "@/components/HeritageUploadDialog";
 import addRecipeBook from "@/assets/add-recipe-book.png";
-
-const options = [
-  {
-    id: "ai",
-    title: "בנה מתכון עם AI",
-    description: "בחרו מצרכים מהמקרר ותנו ל-AI להציע מנה מותאמת אישית.",
-    icon: Sparkles,
-    accent: "from-primary to-[hsl(28_95%_65%)]",
-    route: "/select-ingredients",
-    emoji: "✨",
-  },
-  {
-    id: "global",
-    title: "מהמטבח העולמי",
-    description: "גלו מתכונים פופולריים מ-9 מטבחים מסביב לעולם.",
-    icon: Globe2,
-    accent: "from-secondary to-[hsl(150_45%_50%)]",
-    route: "/categories",
-    emoji: "🌍",
-  },
-  {
-    id: "heritage",
-    title: "זיכרון משפחתי",
-    description: "העלו תמונה של מתכון מהבית — סבתא, אמא, או הספר הישן.",
-    icon: Heart,
-    accent: "from-[hsl(28_70%_55%)] to-[hsl(15_75%_60%)]",
-    route: "/gallery",
-    state: { uploadMode: true },
-    emoji: "🥧",
-  },
-];
 
 const AddRecipe = () => {
   const navigate = useNavigate();
+  const [heritageOpen, setHeritageOpen] = useState(false);
+
+  const options = [
+    {
+      id: "ai",
+      title: "בנה מתכון עם AI",
+      description: "בחרו מצרכים מהמקרר ותנו ל-AI להציע מנה מותאמת אישית.",
+      icon: Sparkles,
+      accent: "from-primary to-[hsl(28_95%_65%)]",
+      emoji: "✨",
+      onClick: () => navigate("/select-ingredients"),
+    },
+    {
+      id: "global",
+      title: "מהמטבח העולמי",
+      description: "גלו מתכונים פופולריים מ-9 מטבחים מסביב לעולם.",
+      icon: Globe2,
+      accent: "from-secondary to-[hsl(150_45%_50%)]",
+      emoji: "🌍",
+      onClick: () => navigate("/categories"),
+    },
+    {
+      id: "heritage",
+      title: "זיכרון משפחתי",
+      description: "העלו תמונה של מתכון מהבית — סבתא, אמא, או הספר הישן.",
+      icon: Heart,
+      accent: "from-[hsl(28_70%_55%)] to-[hsl(15_75%_60%)]",
+      emoji: "🥧",
+      onClick: () => setHeritageOpen(true),
+    },
+  ];
 
   return (
     <div
@@ -95,7 +97,7 @@ const AddRecipe = () => {
           return (
             <button
               key={opt.id}
-              onClick={() => navigate(opt.route, opt.state ? { state: opt.state } : undefined)}
+              onClick={opt.onClick}
               className="group text-right rounded-2xl bg-card border border-border p-6 shadow-sm hover:shadow-elevated hover:-translate-y-1 transition-all duration-300"
             >
               <div
@@ -117,6 +119,8 @@ const AddRecipe = () => {
           );
         })}
       </section>
+
+      <HeritageUploadDialog open={heritageOpen} onOpenChange={setHeritageOpen} />
     </div>
   );
 };

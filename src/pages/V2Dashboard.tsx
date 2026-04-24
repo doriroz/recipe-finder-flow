@@ -7,7 +7,6 @@ import {
   Globe,
   Sparkles,
   Upload,
-  PenLine,
   ArrowLeft,
   Search,
   X,
@@ -29,6 +28,7 @@ import type { V2CookbookRecipe, RecipeSource } from "@/types/v2cookbook";
 import { SOURCE_BADGES } from "@/types/v2cookbook";
 import { toast } from "sonner";
 import heroBg from "@/assets/v2-hero-bg.jpg";
+import HeritageUploadDialog from "@/components/HeritageUploadDialog";
 
 const V2Dashboard = () => {
   const navigate = useNavigate();
@@ -36,16 +36,6 @@ const V2Dashboard = () => {
   const [heritageOpen, setHeritageOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
-
-  // Heritage form state
-  const [heritageMode, setHeritageMode] = useState<"choose" | "photo" | "manual">("choose");
-  const [heritagePhoto, setHeritagePhoto] = useState<string | null>(null);
-  const [heritageTitle, setHeritageTitle] = useState("");
-  const [heritageStory, setHeritageStory] = useState("");
-  const [heritageIngredients, setHeritageIngredients] = useState("");
-  const [heritageSteps, setHeritageSteps] = useState("");
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrResult, setOcrResult] = useState<string | null>(null);
 
   // Gallery state
   const [gallerySearch, setGallerySearch] = useState("");
@@ -72,79 +62,6 @@ const V2Dashboard = () => {
     } else {
       toast.success("המתכון נשמר לספר שלי! 📖");
     }
-  };
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setHeritagePhoto(ev.target?.result as string);
-      setHeritageMode("photo");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSaveHeritage = () => {
-    if (!heritageTitle.trim()) {
-      toast.error("נא להזין שם למתכון");
-      return;
-    }
-    const recipe: V2CookbookRecipe = {
-      id: crypto.randomUUID(),
-      title: heritageTitle,
-      story: heritageStory || undefined,
-      ingredients: heritageIngredients.split("\n").filter(Boolean),
-      instructions: heritageSteps.split("\n").filter(Boolean),
-      source: "heritage",
-      sourceLabel: SOURCE_BADGES.heritage.label,
-      heritageImageUrl: heritagePhoto || undefined,
-      ocrText: ocrResult || undefined,
-      createdAt: new Date(),
-    };
-    trySaveRecipe(recipe);
-    resetHeritageForm();
-    setHeritageOpen(false);
-  };
-
-  const handleSavePhotoOnly = () => {
-    if (!heritageTitle.trim()) {
-      toast.error("נא להזין שם למתכון");
-      return;
-    }
-    const recipe: V2CookbookRecipe = {
-      id: crypto.randomUUID(),
-      title: heritageTitle,
-      story: heritageStory || undefined,
-      ingredients: [],
-      instructions: [],
-      source: "heritage",
-      sourceLabel: SOURCE_BADGES.heritage.label,
-      heritageImageUrl: heritagePhoto || undefined,
-      createdAt: new Date(),
-    };
-    trySaveRecipe(recipe);
-    resetHeritageForm();
-    setHeritageOpen(false);
-  };
-
-  const simulateOCR = () => {
-    setOcrLoading(true);
-    setTimeout(() => {
-      setOcrResult("טקסט שחולץ מהתמונה יופיע כאן...\nניתן לערוך את התוכן לפני השמירה.");
-      setOcrLoading(false);
-      toast.success("הטקסט חולץ בהצלחה!");
-    }, 2000);
-  };
-
-  const resetHeritageForm = () => {
-    setHeritageMode("choose");
-    setHeritagePhoto(null);
-    setHeritageTitle("");
-    setHeritageStory("");
-    setHeritageIngredients("");
-    setHeritageSteps("");
-    setOcrResult(null);
   };
 
   const handleAddLibraryRecipe = (
@@ -245,10 +162,7 @@ const V2Dashboard = () => {
               </p>
 
               <Button
-                onClick={() => {
-                  setHeritageOpen(true);
-                  setHeritageMode("choose");
-                }}
+                onClick={() => setHeritageOpen(true)}
                 className="rounded-2xl gap-2 bg-[hsl(25_45%_35%)] hover:bg-[hsl(25_45%_28%)] text-primary-foreground px-6 shadow-soft"
               >
                 <Upload className="w-4 h-4" />
@@ -443,153 +357,7 @@ const V2Dashboard = () => {
       </div>
 
       {/* ===== HERITAGE DIALOG ===== */}
-      <Dialog
-        open={heritageOpen}
-        onOpenChange={(o) => {
-          setHeritageOpen(o);
-          if (!o) resetHeritageForm();
-        }}
-      >
-        <DialogContent className="max-w-lg backdrop-blur-md bg-card/95 rounded-2xl max-h-[85vh] overflow-y-auto border-border">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-right">שימור זיכרון משפחתי</DialogTitle>
-            <DialogDescription className="text-right">שמרו את המתכונים של המשפחה לדורות הבאים</DialogDescription>
-          </DialogHeader>
-          {heritageMode === "choose" && (
-            <div className="space-y-4 pt-2">
-              <button
-                onClick={() => document.getElementById("heritage-photo-input")?.click()}
-                className="w-full p-6 rounded-xl border-2 border-dashed border-border hover:border-secondary transition-colors flex flex-col items-center gap-3 group"
-              >
-                <Upload className="w-10 h-10 text-muted-foreground group-hover:text-secondary transition-colors" />
-                <span className="font-medium text-foreground">העלו תמונה של מתכון כתוב</span>
-                <span className="text-xs text-muted-foreground">צילום מתכון בכתב יד, כרטיסייה ישנה</span>
-              </button>
-              <input
-                id="heritage-photo-input"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePhotoUpload}
-              />
-              <button
-                onClick={() => setHeritageMode("manual")}
-                className="w-full p-6 rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors flex flex-col items-center gap-3 group"
-              >
-                <PenLine className="w-10 h-10 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="font-medium text-foreground">הקלדה ידנית</span>
-                <span className="text-xs text-muted-foreground">הזינו שם, סיפור, מצרכים ושלבים</span>
-              </button>
-            </div>
-          )}
-          {heritageMode === "photo" && heritagePhoto && (
-            <div className="space-y-4 pt-2">
-              <img
-                src={heritagePhoto}
-                alt="uploaded recipe"
-                className="w-full max-h-48 object-contain rounded-xl border border-border"
-              />
-              <div className="space-y-2">
-                <Label>שם המתכון *</Label>
-                <Input
-                  value={heritageTitle}
-                  onChange={(e) => setHeritageTitle(e.target.value)}
-                  placeholder="למשל: עוגת שוקולד של סבתא רחל"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>הסיפור מאחורי המתכון</Label>
-                <Textarea
-                  value={heritageStory}
-                  onChange={(e) => setHeritageStory(e.target.value)}
-                  placeholder="ספרו את הסיפור..."
-                  rows={2}
-                />
-              </div>
-              {!ocrResult ? (
-                <div className="flex gap-2">
-                  <Button onClick={handleSavePhotoOnly} variant="outline" className="flex-1 rounded-xl">
-                    שמור כזיכרון ויזואלי
-                  </Button>
-                  <Button onClick={simulateOCR} className="flex-1 rounded-xl gap-2" disabled={ocrLoading}>
-                    {ocrLoading ? "מחלץ טקסט..." : "הפוך לטקסט"}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-sage-light text-sm text-foreground border border-secondary/20">
-                    <p className="font-medium mb-1 text-secondary">טקסט שחולץ:</p>
-                    <p className="whitespace-pre-line">{ocrResult}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>מצרכים (שורה לכל מצרך)</Label>
-                    <Textarea
-                      value={heritageIngredients}
-                      onChange={(e) => setHeritageIngredients(e.target.value)}
-                      rows={3}
-                      placeholder="קמח&#10;סוכר&#10;ביצים"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>שלבי הכנה (שורה לכל שלב)</Label>
-                    <Textarea
-                      value={heritageSteps}
-                      onChange={(e) => setHeritageSteps(e.target.value)}
-                      rows={3}
-                      placeholder="מערבבים...&#10;אופים..."
-                    />
-                  </div>
-                  <Button onClick={handleSaveHeritage} className="w-full rounded-xl">
-                    שמור לספר שלי 📖
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-          {heritageMode === "manual" && (
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label>שם המתכון *</Label>
-                <Input
-                  value={heritageTitle}
-                  onChange={(e) => setHeritageTitle(e.target.value)}
-                  placeholder="למשל: קוגל ירושלמי של דודה שרה"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>הסיפור מאחורי המתכון</Label>
-                <Textarea
-                  value={heritageStory}
-                  onChange={(e) => setHeritageStory(e.target.value)}
-                  placeholder="ספרו את הסיפור..."
-                  rows={2}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>מצרכים (שורה לכל מצרך)</Label>
-                <Textarea
-                  value={heritageIngredients}
-                  onChange={(e) => setHeritageIngredients(e.target.value)}
-                  rows={3}
-                  placeholder="קמח&#10;סוכר&#10;ביצים"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>שלבי הכנה (שורה לכל שלב)</Label>
-                <Textarea
-                  value={heritageSteps}
-                  onChange={(e) => setHeritageSteps(e.target.value)}
-                  rows={3}
-                  placeholder="מערבבים...&#10;אופים..."
-                />
-              </div>
-              <Button onClick={handleSaveHeritage} className="w-full rounded-xl">
-                שמור לספר שלי 📖
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <HeritageUploadDialog open={heritageOpen} onOpenChange={setHeritageOpen} />
 
       {/* ===== LIBRARY DIALOG ===== */}
       <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
