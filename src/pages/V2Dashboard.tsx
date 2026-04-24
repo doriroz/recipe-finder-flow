@@ -7,7 +7,6 @@ import {
   Globe,
   Sparkles,
   Upload,
-  PenLine,
   ArrowLeft,
   Search,
   X,
@@ -38,16 +37,6 @@ const V2Dashboard = () => {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
 
-  // Heritage form state
-  const [heritageMode, setHeritageMode] = useState<"choose" | "photo" | "manual">("choose");
-  const [heritagePhoto, setHeritagePhoto] = useState<string | null>(null);
-  const [heritageTitle, setHeritageTitle] = useState("");
-  const [heritageStory, setHeritageStory] = useState("");
-  const [heritageIngredients, setHeritageIngredients] = useState("");
-  const [heritageSteps, setHeritageSteps] = useState("");
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrResult, setOcrResult] = useState<string | null>(null);
-
   // Gallery state
   const [gallerySearch, setGallerySearch] = useState("");
 
@@ -73,79 +62,6 @@ const V2Dashboard = () => {
     } else {
       toast.success("המתכון נשמר לספר שלי! 📖");
     }
-  };
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setHeritagePhoto(ev.target?.result as string);
-      setHeritageMode("photo");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSaveHeritage = () => {
-    if (!heritageTitle.trim()) {
-      toast.error("נא להזין שם למתכון");
-      return;
-    }
-    const recipe: V2CookbookRecipe = {
-      id: crypto.randomUUID(),
-      title: heritageTitle,
-      story: heritageStory || undefined,
-      ingredients: heritageIngredients.split("\n").filter(Boolean),
-      instructions: heritageSteps.split("\n").filter(Boolean),
-      source: "heritage",
-      sourceLabel: SOURCE_BADGES.heritage.label,
-      heritageImageUrl: heritagePhoto || undefined,
-      ocrText: ocrResult || undefined,
-      createdAt: new Date(),
-    };
-    trySaveRecipe(recipe);
-    resetHeritageForm();
-    setHeritageOpen(false);
-  };
-
-  const handleSavePhotoOnly = () => {
-    if (!heritageTitle.trim()) {
-      toast.error("נא להזין שם למתכון");
-      return;
-    }
-    const recipe: V2CookbookRecipe = {
-      id: crypto.randomUUID(),
-      title: heritageTitle,
-      story: heritageStory || undefined,
-      ingredients: [],
-      instructions: [],
-      source: "heritage",
-      sourceLabel: SOURCE_BADGES.heritage.label,
-      heritageImageUrl: heritagePhoto || undefined,
-      createdAt: new Date(),
-    };
-    trySaveRecipe(recipe);
-    resetHeritageForm();
-    setHeritageOpen(false);
-  };
-
-  const simulateOCR = () => {
-    setOcrLoading(true);
-    setTimeout(() => {
-      setOcrResult("טקסט שחולץ מהתמונה יופיע כאן...\nניתן לערוך את התוכן לפני השמירה.");
-      setOcrLoading(false);
-      toast.success("הטקסט חולץ בהצלחה!");
-    }, 2000);
-  };
-
-  const resetHeritageForm = () => {
-    setHeritageMode("choose");
-    setHeritagePhoto(null);
-    setHeritageTitle("");
-    setHeritageStory("");
-    setHeritageIngredients("");
-    setHeritageSteps("");
-    setOcrResult(null);
   };
 
   const handleAddLibraryRecipe = (
