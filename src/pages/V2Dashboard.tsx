@@ -29,6 +29,7 @@ import type { V2CookbookRecipe, RecipeSource } from "@/types/v2cookbook";
 import { SOURCE_BADGES } from "@/types/v2cookbook";
 import { toast } from "sonner";
 import heroBg from "@/assets/v2-hero-bg.jpg";
+import HeritageUploadDialog from "@/components/HeritageUploadDialog";
 
 const V2Dashboard = () => {
   const navigate = useNavigate();
