@@ -54,22 +54,25 @@ const AddRecipe = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
-              <Plus className="w-5 h-5 text-primary-foreground" />
+        <div className="container mx-auto px-4 py-3">
+          {/* <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between"> */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                <Plus className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-xl font-bold text-primary-foreground">הוסיפו מתכון</h1>
             </div>
-            <h1 className="text-xl font-bold text-primary-foreground">הוסיפו מתכון</h1>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-xl bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground hover:bg-primary-foreground/30"
+              onClick={() => navigate(-1)}
+              aria-label="חזרה"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-xl bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground hover:bg-primary-foreground/30"
-            onClick={() => navigate(-1)}
-            aria-label="חזרה"
-          >
-            <ArrowRight className="w-5 h-5" />
-          </Button>
         </div>
       </header>
 
@@ -82,12 +85,8 @@ const AddRecipe = () => {
           height={512}
           className="w-32 h-32 mx-auto object-contain drop-shadow-lg"
         />
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-          איך תרצו להוסיף את המתכון?
-        </h2>
-        <p className="text-muted-foreground text-base">
-          בחרו את הדרך שמתאימה לכם — נבנה ביחד את הספר שלכם.
-        </p>
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground">איך תרצו להוסיף את המתכון?</h2>
+        <p className="text-muted-foreground text-base">בחרו את הדרך שמתאימה לכם — נבנה ביחד את הספר שלכם.</p>
       </section>
 
       {/* Options */}
@@ -108,9 +107,7 @@ const AddRecipe = () => {
               <h3 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
                 {opt.title} <span>{opt.emoji}</span>
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {opt.description}
-              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{opt.description}</p>
               <div className="mt-4 text-sm font-medium text-primary group-hover:gap-2 inline-flex items-center gap-1 transition-all">
                 התחילו
                 <ArrowRight className="w-4 h-4 rotate-180" />
