@@ -182,7 +182,7 @@ const V2Dashboard = () => {
               <div className="flex items-center justify-between gap-3 mb-3">
                 <h2 className="text-lg md:text-xl font-bold text-foreground">הגלריה המשותפת..</h2>
                 {/* Search */}
-                {/*<div className="relative w-44 md:w-56">
+                <div className="relative w-44 md:w-56">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     value={gallerySearch}
@@ -196,7 +196,7 @@ const V2Dashboard = () => {
                     </button>
                   )}
                 </div>
-              </div>*/}
+              </div>
               <p className="text-xs text-muted-foreground mb-4">לכל המתכונים שתאספו או תוסיפו פריט לאסוף או לשמור!</p>
 
               {/* Grid */}
