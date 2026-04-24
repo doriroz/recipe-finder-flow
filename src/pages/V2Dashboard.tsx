@@ -162,10 +162,7 @@ const V2Dashboard = () => {
               </p>
 
               <Button
-                onClick={() => {
-                  setHeritageOpen(true);
-                  setHeritageMode("choose");
-                }}
+                onClick={() => setHeritageOpen(true)}
                 className="rounded-2xl gap-2 bg-[hsl(25_45%_35%)] hover:bg-[hsl(25_45%_28%)] text-primary-foreground px-6 shadow-soft"
               >
                 <Upload className="w-4 h-4" />
