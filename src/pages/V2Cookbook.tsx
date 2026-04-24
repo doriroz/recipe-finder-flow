@@ -11,6 +11,34 @@ import { SOURCE_BADGES } from "@/types/v2cookbook";
 import type { V2CookbookRecipe, RecipeSource } from "@/types/v2cookbook";
 import { toast } from "sonner";
 import addRecipeBook from "@/assets/add-recipe-book.png";
+import type { UserGalleryItem } from "@/types/recipe";
+
+// Placeholder image used for non-heritage recipes that have no photo.
+// Inline SVG keeps it dependency-free and renders with theme-friendly colors.
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23F5E6D3'/><text x='50%' y='50%' font-size='80' text-anchor='middle' dominant-baseline='central'>🍽️</text></svg>`,
+  );
+
+/** Convert a V2 cookbook recipe (localStorage) into a UserGalleryItem
+ *  shape so the existing CookbookBuilder can consume it without changes. */
+const toGalleryItem = (r: V2CookbookRecipe): UserGalleryItem => ({
+  id: r.id,
+  user_id: null,
+  recipe_id: r.id,
+  image_url: r.heritageImageUrl || PLACEHOLDER_IMAGE,
+  user_notes: r.story || null,
+  created_at: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+  recipe: {
+    id: r.id,
+    title: r.title,
+    ingredients: r.ingredients.map((name) => ({ name })),
+    instructions: r.instructions,
+    cooking_time: r.cookingTime ?? null,
+    substitutions: null,
+  },
+});
 
 const V2Cookbook = () => {
   const navigate = useNavigate();
@@ -210,7 +238,14 @@ const V2Cookbook = () => {
             <Button
               size="lg"
               className="rounded-2xl gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-soft"
-              onClick={() => navigate("/cookbook", { state: { from: "/v2-cookbook" } })}
+              onClick={() =>
+                navigate("/cookbook", {
+                  state: {
+                    from: "/v2-cookbook",
+                    galleryOverride: recipes.map(toGalleryItem),
+                  },
+                })
+              }
             >
               <BookMarked className="w-5 h-5" />
               צרו ספר מתכונים
