@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChefHat, Search, BookOpen, Trash2, ArrowRight, X } from "lucide-react";
+import { ChefHat, Search, BookOpen, Trash2, ArrowRight, X, BookMarked } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -193,6 +193,29 @@ const V2Cookbook = () => {
               );
             })}
           </div>
+        )}
+
+        {/* Bottom CTA — turn collection into a printed/digital cookbook */}
+        {recipes.length > 0 && (
+          <section className="mt-10 rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-card p-6 md:p-8 text-center space-y-4">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-primary to-[hsl(28_95%_65%)] flex items-center justify-center shadow-soft">
+              <BookMarked className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">מוכנים להפוך את הספר שלכם למציאות?</h2>
+              <p className="text-sm text-muted-foreground">
+                בחרו מתכונים מהאוסף שלכם וצרו ספר מתכונים אישי — דיגיטלי או מודפס.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              className="rounded-2xl gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-soft"
+              onClick={() => navigate("/cookbook", { state: { from: "/v2-cookbook" } })}
+            >
+              <BookMarked className="w-5 h-5" />
+              צרו ספר מתכונים
+            </Button>
+          </section>
         )}
       </div>
 
