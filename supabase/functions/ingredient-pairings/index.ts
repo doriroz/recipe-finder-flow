@@ -1,5 +1,3 @@
-import { corsHeaders } from "https://deno.land/x/cors@v1.2.2/mod.ts";
-
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -74,9 +72,10 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...CORS, "Content-Type": "application/json" } }
     );
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Error in ingredient-pairings:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...CORS, "Content-Type": "application/json" },
     });
