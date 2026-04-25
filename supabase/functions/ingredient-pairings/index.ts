@@ -28,9 +28,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Call Spoonacular findByIngredients to discover what pairs well
+    // Call Spoonacular findByIngredients to discover what pairs well.
+    // ranking=1 maximizes used ingredients (=> most relevant pairings appear in missedIngredients).
     const ingredientsParam = ingredientNames.join(",");
-    const url = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientsParam)}&number=5&ranking=2&ignorePantry=true&apiKey=${apiKey}`;
+    const url = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientsParam)}&number=10&ranking=1&ignorePantry=true&apiKey=${apiKey}`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -44,29 +45,31 @@ Deno.serve(async (req) => {
 
     const recipes = await response.json();
 
-    // Extract all "missed" and "used" ingredient names to find related categories
-    const relatedIngredients = new Set<string>();
+    // Count frequency of each "missed" ingredient across all recipes => most-paired items rise to top.
+    const pairingCounts = new Map<string, { name: string; count: number; aisle?: string }>();
+    const submitted = new Set(ingredientNames.map((n: string) => n.toLowerCase()));
+
     for (const recipe of recipes) {
       for (const ing of (recipe.missedIngredients || [])) {
-        relatedIngredients.add(ing.name?.toLowerCase());
-      }
-      for (const ing of (recipe.usedIngredients || [])) {
-        relatedIngredients.add(ing.name?.toLowerCase());
+        const rawName = (ing.name || "").toLowerCase().trim();
+        if (!rawName || submitted.has(rawName)) continue;
+        const existing = pairingCounts.get(rawName);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          pairingCounts.set(rawName, { name: rawName, count: 1, aisle: ing.aisle });
+        }
       }
     }
 
-    // Also extract aisle info (category hints) from missed ingredients
-    const aisles = new Set<string>();
-    for (const recipe of recipes) {
-      for (const ing of (recipe.missedIngredients || [])) {
-        if (ing.aisle) aisles.add(ing.aisle);
-      }
-    }
+    // Sort by frequency desc
+    const pairings = Array.from(pairingCounts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 30);
 
     return new Response(
       JSON.stringify({
-        relatedIngredients: Array.from(relatedIngredients),
-        aisles: Array.from(aisles),
+        pairings, // [{ name, count, aisle }]
         recipeCount: recipes.length,
       }),
       { headers: { ...CORS, "Content-Type": "application/json" } }
