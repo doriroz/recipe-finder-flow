@@ -337,7 +337,7 @@ const SelectIngredients = () => {
                           initial={{ scale: 0, rotate: -45 }}
                           animate={{ scale: 1, rotate: 0 }}
                           transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                          className="absolute top-3 right-3 z-20 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-full p-1.5 shadow-lg"
+                          className="absolute top-3 right-3 z-20 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-full p-1.5 shadow-lg"
                         >
                           <Star className="w-3.5 h-3.5 fill-current" />
                         </motion.div>
@@ -538,7 +538,7 @@ const SelectIngredients = () => {
                         isPending
                           ? "border-current/30"
                           : isPaired
-                            ? "border-amber-400/40"
+                            ? "border-primary/40"
                             : "border-transparent",
                       )}
                       onMouseEnter={(e) => {
@@ -556,7 +556,7 @@ const SelectIngredients = () => {
                         {isPaired && (
                           <span
                             title={pairSource ? `משתלב עם ${pairSource}` : "מתאים לבחירה שלך"}
-                            className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+                            className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground"
                           >
                             <Star className="w-2.5 h-2.5 fill-current" />
                             מומלץ
