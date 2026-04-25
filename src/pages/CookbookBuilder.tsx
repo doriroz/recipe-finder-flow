@@ -144,14 +144,14 @@ const CookbookBuilder = () => {
                   cookbook.prevStep();
                 }
               }}
-              className="flex items-center gap-1 hover:bg-primary/10"
+              className="flex items-center gap-1 hover:bg-primary/10 text-primary-foreground"
             >
               <ArrowRight className="w-4 h-4" />
               {cookbook.step === "select" ? backToOriginLabel : "חזרה"}
             </Button>
             <div className="flex items-center gap-2">
-              <ChefHat className="w-6 h-6 text-primary" />
-              <span className="font-bold text-foreground">מה שיש</span>
+              <ChefHat className="w-6 h-6 text-primary-foreground" />
+              <span className="font-bold text-primary-foreground">מה שיש</span>
             </div>
           </div>
         </div>
