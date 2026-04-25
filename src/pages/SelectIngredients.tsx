@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat } from "lucide-react";
+import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat, Star } from "lucide-react";
 import CreditCounter from "@/components/CreditCounter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,9 +66,8 @@ const SelectIngredients = () => {
   console.log("allIngredients : " + allIngredients);
   const categories = useMemo(() => Array.from(new Set(allIngredients.map((i) => i.category))), [allIngredients]);
 
-  const { relatedCategories, hasSelection } = useIngredientPairings(selected, allIngredients);
-  console.log("relatedCategories : ");
-  console.log(relatedCategories.values().next().value);
+  const { relatedCategories, pairedIngredientIds, pairingSources, hasSelection } =
+    useIngredientPairings(selected, allIngredients);
 
   const filteredBySearch = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -139,7 +138,15 @@ const SelectIngredients = () => {
     ? (CATEGORY_META[openCategory] ?? { hue: "30 30% 82%", subtitle: "", image: "" })
     : null;
   const openIngredients = openCategory
-    ? allIngredients.filter((i) => i.category === openCategory).sort((a, b) => b.popularityScore - a.popularityScore)
+    ? allIngredients
+        .filter((i) => i.category === openCategory)
+        .sort((a, b) => {
+          // Paired ingredients float to the top
+          const aPaired = pairedIngredientIds.has(a.id) ? 1 : 0;
+          const bPaired = pairedIngredientIds.has(b.id) ? 1 : 0;
+          if (aPaired !== bPaired) return bPaired - aPaired;
+          return b.popularityScore - a.popularityScore;
+        })
     : [];
 
   return (
@@ -277,7 +284,7 @@ const SelectIngredients = () => {
                       )}
                       style={{
                         boxShadow: isGlowing
-                          ? `0 0 24px 6px hsl(${meta.hue} / 0.55), 0 4px 16px -4px hsl(0 0% 0% / 0.15)`
+                          ? `0 0 28px 8px hsl(38 95% 60% / 0.55), 0 4px 16px -4px hsl(0 0% 0% / 0.15)`
                           : selectedCount > 0
                             ? `0 0 12px 2px hsl(${meta.hue} / 0.3), 0 2px 10px -2px hsl(0 0% 0% / 0.1)`
                             : "0 4px 12px -2px hsl(0 0% 0% / 0.12)",
@@ -317,11 +324,23 @@ const SelectIngredients = () => {
                         <motion.div
                           className="absolute inset-0 rounded-2xl pointer-events-none z-10"
                           style={{
-                            background: `radial-gradient(ellipse at center, hsl(${meta.hue} / 0.35) 0%, transparent 65%)`,
+                            background: `radial-gradient(ellipse at center, hsl(38 95% 60% / 0.35) 0%, transparent 65%)`,
                           }}
                           animate={{ opacity: [0.4, 0.85, 0.4] }}
                           transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                         />
+                      )}
+
+                      {/* Star badge: at least one paired ingredient lives in this category */}
+                      {isGlowing && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -45 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                          className="absolute top-3 right-3 z-20 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-full p-1.5 shadow-lg"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                        </motion.div>
                       )}
 
                       {/* Text overlay at bottom center */}
@@ -504,28 +523,47 @@ const SelectIngredients = () => {
               <div className="max-h-[50vh] overflow-y-auto px-4 py-3 space-y-1">
                 {openIngredients.map((ing) => {
                   const isPending = pendingSelections.has(ing.id);
+                  const isPaired = pairedIngredientIds.has(ing.id);
+                  const pairSource = pairingSources.get(ing.id);
                   return (
-                    <button
+                    <motion.button
                       key={ing.id}
+                      layout
+                      initial={isPaired ? { backgroundColor: "hsl(38 95% 60% / 0.25)" } : false}
+                      animate={{ backgroundColor: isPending ? `hsl(${openMeta.hue} / 0.45)` : isPaired ? "hsl(38 95% 60% / 0.12)" : "transparent" }}
+                      transition={{ duration: 0.4 }}
                       onClick={() => togglePending(ing.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-right border",
-                        isPending ? "border-current/30" : "border-transparent",
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right border",
+                        isPending
+                          ? "border-current/30"
+                          : isPaired
+                            ? "border-amber-400/40"
+                            : "border-transparent",
                       )}
-                      style={{
-                        backgroundColor: isPending ? `hsl(${openMeta.hue} / 0.45)` : undefined,
-                      }}
                       onMouseEnter={(e) => {
                         if (!isPending) e.currentTarget.style.backgroundColor = `hsl(${openMeta.hue} / 0.2)`;
                       }}
                       onMouseLeave={(e) => {
-                        if (!isPending) e.currentTarget.style.backgroundColor = "";
+                        if (!isPending)
+                          e.currentTarget.style.backgroundColor = isPaired ? "hsl(38 95% 60% / 0.12)" : "";
                       }}
                     >
                       <Checkbox checked={isPending} className="pointer-events-none" />
                       <span className="text-xl">{ing.emoji}</span>
-                      <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
-                    </button>
+                      <span className="flex-1 text-sm font-medium text-foreground flex items-center gap-1.5">
+                        {ing.name}
+                        {isPaired && (
+                          <span
+                            title={pairSource ? `משתלב עם ${pairSource}` : "מתאים לבחירה שלך"}
+                            className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+                          >
+                            <Star className="w-2.5 h-2.5 fill-current" />
+                            מומלץ
+                          </span>
+                        )}
+                      </span>
+                    </motion.button>
                   );
                 })}
               </div>
