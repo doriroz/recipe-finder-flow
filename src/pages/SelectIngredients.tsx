@@ -265,7 +265,7 @@ const SelectIngredients = () => {
                         opacity: 1,
                         //opacity: isDimmed ? 0.6 : 1,
                         y: 0,
-                        scale: isGlowing ? 1.08 : 1,
+                        scale: 1,
                         //filter: isDimmed ? "blur(2px)" : "blur(0px)",
                       }}
                       whileTap={{ scale: isDisabledByCamera ? 1 : 0.97 }}
