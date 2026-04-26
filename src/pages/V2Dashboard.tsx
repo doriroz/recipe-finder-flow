@@ -37,6 +37,7 @@ const V2Dashboard = () => {
   const [heritageOpen, setHeritageOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
+  //const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Gallery state
   const [gallerySearch, setGallerySearch] = useState("");
