@@ -103,15 +103,9 @@ const V2Dashboard = () => {
         }}
       >
         <div className="px-4 md:px-6 py-3 flex items-center justify-between">
-          {/* Right side: title + chef hat */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
-              <ChefHat className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg md:text-xl font-bold text-primary-foreground">ספר המתכונים הדיגיטלי</span>
-          </div>
+          {/*<UserMenu onOpenHistory={() => setIsSidebarOpen(true)} />*/}
 
-          {/* Left side: My Book button */}
+          {/* Right side: title + chef hat */}
           <Button
             variant="secondary"
             size="sm"
@@ -121,6 +115,13 @@ const V2Dashboard = () => {
             <BookOpen className="w-4 h-4" />
             הספר שלי
           </Button>
+          {/* Left side: My Book button */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+              <ChefHat className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <span className="text-lg md:text-xl font-bold text-primary-foreground">ספר המתכונים הדיגיטלי</span>
+          </div>
         </div>
       </header>
 
