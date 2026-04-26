@@ -1,25 +1,70 @@
+## Problem
+When the user selects **חלב** (milk), Spoonacular returns global recipes (cream sauces, beef stroganoff, chicken alfredo, etc.) and the system surfaces **בשר טחון / עוף** as recommended pairings. This breaks kosher dietary rules and feels wrong for an Israeli/Hebrew app.
 
+The pairing logic itself works — it just lacks cultural awareness.
 
-## Fix Camera Button + Category Dialog Colors
+## Fix — Kosher-aware pairing filter
 
-### Issue 1: Camera button navigates to wrong page
-The camera icon button on `/select-ingredients` (line 137) navigates to `/ingredients` — an old page. It should instead open an inline image-upload panel directly on the current page, similar to how `/ingredients` handles its "photo" tab.
+Add a small classification layer that prevents meat ↔ dairy cross-recommendations. Fish, eggs, and legumes (pareve) remain valid pairings for both sides.
 
-**Fix:** Replace the `navigate("/ingredients")` with an in-page Dialog or inline section that shows the `ImageUpload` component and a "Generate recipe from photo" button. This keeps the user on `/select-ingredients` and provides the photo-to-recipe flow right there.
+### 1. New file: `src/lib/kosherCategories.ts`
+Classify the ~14 protein/dairy ingredients in `mockData.ts`:
 
-### Issue 2: Category dialog uses color only in header
-Currently the category Dialog only applies the category's hue color to the header area (line 307). The ingredient list items and the confirm button area are plain white/default.
+```ts
+// MEAT (בשרי) — never paired with dairy
+export const MEAT_INGREDIENTS = new Set([
+  "עוף", "בשר טחון", "נקניקיות", "חזה עוף", "שריות עוף", "בשר בקר"
+]);
 
-**Fix:** Brush the entire dialog with the category color:
-- Give each ingredient row a subtle tinted background on hover using the category hue (e.g., `hsl(hue / 10%)`)
-- Tint the selected/checked rows with the category color instead of generic `bg-accent`
-- Apply a light category-colored background to the footer/confirm area
-- Use the category hue for the confirm button's background instead of the default hero variant
+// DAIRY (חלבי) — never paired with meat
+export const DAIRY_INGREDIENTS = new Set([
+  "גבינה צהובה", "חלב", "גבינת קוטג'", "שמנת חמוצה", "יוגורט",
+  "חמאה", "גבינה לבנה", "גבינת מוצרלה", "שמנת מתוקה", "פרמזן"
+]);
 
-### Files to edit
-- **`src/pages/SelectIngredients.tsx`** — both changes happen here:
-  1. Add `ImageUpload` import + state for `imageBase64` + a Dialog/section for the camera flow that calls `generateRecipe({ imageBase64 })`
-  2. Update the category Dialog to pass category hue colors into row backgrounds, hover states, selected states, and the footer area
+// Everything else (fish, eggs, legumes, vegetables, grains…) is pareve → always allowed.
 
-### No new files or dependencies needed.
+export function isMeat(name: string)  { return MEAT_INGREDIENTS.has(name); }
+export function isDairy(name: string) { return DAIRY_INGREDIENTS.has(name); }
 
+export function violatesKosher(selectedNames: string[], candidateName: string): boolean {
+  const candIsMeat  = isMeat(candidateName);
+  const candIsDairy = isDairy(candidateName);
+  if (!candIsMeat && !candIsDairy) return false; // pareve → always fine
+
+  const hasMeat  = selectedNames.some(isMeat);
+  const hasDairy = selectedNames.some(isDairy);
+
+  if (candIsMeat && hasDairy) return true;
+  if (candIsDairy && hasMeat) return true;
+  return false;
+}
+```
+
+### 2. Update `src/hooks/useIngredientPairings.ts`
+Inside the loop that builds `pairedIds` (around the `for (const p of pairings)` block), add a guard:
+
+```ts
+import { violatesKosher } from "@/lib/kosherCategories";
+
+const selectedNames = ingredients.map((i) => i.name);
+// …inside the loop:
+if (violatesKosher(selectedNames, heName)) continue;
+```
+
+Also skip the chef-tip toast when `topPairing.pairing` violates kosher (just check the same function before assigning `topPairing`).
+
+### 3. No edge function or UI changes needed
+- The Spoonacular call stays the same (still useful for non-conflicting pairings).
+- Category glow & ⭐ sorting are unaffected — they just won't show meat under dairy selections (and vice-versa).
+- Pareve items (egg, fish, legumes, tofu, vegetables) continue to be recommended normally.
+
+## Validation
+After the fix, with **חלב** selected:
+- Toast: "חלב משתלב נהדר עם **ביצה**" (or יוגורט / קמח / סוכר) — never with עוף or בשר.
+- Open חלבונים → ⭐ on **ביצה / סלמון / טונה / טופו**, never on עוף or בשר טחון.
+- Inverse test: select **עוף** → חלבי category will not glow, no dairy items get ⭐.
+
+## Files touched
+- `src/lib/kosherCategories.ts` (new, ~25 lines)
+- `src/hooks/useIngredientPairings.ts` (add import + 2-line guard + toast guard)

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getEnglishNames, fuzzyMatchHebrew } from "@/lib/ingredientI18n";
+import { violatesKosher } from "@/lib/kosherCategories";
 
 interface Ingredient {
   id: number;
@@ -121,6 +122,7 @@ export function useIngredientPairings(
         const pairedIds = new Set<number>();
         const sources = new Map<number, string>();
         const selectedIds = new Set(ingredients.map((i) => i.id));
+        const selectedNames = ingredients.map((i) => i.name);
         let topPairing: { source: string; pairing: string } | undefined;
 
         // Take primary selected ingredient as the "source" attribution for the toast
@@ -129,6 +131,8 @@ export function useIngredientPairings(
         for (const p of pairings) {
           const heName = fuzzyMatchHebrew(p.name);
           if (!heName) continue;
+          // Kosher guard: never recommend meat with dairy (or vice-versa)
+          if (violatesKosher(selectedNames, heName)) continue;
           const match = allIngredients.find((ai) => ai.name === heName);
           if (!match || selectedIds.has(match.id)) continue;
           pairedIds.add(match.id);
