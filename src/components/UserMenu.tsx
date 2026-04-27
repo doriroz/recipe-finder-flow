@@ -50,7 +50,7 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
     /*bg-muted*/
   }
   if (loading) {
-    return <div className="h-10 w-10 rounded-full bg-primary/20 animate-pulse" />;
+    return <div className="h-10 w-10 rounded-full bg-accent animate-pulse" />;
   }
 
   if (!user) {
