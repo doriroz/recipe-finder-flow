@@ -46,11 +46,11 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
       setIsLoggingOut(false);
     }
   };
-
+  {
+    /*bg-muted*/
+  }
   if (loading) {
-    return (
-      <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
-    );
+    return <div className="h-10 w-10 rounded-full bg-primary/20 animate-pulse" />;
   }
 
   if (!user) {
@@ -72,60 +72,39 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="relative h-10 w-10 rounded-full p-0 hover:bg-accent"
-        >
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-accent">
           <Avatar className="h-10 w-10 border-2 border-primary/20">
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-              {userInitial}
-            </AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">{userInitial}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56 [direction:rtl]" align="end" forceMount>
         <div className="flex items-center gap-2 p-2">
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-primary/10 text-primary text-sm">
-              {userInitial}
-            </AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary text-sm">{userInitial}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col space-y-1 text-right">
-            <p className="text-sm font-medium leading-none text-foreground">
-              שלום! 👋
-            </p>
+            <p className="text-sm font-medium leading-none text-foreground">שלום! 👋</p>
             <p className="text-xs leading-none text-muted-foreground truncate max-w-[180px]" dir="ltr">
               {userEmail}
             </p>
           </div>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => navigate("/profile")}
-          className="cursor-pointer"
-        >
+        <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
           <User className="ml-2 h-4 w-4" />
           הפרופיל שלי
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => navigate("/gallery")}
-          className="cursor-pointer"
-        >
+        <DropdownMenuItem onClick={() => navigate("/gallery")} className="cursor-pointer">
           <BookOpen className="ml-2 h-4 w-4" />
           הגלריה שלי
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => navigate("/ingredients")}
-          className="cursor-pointer"
-        >
+        <DropdownMenuItem onClick={() => navigate("/ingredients")} className="cursor-pointer">
           <ChefHat className="ml-2 h-4 w-4" />
           בישול חדש
         </DropdownMenuItem>
         {onOpenHistory && (
-          <DropdownMenuItem
-            onClick={onOpenHistory}
-            className="cursor-pointer"
-          >
+          <DropdownMenuItem onClick={onOpenHistory} className="cursor-pointer">
             <History className="ml-2 h-4 w-4" />
             מתכונים אחרונים
           </DropdownMenuItem>
@@ -133,10 +112,7 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => navigate("/admin/analytics")}
-              className="cursor-pointer"
-            >
+            <DropdownMenuItem onClick={() => navigate("/admin/analytics")} className="cursor-pointer">
               <BarChart3 className="ml-2 h-4 w-4" />
               דשבורד אנליטיקס
             </DropdownMenuItem>
