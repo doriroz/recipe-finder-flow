@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import heroBg from "@/assets/v2-hero-bg.jpg";
 import HeritageUploadDialog from "@/components/HeritageUploadDialog";
 import UserMenu from "@/components/UserMenu";
+import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
 
 const V2Dashboard = () => {
   const navigate = useNavigate();
@@ -440,6 +441,9 @@ const V2Dashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Recent Recipes Sidebar */}
+      <RecentRecipesSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
     </div>
   );
 };
