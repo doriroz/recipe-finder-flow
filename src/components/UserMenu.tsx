@@ -70,7 +70,7 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 bg-accent hover:bg-[#F7DFB6]">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 bg-accent hover:bg-[#fcfcfc]">
           <Avatar className="h-10 w-10 border-2 border-primary/20">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">{userInitial}</AvatarFallback>
           </Avatar>
