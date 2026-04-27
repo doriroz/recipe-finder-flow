@@ -46,11 +46,9 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
       setIsLoggingOut(false);
     }
   };
-  {
-    /*bg-muted*/
-  }
+
   if (loading) {
-    return <div className="h-10 w-10 rounded-full bg-accent animate-pulse" />;
+    return <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />;
   }
 
   if (!user) {
@@ -72,7 +70,7 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-accent">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 bg-accent hover:bg-accent">
           <Avatar className="h-10 w-10 border-2 border-primary/20">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">{userInitial}</AvatarFallback>
           </Avatar>
