@@ -1,4 +1,17 @@
-import { ArrowRight, ChefHat, BookOpen, Loader2, Zap, RefreshCw, UtensilsCrossed, Sparkles, Calendar, Mail, LogOut, Crown } from "lucide-react";
+import {
+  ArrowRight,
+  ChefHat,
+  BookOpen,
+  Loader2,
+  Zap,
+  RefreshCw,
+  UtensilsCrossed,
+  Sparkles,
+  Calendar,
+  Mail,
+  LogOut,
+  Crown,
+} from "lucide-react";
 import profileAvatar from "@/assets/profile-avatar.avif";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -78,7 +91,11 @@ const UserProfile = () => {
   const cookedCount = galleryItems?.length || 0;
   const savedCount = recipes?.length || 0;
   const lastCooked = galleryItems?.[0]?.created_at
-    ? new Date(galleryItems[0].created_at).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
+    ? new Date(galleryItems[0].created_at).toLocaleDateString("he-IL", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
     : "עוד לא בושל מתכון";
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString("he-IL", { month: "long", year: "numeric" })
@@ -172,7 +189,10 @@ const UserProfile = () => {
             </section>
 
             {/* Stats grid */}
-            <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+            <section
+              className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 animate-slide-up"
+              style={{ animationDelay: "0.1s" }}
+            >
               <StatCard icon={UtensilsCrossed} value={cookedCount} label="מתכונים שבושלו" />
               <StatCard icon={BookOpen} value={savedCount} label="מתכונים שמורים" />
               <StatCard
@@ -185,7 +205,10 @@ const UserProfile = () => {
             </section>
 
             {/* Activity card */}
-            <section className="bg-card border border-border/60 rounded-2xl p-5 mb-6 shadow-sm animate-slide-up" style={{ animationDelay: "0.2s" }}>
+            <section
+              className="bg-card border border-border/60 rounded-2xl p-5 mb-6 shadow-sm animate-slide-up"
+              style={{ animationDelay: "0.2s" }}
+            >
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">פעילות אחרונה</h3>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center shrink-0">
@@ -199,24 +222,20 @@ const UserProfile = () => {
             </section>
 
             {/* Credits action */}
-            <section className="bg-card border border-border/60 rounded-2xl p-5 mb-6 shadow-sm animate-slide-up" style={{ animationDelay: "0.3s" }}>
+            <section
+              className="bg-card border border-border/60 rounded-2xl p-5 mb-6 shadow-sm animate-slide-up"
+              style={{ animationDelay: "0.3s" }}
+            >
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <h3 className="font-semibold text-foreground">קרדיטים</h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    כל יצירה של מתכון AI מנכה קרדיט אחד.
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-0.5">כל יצירה של מתכון AI מנכה קרדיט אחד.</p>
                 </div>
                 <Zap className="w-5 h-5 text-primary shrink-0 mt-1" />
               </div>
 
               {isAdmin ? (
-                <Button
-                  variant="outline"
-                  onClick={handleResetCredits}
-                  disabled={resettingCredits}
-                  className="w-full"
-                >
+                <Button variant="outline" onClick={handleResetCredits} disabled={resettingCredits} className="w-full">
                   {resettingCredits ? (
                     <Loader2 className="w-4 h-4 animate-spin ml-2" />
                   ) : (
@@ -225,11 +244,7 @@ const UserProfile = () => {
                   איפוס קרדיטים (מנהל בלבד)
                 </Button>
               ) : (
-                <Button
-                  variant="default"
-                  onClick={() => navigate("/upgrade")}
-                  className="w-full"
-                >
+                <Button variant="default" onClick={() => navigate("/upgrade")} className="w-full">
                   <Sparkles className="w-4 h-4 ml-2" />
                   קבלו עוד קרדיטים
                 </Button>
@@ -237,7 +252,7 @@ const UserProfile = () => {
             </section>
 
             {/* Sign out */}
-            <Button
+            {/*<Button
               variant="ghost"
               onClick={handleSignOut}
               disabled={signingOut}
@@ -249,7 +264,7 @@ const UserProfile = () => {
                 <LogOut className="w-4 h-4 ml-2" />
               )}
               התנתקות
-            </Button>
+            </Button>*/}
           </>
         )}
       </main>
