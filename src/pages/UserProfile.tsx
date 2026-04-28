@@ -1,16 +1,35 @@
-import { ArrowRight, ChefHat, BookOpen, Award, Loader2, Zap, RefreshCw, UtensilsCrossed } from "lucide-react";
+import { ArrowRight, ChefHat, BookOpen, Loader2, Zap, RefreshCw, UtensilsCrossed, Sparkles, Calendar, Mail, LogOut, Crown } from "lucide-react";
 import profileAvatar from "@/assets/profile-avatar.avif";
-import profileDecoration from "@/assets/profile-decoration.png";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import DishCard, { Dish } from "@/components/DishCard";
 import { useUserGallery } from "@/hooks/useUserGallery";
 import { useUserRecipes } from "@/hooks/useRecipes";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserCredits } from "@/hooks/useUserCredits";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
+
+const StatCard = ({
+  icon: Icon,
+  value,
+  label,
+  highlight = false,
+}: {
+  icon: typeof Zap;
+  value: number | string;
+  label: string;
+  highlight?: boolean;
+}) => (
+  <div className="bg-card border border-border/60 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+      <Icon className="w-5 h-5 text-primary" />
+    </div>
+    <p className={`text-2xl font-bold ${highlight ? "text-destructive" : "text-foreground"}`}>{value}</p>
+    <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+  </div>
+);
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -18,9 +37,11 @@ const UserProfile = () => {
   const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
   const { data: recipes, isLoading: loadingRecipes } = useUserRecipes();
   const { credits, loading: loadingCredits, refetch: refetchCredits } = useUserCredits();
+  const { isAdmin } = useIsAdmin();
   const [resettingCredits, setResettingCredits] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
-  const isLoading = authLoading || loadingGallery || loadingRecipes;
+  const isLoading = authLoading || loadingGallery || loadingRecipes || loadingCredits;
 
   const handleResetCredits = async () => {
     setResettingCredits(true);
@@ -41,225 +62,194 @@ const UserProfile = () => {
     }
   };
 
-  // Transform gallery items to dish format
-  const userDishes = (galleryItems || []).map((item) => ({
-    id: item.id,
-    name: item.recipe?.title || item.user_notes || "מנה ללא שם",
-    date: item.created_at 
-      ? new Date(item.created_at).toLocaleDateString("he-IL")
-      : "",
-    emoji: "🍳",
-    imageUrl: item.image_url,
-  }));
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      toast.success("התנתקת בהצלחה");
+      navigate("/");
+    } catch {
+      toast.error("שגיאה בהתנתקות");
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
+  const cookedCount = galleryItems?.length || 0;
+  const savedCount = recipes?.length || 0;
+  const lastCooked = galleryItems?.[0]?.created_at
+    ? new Date(galleryItems[0].created_at).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
+    : "עוד לא בושל מתכון";
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString("he-IL", { month: "long", year: "numeric" })
+    : "—";
 
   if (!user && !authLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/")}
-                className="flex items-center gap-1 hover:bg-primary/10"
-              >
-                <ArrowRight className="w-4 h-4" />
-                חזרה
-              </Button>
-              <div className="flex items-center gap-2">
-                <ChefHat className="w-6 h-6 text-primary" />
-                <span className="font-bold text-foreground">מה שיש</span>
-              </div>
-            </div>
-          </div>
-        </header>
-        
-        <main className="container mx-auto px-4 py-12 text-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        dir="rtl"
+        style={{ background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)" }}
+      >
+        <div className="text-center max-w-md mx-auto px-6">
           <div className="text-6xl mb-6">🔐</div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            יש להתחבר כדי לצפות בפרופיל
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            התחברו כדי לראות את ספר המתכונים שלכם ואת היסטוריית הבישולים
-          </p>
-          <Button variant="default" onClick={() => navigate("/")}>
-            חזרה לדף הבית
-          </Button>
-        </main>
+          <h1 className="text-2xl font-bold text-foreground mb-3">יש להתחבר כדי לצפות בפרופיל</h1>
+          <p className="text-muted-foreground mb-8">התחברו כדי לראות את ההיסטוריה והקרדיטים שלכם</p>
+          <Button onClick={() => navigate("/login")}>התחברות</Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
+    <div
+      className="min-h-screen pb-20"
+      dir="rtl"
+      style={{ background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)" }}
+    >
+      {/* Header — same pattern as AddRecipe */}
+      <header
+        className="relative z-20"
+        style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
+      >
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate("/")}
-              className="flex items-center gap-1 hover:bg-primary/10"
+              className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
+              onClick={() => navigate(-1)}
+              aria-label="חזרה"
             >
-              <ArrowRight className="w-4 h-4" />
               חזרה
+              <ArrowRight className="w-5 h-5" />
             </Button>
-            <div className="flex items-center gap-2">
-              <ChefHat className="w-6 h-6 text-primary" />
-              <span className="font-bold text-foreground">מה שיש</span>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                <ChefHat className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-xl font-bold text-primary-foreground">הפרופיל שלי</h1>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 max-w-3xl">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
+          <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
             <p className="text-muted-foreground">טוען פרופיל...</p>
           </div>
         ) : (
           <>
-            {/* Profile Header + Stats combined */}
-            <div className="bg-gradient-to-br from-primary/10 via-accent to-card rounded-2xl p-6 mb-6 animate-fade-in relative overflow-hidden">
-              {/* Decorative image */}
-              <img
-                src={profileDecoration}
-                alt=""
-                className="absolute left-0 bottom-0 w-28 h-28 object-contain opacity-20 pointer-events-none"
-                style={{ filter: "sepia(0.4) saturate(0.8)" }}
-              />
-
-              <div className="flex items-center gap-4 mb-4 relative z-10">
-                <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-primary/30">
-                  <img src={profileAvatar} alt="Profile" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-xl font-bold text-foreground truncate">
-                    {user?.email?.split("@")[0] || "שף מתחיל"}
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    מבשלים ביחד מ{user?.created_at 
-                      ? new Date(user.created_at).toLocaleDateString("he-IL", { month: "long", year: "numeric" })
-                      : "ינואר 2025"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Inline Stats */}
-              <div className="grid grid-cols-3 gap-3 relative z-10">
-                <div className="bg-background/60 rounded-xl text-center py-3 px-2">
-                  <UtensilsCrossed className="w-5 h-5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold text-foreground">{userDishes.length}</p>
-                  <p className="text-xs text-muted-foreground">בושלו</p>
-                </div>
-                <div className="bg-background/60 rounded-xl text-center py-3 px-2">
-                  <BookOpen className="w-5 h-5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold text-foreground">{recipes?.length || 0}</p>
-                  <p className="text-xs text-muted-foreground">שמורים</p>
-                </div>
-                <div className="bg-background/60 rounded-xl text-center py-3 px-2">
-                  <Zap className="w-5 h-5 text-primary mx-auto mb-1" />
-                  <p className={`text-lg font-bold ${(credits?.credits_remaining ?? 0) <= 0 ? "text-destructive" : "text-foreground"}`}>
-                    {credits?.credits_remaining ?? 0}
-                  </p>
-                  <p className="text-xs text-muted-foreground">קרדיטים</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Achievement Badge */}
-            {userDishes.length >= 5 && (
-              <div className="bg-accent rounded-2xl p-4 mb-8 flex items-center gap-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-                <div className="bg-primary rounded-full p-3">
-                  <Award className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">הישג חדש!</h3>
-                  <p className="text-sm text-muted-foreground">בישלתם {userDishes.length} מתכונים - מגיע לכם כוכב! ⭐</p>
-                </div>
-              </div>
-            )}
-
-            {/* Reset Credits */}
-            <div className="mb-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleResetCredits}
-                disabled={resettingCredits}
-                className="w-full"
-              >
-                {resettingCredits ? (
-                  <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                ) : (
-                  <RefreshCw className="w-4 h-4 ml-2" />
-                )}
-                איפוס קרדיטים (10 קרדיטים)
-              </Button>
-            </div>
-
-
-            <div className="animate-slide-up" style={{ animationDelay: "0.3s" }}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-primary" />
-                  גלריית הבישולים שלי
-                </h2>
-                {userDishes.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate("/gallery")}
-                  >
-                    צפו בכל הגלריה
-                  </Button>
-                )}
-              </div>
-
-              {/* Dishes Grid */}
-              {userDishes.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {userDishes.slice(0, 6).map((dish, index) => (
-                      <div
-                        key={dish.id}
-                        style={{ animationDelay: `${0.4 + index * 0.1}s` }}
-                        className="animate-scale-in"
-                      >
-                        <DishCard dish={dish} />
-                      </div>
-                    ))}
+            {/* Identity card */}
+            <section className="bg-card border border-border/60 rounded-3xl p-6 mb-6 shadow-sm animate-fade-in">
+              <div className="flex items-center gap-4">
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-primary/30 shadow-md">
+                    <img src={profileAvatar} alt="Profile" className="w-full h-full object-cover" />
                   </div>
-                  {userDishes.length > 6 && (
-                    <div className="text-center mt-6">
-                      <Button
-                        variant="outline"
-                        onClick={() => navigate("/gallery")}
-                      >
-                        צפו בעוד {userDishes.length - 6} מנות
-                      </Button>
+                  {isAdmin && (
+                    <div className="absolute -bottom-1 -left-1 bg-primary rounded-full p-1.5 shadow-md" title="מנהל">
+                      <Crown className="w-3.5 h-3.5 text-primary-foreground" />
                     </div>
                   )}
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  <span className="text-6xl mb-4 block">📖</span>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    הגלריה ריקה
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    בשלו את המתכון הראשון שלכם ושמרו אותו כאן!
-                  </p>
-                  <Button variant="default" onClick={() => navigate("/ingredients")}>
-                    התחילו לבשל
-                  </Button>
                 </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-foreground truncate">
+                    {user?.email?.split("@")[0] || "שף מתחיל"}
+                  </h2>
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                    <Mail className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{user?.email}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                    <span>חבר/ה מ{memberSince}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Stats grid */}
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+              <StatCard icon={UtensilsCrossed} value={cookedCount} label="מתכונים שבושלו" />
+              <StatCard icon={BookOpen} value={savedCount} label="מתכונים שמורים" />
+              <StatCard
+                icon={Zap}
+                value={credits?.credits_remaining ?? 0}
+                label="קרדיטים פנויים"
+                highlight={(credits?.credits_remaining ?? 0) <= 0}
+              />
+              <StatCard icon={Sparkles} value={credits?.total_ai_calls ?? 0} label="יצירות AI" />
+            </section>
+
+            {/* Activity card */}
+            <section className="bg-card border border-border/60 rounded-2xl p-5 mb-6 shadow-sm animate-slide-up" style={{ animationDelay: "0.2s" }}>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3">פעילות אחרונה</h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center shrink-0">
+                  <ChefHat className="w-5 h-5 text-secondary-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">בישול אחרון</p>
+                  <p className="font-semibold text-foreground">{lastCooked}</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Credits action */}
+            <section className="bg-card border border-border/60 rounded-2xl p-5 mb-6 shadow-sm animate-slide-up" style={{ animationDelay: "0.3s" }}>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="font-semibold text-foreground">קרדיטים</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    כל יצירה של מתכון AI מנכה קרדיט אחד.
+                  </p>
+                </div>
+                <Zap className="w-5 h-5 text-primary shrink-0 mt-1" />
+              </div>
+
+              {isAdmin ? (
+                <Button
+                  variant="outline"
+                  onClick={handleResetCredits}
+                  disabled={resettingCredits}
+                  className="w-full"
+                >
+                  {resettingCredits ? (
+                    <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 ml-2" />
+                  )}
+                  איפוס קרדיטים (מנהל בלבד)
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  onClick={() => navigate("/upgrade")}
+                  className="w-full"
+                >
+                  <Sparkles className="w-4 h-4 ml-2" />
+                  קבלו עוד קרדיטים
+                </Button>
               )}
-            </div>
+            </section>
+
+            {/* Sign out */}
+            <Button
+              variant="ghost"
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            >
+              {signingOut ? (
+                <Loader2 className="w-4 h-4 animate-spin ml-2" />
+              ) : (
+                <LogOut className="w-4 h-4 ml-2" />
+              )}
+              התנתקות
+            </Button>
           </>
         )}
       </main>
