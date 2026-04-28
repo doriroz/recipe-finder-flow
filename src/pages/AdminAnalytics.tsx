@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BarChart3, Users, Download, TrendingUp, ShieldOff, Loader2, ArrowRight, Cpu, Leaf, Search } from "lucide-react";
+import {
+  BarChart3,
+  Users,
+  Download,
+  TrendingUp,
+  ShieldOff,
+  Loader2,
+  ArrowRight,
+  Cpu,
+  Leaf,
+  Search,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,14 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,7 +108,7 @@ const AdminAnalytics = () => {
 
       if (res.error) throw res.error;
       toast({ title: "הדשבורד הושבת", description: "ניתן להפעיל מחדש דרך SQL Editor" });
-      setData((prev) => prev ? { ...prev, disabled: true } : null);
+      setData((prev) => (prev ? { ...prev, disabled: true } : null));
     } catch (err: any) {
       toast({ title: "שגיאה", description: err.message, variant: "destructive" });
     } finally {
@@ -149,14 +153,12 @@ const AdminAnalytics = () => {
           <CardContent className="pt-6 text-center space-y-4">
             <ShieldOff className="h-12 w-12 mx-auto text-muted-foreground" />
             <h2 className="text-xl font-semibold text-foreground">הדשבורד מושבת כרגע</h2>
-            <p className="text-muted-foreground text-sm">
-              ניתן להפעיל מחדש בלחיצה על הכפתור למטה
-            </p>
+            <p className="text-muted-foreground text-sm">ניתן להפעיל מחדש בלחיצה על הכפתור למטה</p>
             <div className="flex flex-col gap-2">
               <Button onClick={handleRestore} disabled={disabling}>
                 {disabling ? "מפעיל..." : "הפעל דשבורד מחדש"}
               </Button>
-              <Button variant="outline" onClick={() => navigate("/")}>
+              <Button variant="outline" onClick={() => navigate("/v2-dashboard")}>
                 חזרה לדף הבית
               </Button>
             </div>
@@ -290,7 +292,9 @@ const AdminAnalytics = () => {
                 <TableBody>
                   {eventRows.map(([name, count]) => (
                     <TableRow key={name}>
-                      <TableCell className="font-mono text-sm" dir="ltr">{name}</TableCell>
+                      <TableCell className="font-mono text-sm" dir="ltr">
+                        {name}
+                      </TableCell>
                       <TableCell>{count}</TableCell>
                     </TableRow>
                   ))}
@@ -366,17 +370,27 @@ const AdminAnalytics = () => {
                     <TableBody>
                       {data.aiUsage.recentLogs.map((log) => (
                         <TableRow key={log.id}>
-                          <TableCell className="text-sm">{new Date(log.created_at).toLocaleDateString("he-IL")}</TableCell>
-                          <TableCell className="font-mono text-sm" dir="ltr">{log.action_type}</TableCell>
+                          <TableCell className="text-sm">
+                            {new Date(log.created_at).toLocaleDateString("he-IL")}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm" dir="ltr">
+                            {log.action_type}
+                          </TableCell>
                           <TableCell>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              log.source === "ai"
-                                ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                log.source === "ai"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                  : log.source === "spoonacular"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                    : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                              }`}
+                            >
+                              {log.source === "ai"
+                                ? "🤖 AI"
                                 : log.source === "spoonacular"
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                            }`}>
-                              {log.source === "ai" ? "🤖 AI" : log.source === "spoonacular" ? "🔍 Spoonacular" : "📚 מקומי"}
+                                  ? "🔍 Spoonacular"
+                                  : "📚 מקומי"}
                             </span>
                           </TableCell>
                           <TableCell>{log.credits_used}</TableCell>
@@ -392,7 +406,7 @@ const AdminAnalytics = () => {
         )}
 
         <div className="text-center">
-          <Button variant="ghost" onClick={() => navigate("/")} className="text-muted-foreground">
+          <Button variant="ghost" onClick={() => navigate("/v2-dashboard")} className="text-muted-foreground">
             <ArrowRight className="h-4 w-4 ml-2" />
             חזרה לדף הבית
           </Button>
