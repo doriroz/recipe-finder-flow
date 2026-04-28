@@ -97,10 +97,10 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
           <BookOpen className="ml-2 h-4 w-4" />
           הגלריה שלי
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/select-ingredients")} className="cursor-pointer">
+        {/*<DropdownMenuItem onClick={() => navigate("/select-ingredients")} className="cursor-pointer">
           <ChefHat className="ml-2 h-4 w-4" />
           בישול חדש
-        </DropdownMenuItem>
+        </DropdownMenuItem>*/}
         {onOpenHistory && (
           <DropdownMenuItem onClick={onOpenHistory} className="cursor-pointer">
             <History className="ml-2 h-4 w-4" />
