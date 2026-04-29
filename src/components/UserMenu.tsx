@@ -29,8 +29,12 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Check for an active session first; if none, just clear local state.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
+        if (error) throw error;
+      }
       toast({
         title: "להתראות! 👋",
         description: "התנתקת בהצלחה",
