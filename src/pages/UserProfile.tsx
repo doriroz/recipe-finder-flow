@@ -131,12 +131,9 @@ const UserProfile = () => {
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await supabase.auth.signOut({ scope: 'local' });
-      }
+      localStorage.removeItem("sb-njjggyhqddbuzbzibbja-auth-token");
       toast.success("התנתקת בהצלחה");
-      navigate("/");
+      window.location.assign("/");
     } catch {
       toast.error("שגיאה בהתנתקות");
     } finally {
