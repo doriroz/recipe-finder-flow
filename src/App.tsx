@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/V2Dashboard";
-import IngredientInput from "./pages/IngredientInput";
+import IngredientInput from "./pages/SelectedIngredient";
 import RecipeResult from "./pages/RecipeResult";
 import CookingMode from "./pages/CookingMode";
 import PostCooking from "./pages/PostCooking";
