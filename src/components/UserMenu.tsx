@@ -29,6 +29,8 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
     setIsLoggingOut(true);
     try {
       localStorage.removeItem("sb-njjggyhqddbuzbzibbja-auth-token");
+      // Clear personalized client-side state so it doesn't leak across sessions
+      localStorage.removeItem("v2-cookbook-recipes");
       toast({
         title: "להתראות! 👋",
         description: "התנתקת בהצלחה",
