@@ -29,17 +29,12 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // Check for an active session first; if none, just clear local state.
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { error } = await supabase.auth.signOut({ scope: 'local' });
-        if (error) throw error;
-      }
+      localStorage.removeItem("sb-njjggyhqddbuzbzibbja-auth-token");
       toast({
         title: "להתראות! 👋",
         description: "התנתקת בהצלחה",
       });
-      navigate("/");
+      window.location.assign("/");
     } catch (error: any) {
       toast({
         title: "שגיאה",
