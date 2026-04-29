@@ -132,6 +132,7 @@ const UserProfile = () => {
     setSigningOut(true);
     try {
       localStorage.removeItem("sb-njjggyhqddbuzbzibbja-auth-token");
+      localStorage.removeItem("v2-cookbook-recipes");
       toast.success("התנתקת בהצלחה");
       window.location.assign("/");
     } catch {

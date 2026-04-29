@@ -31,10 +31,21 @@ import heroBg from "@/assets/v2-hero-bg.jpg";
 import HeritageUploadDialog from "@/components/HeritageUploadDialog";
 import UserMenu from "@/components/UserMenu";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
+import { useAuth } from "@/hooks/useAuth";
 
 const V2Dashboard = () => {
   const navigate = useNavigate();
   const { recipes, addRecipe, removeRecipe } = useV2Cookbook();
+  const { user } = useAuth();
+  const requireAuth = (path: string) => {
+    if (!user) {
+      toast("יש להתחבר כדי להמשיך 🔐");
+      navigate("/login", { state: { from: { pathname: path } } });
+      return false;
+    }
+    return true;
+  };
+  const displayedRecipes = user ? recipes : [];
   const [heritageOpen, setHeritageOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
@@ -51,12 +62,12 @@ const V2Dashboard = () => {
   }>({ open: false, recipe: null, existingTitle: "" });
 
   const filteredRecipes = useMemo(() => {
-    if (!gallerySearch.trim()) return recipes;
+    if (!gallerySearch.trim()) return displayedRecipes;
     const q = gallerySearch.trim().toLowerCase();
-    return recipes.filter(
+    return displayedRecipes.filter(
       (r) => r.title.toLowerCase().includes(q) || r.ingredients.some((ing) => ing.toLowerCase().includes(q)),
     );
-  }, [recipes, gallerySearch]);
+  }, [displayedRecipes, gallerySearch]);
 
   const trySaveRecipe = (recipe: V2CookbookRecipe) => {
     const result = addRecipe(recipe);
@@ -166,7 +177,7 @@ const V2Dashboard = () => {
               </p>
 
               <Button
-                onClick={() => setHeritageOpen(true)}
+                onClick={() => requireAuth("/v2-dashboard") && setHeritageOpen(true)}
                 className="rounded-2xl gap-2 bg-[hsl(25_45%_35%)] hover:bg-[hsl(25_45%_28%)] text-primary-foreground px-6 shadow-soft"
               >
                 <Upload className="w-4 h-4" />
@@ -269,7 +280,7 @@ const V2Dashboard = () => {
                       );
                     })}
                   </div>
-                ) : recipes.length === 0 ? (
+                ) : displayedRecipes.length === 0 ? (
                   <div className="text-center py-8 space-y-3">
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-accent flex items-center justify-center">
                       <BookOpen className="w-7 h-7 text-primary" />
@@ -318,7 +329,7 @@ const V2Dashboard = () => {
             <div className="grid grid-cols-2 gap-3 md:gap-4 w-full max-w-md">
               {/* Left card: Globe — popular recipes */}
               <button
-                onClick={() => navigate("/categories")}
+                onClick={() => requireAuth("/categories") && navigate("/categories")}
                 className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-card/20 backdrop-blur-md border border-primary-foreground/20 hover:bg-card/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
               >
                 <div className="w-12 h-12 rounded-2xl bg-primary-foreground/90 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -333,7 +344,7 @@ const V2Dashboard = () => {
 
               {/* Right card: Sparkles — AI fridge */}
               <button
-                onClick={() => navigate("/select-ingredients")}
+                onClick={() => requireAuth("/select-ingredients") && navigate("/select-ingredients")}
                 className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-card/20 backdrop-blur-md border border-primary-foreground/20 hover:bg-card/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
               >
                 <div className="w-12 h-12 rounded-2xl bg-primary-foreground/90 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -351,7 +362,7 @@ const V2Dashboard = () => {
             <Button
               size="lg"
               className="w-full max-w-xs rounded-full text-base font-bold gap-2 shadow-elevated bg-primary hover:bg-primary/90 text-primary-foreground py-6"
-              onClick={() => navigate("/select-ingredients")}
+              onClick={() => requireAuth("/select-ingredients") && navigate("/select-ingredients")}
             >
               <ChefHat className="w-5 h-5" />
               בנו מתכון!
