@@ -131,7 +131,10 @@ const UserProfile = () => {
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
-      await supabase.auth.signOut();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.auth.signOut({ scope: 'local' });
+      }
       toast.success("התנתקת בהצלחה");
       navigate("/");
     } catch {
