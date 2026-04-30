@@ -53,8 +53,9 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
 
   if (!user) {
     return (
+      {/*outline*/}
       <Button
-        variant="outline"
+        variant="ghost"
         onClick={() => navigate("/login")}
         className="flex items-center gap-2 rounded-full border-primary/30 bg-accent hover:bg-[#fcfcfc]"
       >
