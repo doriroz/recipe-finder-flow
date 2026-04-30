@@ -53,7 +53,6 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
 
   if (!user) {
     return (
-      {/*outline*/}
       <Button
         variant="outline"
         onClick={() => navigate("/login")}
