@@ -9,11 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:opacity-90 [box-shadow:var(--shadow-soft)] hover:[box-shadow:var(--shadow-elevated)]",
+        default:
+          "bg-primary text-primary-foreground hover:opacity-90 [box-shadow:var(--shadow-soft)] hover:[box-shadow:var(--shadow-elevated)]",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:opacity-90 [box-shadow:var(--shadow-soft)]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
+        login: "bg-accent hover:bg-[#fcfcfc]",
         link: "text-primary underline-offset-4 hover:underline",
         hero: "bg-primary text-primary-foreground hover:opacity-90 [box-shadow:var(--shadow-elevated)] hover:[box-shadow:var(--shadow-soft)] text-lg font-semibold",
         cooking: "bg-secondary text-secondary-foreground hover:opacity-90 [box-shadow:var(--shadow-soft)]",
@@ -31,12 +33,11 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
@@ -44,7 +45,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
-  }
+  },
 );
 Button.displayName = "Button";
 
