@@ -56,7 +56,7 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
       <Button
         variant="outline"
         onClick={() => navigate("/login")}
-        className="flex items-center gap-2 rounded-full border-primary/30 bg-accent hover:bg-primary/10"
+        className="flex items-center gap-2 rounded-full border-primary/30 bg-accent hover:bg-[#fcfcfc]"
       >
         <LogIn className="w-4 h-4" />
         התחברות
