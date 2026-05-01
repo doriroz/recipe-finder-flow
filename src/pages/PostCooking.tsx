@@ -327,7 +327,7 @@ const PostCooking = () => {
             <ChefHat className="w-5 h-5" />
             בואו נבשל עוד
           </Button>
-          <Button variant="outline" size="lg" onClick={() => navigate("//v2-cookbook")}>
+          <Button variant="outline" size="lg" onClick={() => navigate("/v2-cookbook")}>
             <BookOpen className="w-5 h-5" />
             הגלריה שלי
           </Button>
