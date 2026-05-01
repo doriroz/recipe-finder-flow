@@ -87,18 +87,47 @@ const RecipeResult = () => {
     navigate(`/cooking?id=${selectedRecipeId}`);
   };
 
-  const handleGenerateAI = userIngredientNames.length > 0 ? () => {
-    generateRecipe({
-      ingredients: userIngredientNames.map((name, i) => ({ id: i, name, emoji: "", category: "" })),
-      forceCreative: true,
-    });
-  } : undefined;
+  const handleGenerateAI =
+    userIngredientNames.length > 0
+      ? () => {
+          generateRecipe({
+            ingredients: userIngredientNames.map((name, i) => ({ id: i, name, emoji: "", category: "" })),
+            forceCreative: true,
+          });
+        }
+      : undefined;
 
   // No-match view
   if (noMatch) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-card border-b border-border sticky top-0 z-10">
+        <header
+          className="relative z-20"
+          style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
+        >
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
+                onClick={() => navigate(-1)}
+                aria-label="חזרה"
+              >
+                חזרה
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                  <ChefHat className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <h1 className="text-xl font-bold text-primary-foreground">הפרופיל שלי</h1>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/*<header className="bg-card border-b border-border sticky top-0 z-10">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
@@ -111,7 +140,7 @@ const RecipeResult = () => {
               </div>
             </div>
           </div>
-        </header>
+        </header>*/}
         <main className="container mx-auto px-4 py-8 pb-24">
           <div className="text-center space-y-4 mb-8">
             <div className="text-5xl">🍽️</div>
@@ -137,7 +166,9 @@ const RecipeResult = () => {
           {/* Popular recipes */}
           {popularRecipes.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground text-center">מתכונים פופולריים שאולי יעניינו אותך</h3>
+              <h3 className="text-lg font-semibold text-foreground text-center">
+                מתכונים פופולריים שאולי יעניינו אותך
+              </h3>
               {popularRecipes.map((item: any, i: number) => (
                 <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
                   <h4 className="font-bold text-foreground">{item.recipe?.title || "מתכון"}</h4>
@@ -162,11 +193,7 @@ const RecipeResult = () => {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               {!cookingSessionActive && (
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate(-1)}
-                  className="flex items-center gap-2"
-                >
+                <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
                   <ArrowRight className="w-5 h-5" />
                   חזרה
                 </Button>
@@ -248,11 +275,7 @@ const RecipeResult = () => {
       <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2"
-            >
+            <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
               <ArrowRight className="w-5 h-5" />
               חזרה
             </Button>
@@ -292,17 +315,10 @@ const RecipeResult = () => {
                       : "יצרנו לכם מתכון עם AI!"}
                 </span>
               </div>
-              {!user && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  התחברו כדי לשמור מתכונים משלכם
-                </p>
-              )}
+              {!user && <p className="text-sm text-muted-foreground mt-2">התחברו כדי לשמור מתכונים משלכם</p>}
             </div>
 
-            <RecipeCard
-              recipe={displayRecipe}
-              onStartCooking={() => handleStartCooking(recipe?.id || "mock")}
-            />
+            <RecipeCard recipe={displayRecipe} onStartCooking={() => handleStartCooking(recipe?.id || "mock")} />
           </>
         )}
       </main>
