@@ -1,70 +1,60 @@
-## Problem
-When the user selects **חלב** (milk), Spoonacular returns global recipes (cream sauces, beef stroganoff, chicken alfredo, etc.) and the system surfaces **בשר טחון / עוף** as recommended pairings. This breaks kosher dietary rules and feels wrong for an Israeli/Hebrew app.
+# Refactor Signup to Server-Side Edge Function
 
-The pairing logic itself works — it just lacks cultural awareness.
+## Goal
 
-## Fix — Kosher-aware pairing filter
+Replace the client-side `supabase.auth.signUp(...)` call in `src/pages/Login.tsx` with a server-side Edge Function that uses the `SUPABASE_SERVICE_ROLE_KEY` to create users via the Admin API with `email_confirm: true`. After creation, the client signs the user in with email/password so a normal session is established.
 
-Add a small classification layer that prevents meat ↔ dairy cross-recommendations. Fish, eggs, and legumes (pareve) remain valid pairings for both sides.
+## Why this approach
 
-### 1. New file: `src/lib/kosherCategories.ts`
-Classify the ~14 protein/dairy ingredients in `mockData.ts`:
+- `email_confirm: true` (Admin API) marks the user as already verified — no confirmation email required, no dependency on Supabase's email rate limits or SMTP.
+- Service role stays server-side only (never reaches the browser).
+- Centralizes signup policy (validation, future rate limiting, future profile/role creation) in one controlled place.
 
-```ts
-// MEAT (בשרי) — never paired with dairy
-export const MEAT_INGREDIENTS = new Set([
-  "עוף", "בשר טחון", "נקניקיות", "חזה עוף", "שריות עוף", "בשר בקר"
-]);
+## Changes
 
-// DAIRY (חלבי) — never paired with meat
-export const DAIRY_INGREDIENTS = new Set([
-  "גבינה צהובה", "חלב", "גבינת קוטג'", "שמנת חמוצה", "יוגורט",
-  "חמאה", "גבינה לבנה", "גבינת מוצרלה", "שמנת מתוקה", "פרמזן"
-]);
+### 1. New Edge Function: `supabase/functions/signup/index.ts`
 
-// Everything else (fish, eggs, legumes, vegetables, grains…) is pareve → always allowed.
+Responsibilities:
+- Accept `POST { email, password }` (JSON).
+- CORS handling (OPTIONS + headers on every response).
+- Validate input with Zod:
+  - `email`: valid email, max 255
+  - `password`: min 6, max 72 (Supabase's bcrypt limit)
+- Create an admin client with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
+- Call `admin.auth.admin.createUser({ email, password, email_confirm: true })`.
+- Map errors to friendly Hebrew messages (already-registered, weak password, invalid email, generic).
+- Return `{ success: true }` on 200, `{ error: "<hebrew>" }` on 400/409/500.
+- Do NOT return the user object or any tokens (client will sign in next).
 
-export function isMeat(name: string)  { return MEAT_INGREDIENTS.has(name); }
-export function isDairy(name: string) { return DAIRY_INGREDIENTS.has(name); }
+Notes:
+- No JWT verification needed (public signup endpoint). Will not modify `supabase/config.toml` — Lovable defaults to `verify_jwt = false`, which is what we want here.
+- No new secrets needed — `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` already exist.
 
-export function violatesKosher(selectedNames: string[], candidateName: string): boolean {
-  const candIsMeat  = isMeat(candidateName);
-  const candIsDairy = isDairy(candidateName);
-  if (!candIsMeat && !candIsDairy) return false; // pareve → always fine
+### 2. Update `src/pages/Login.tsx`
 
-  const hasMeat  = selectedNames.some(isMeat);
-  const hasDairy = selectedNames.some(isDairy);
+In the `signup` branch of `handleSubmit`:
+- Replace `supabase.auth.signUp(...)` with `supabase.functions.invoke("signup", { body: { email, password } })`.
+- On success, immediately call `supabase.auth.signInWithPassword({ email, password })` to establish a session.
+- On success of sign-in: toast "ברוכים הבאים! 🎉" and `navigate(redirectTo, { replace: true })` (matches login flow — no more "check your email" message since confirmation is bypassed).
+- Extend the existing friendly-error mapping to handle the new error strings returned by the function (already-registered → "כבר קיים חשבון…", weak password → existing "Password should be" branch, etc.).
 
-  if (candIsMeat && hasDairy) return true;
-  if (candIsDairy && hasMeat) return true;
-  return false;
-}
-```
+No other files change. `useAuth` continues to work via `onAuthStateChange`.
 
-### 2. Update `src/hooks/useIngredientPairings.ts`
-Inside the loop that builds `pairedIds` (around the `for (const p of pairings)` block), add a guard:
+## Security considerations
 
-```ts
-import { violatesKosher } from "@/lib/kosherCategories";
+- Service role key remains server-side only (Edge Function env).
+- Endpoint is intentionally public (anyone can sign up — same posture as the previous client-side `signUp`). If you later want to throttle abuse, we can add per-IP rate limiting in the function; out of scope here.
+- Input validated with Zod before hitting the Admin API.
+- Function returns no tokens or sensitive user fields.
 
-const selectedNames = ingredients.map((i) => i.name);
-// …inside the loop:
-if (violatesKosher(selectedNames, heName)) continue;
-```
+## Out of scope
 
-Also skip the chef-tip toast when `topPairing.pairing` violates kosher (just check the same function before assigning `topPairing`).
-
-### 3. No edge function or UI changes needed
-- The Spoonacular call stays the same (still useful for non-conflicting pairings).
-- Category glow & ⭐ sorting are unaffected — they just won't show meat under dairy selections (and vice-versa).
-- Pareve items (egg, fish, legumes, tofu, vegetables) continue to be recommended normally.
-
-## Validation
-After the fix, with **חלב** selected:
-- Toast: "חלב משתלב נהדר עם **ביצה**" (or יוגורט / קמח / סוכר) — never with עוף or בשר.
-- Open חלבונים → ⭐ on **ביצה / סלמון / טונה / טופו**, never on עוף or בשר טחון.
-- Inverse test: select **עוף** → חלבי category will not glow, no dairy items get ⭐.
+- Password reset flow (still uses `resetPasswordForEmail` directly — unchanged).
+- Login flow (unchanged — still client-side `signInWithPassword`).
+- Profile/roles table creation on signup (none exists today; not adding now).
+- SMTP / Resend configuration (separate dashboard task you already have).
 
 ## Files touched
-- `src/lib/kosherCategories.ts` (new, ~25 lines)
-- `src/hooks/useIngredientPairings.ts` (add import + 2-line guard + toast guard)
+
+- `supabase/functions/signup/index.ts` (new)
+- `src/pages/Login.tsx` (signup branch only)
