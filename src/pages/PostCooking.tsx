@@ -144,7 +144,7 @@ const PostCooking = () => {
   return (
     <div className="min-h-screen bg-background">
       {showConfetti && <Confetti />}
-
+      {/* Header */}
       <header
         className="relative z-20"
         style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
@@ -170,7 +170,7 @@ const PostCooking = () => {
           </div>
         </div>
       </header>
-      {/* Header */}
+
       {/*<header className="sticky top-0 z-50 bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
@@ -323,11 +323,11 @@ const PostCooking = () => {
           className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in"
           style={{ animationDelay: "0.6s" }}
         >
-          <Button variant="default" size="lg" onClick={() => navigate("/ingredients")}>
+          <Button variant="default" size="lg" onClick={() => navigate("/select-ingredients")}>
             <ChefHat className="w-5 h-5" />
             בואו נבשל עוד
           </Button>
-          <Button variant="outline" size="lg" onClick={() => navigate("/gallery")}>
+          <Button variant="outline" size="lg" onClick={() => navigate("//v2-cookbook")}>
             <BookOpen className="w-5 h-5" />
             הגלריה שלי
           </Button>
