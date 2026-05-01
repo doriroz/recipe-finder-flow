@@ -189,7 +189,32 @@ const RecipeResult = () => {
   if (recipeItems && recipeItems.length > 0) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-card border-b border-border sticky top-0 z-10">
+        <header
+          className="relative z-20"
+          style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
+        >
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
+                onClick={() => navigate(-1)}
+                aria-label="חזרה"
+              >
+                חזרה
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                  <ChefHat className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <h1 className="text-xl font-bold text-primary-foreground">הפרופיל שלי</h1>
+              </div>
+            </div>
+          </div>
+        </header>
+        {/*<header className="bg-card border-b border-border sticky top-0 z-10">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               {!cookingSessionActive && (
@@ -204,7 +229,7 @@ const RecipeResult = () => {
               </div>
             </div>
           </div>
-        </header>
+        </header>*/}
 
         <main className="container mx-auto px-4 py-8 pb-24">
           {/* AI Disclaimer */}
