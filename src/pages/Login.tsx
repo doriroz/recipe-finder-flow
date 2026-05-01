@@ -48,18 +48,36 @@ const Login = () => {
         });
         navigate(redirectTo, { replace: true });
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Server-side signup via Edge Function (uses service role + email_confirm: true)
+        const { data, error } = await supabase.functions.invoke("signup", {
+          body: { email, password },
+        });
+        if (error) {
+          // Try to surface the function's friendly Hebrew error if present
+          const ctx: any = (error as any).context;
+          let serverMsg = "";
+          try {
+            if (ctx && typeof ctx.json === "function") {
+              const body = await ctx.json();
+              serverMsg = body?.error || "";
+            }
+          } catch { /* ignore */ }
+          throw new Error(serverMsg || error.message || "Signup failed");
+        }
+        if (data?.error) throw new Error(data.error);
+
+        // User is created and auto-confirmed — sign them in immediately
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
-          options: {
-            emailRedirectTo: window.location.origin,
-          },
         });
-        if (error) throw error;
+        if (signInError) throw signInError;
+
         toast({
-          title: "נרשמת בהצלחה! 📧",
-          description: "בדוק את המייל שלך לאישור החשבון",
+          title: "ברוכים הבאים! 🎉",
+          description: "נרשמת והתחברת בהצלחה",
         });
+        navigate(redirectTo, { replace: true });
       }
     } catch (error: any) {
       const raw = error.message || "";
