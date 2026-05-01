@@ -70,6 +70,10 @@ const Login = () => {
         friendly = "האימייל עדיין לא אושר. בדוק את תיבת הדואר שלך.";
       } else if (raw.includes("User already registered")) {
         friendly = "כבר קיים חשבון עם אימייל זה. נסה להתחבר.";
+      } else if (raw.includes("rate limit") || raw.includes("over_email_send_rate_limit") || raw.includes("after")) {
+        friendly = "נשלחו יותר מדי בקשות. נסה שוב בעוד דקה ⏳";
+      } else if (raw.includes("Password should be")) {
+        friendly = "הסיסמה חייבת להכיל לפחות 6 תווים.";
       }
       setErrorMessage(friendly);
     } finally {
