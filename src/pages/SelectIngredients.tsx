@@ -192,8 +192,17 @@ const SelectIngredients = () => {
   };
 
   const canGenerate = selected.length >= 2;
+  const customMetaMap = useMemo(() => {
+    const m: Record<string, { hue: string; subtitle: string; image: string; emoji?: string }> = {};
+    customCategories.forEach((c) => {
+      m[c.name] = { hue: c.hue, subtitle: c.subtitle, image: "", emoji: c.emoji };
+    });
+    return m;
+  }, [customCategories]);
+
   const openMeta = openCategory
-    ? (CATEGORY_META[openCategory] ?? { hue: "30 30% 82%", subtitle: "", image: "" })
+    ? (CATEGORY_META[openCategory] ??
+        customMetaMap[openCategory] ?? { hue: "30 30% 82%", subtitle: "", image: "" })
     : null;
   const openIngredients = openCategory
     ? allIngredients
