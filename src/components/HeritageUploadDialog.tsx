@@ -52,12 +52,17 @@ const HeritageUploadDialog = ({ open, onOpenChange }: HeritageUploadDialogProps)
     reader.readAsDataURL(file);
   };
 
-  const trySaveRecipe = (recipe: V2CookbookRecipe) => {
-    const result = addRecipe(recipe);
-    if (result.isDuplicate) {
-      toast.info(`"${result.existingTitle}" כבר קיים בספר שלך`);
-    } else {
-      toast.success("המתכון נשמר לספר שלי! 📖");
+  const trySaveRecipe = async (recipe: V2CookbookRecipe) => {
+    try {
+      const result = await addRecipe(recipe);
+      if (result.isDuplicate) {
+        toast.info(`"${result.existingTitle}" כבר קיים בספר שלך`);
+      } else {
+        toast.success("המתכון נשמר לספר שלי! 📖");
+      }
+    } catch (err) {
+      console.error("Save recipe error:", err);
+      toast.error("שמירה נכשלה, נסו שוב");
     }
   };
 
