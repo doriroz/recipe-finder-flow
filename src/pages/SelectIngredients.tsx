@@ -1,10 +1,11 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat, Star } from "lucide-react";
 import CreditCounter from "@/components/CreditCounter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { ingredients as mockIngredients, type Ingredient } from "@/data/mockData";
@@ -15,6 +16,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIsMobile } from "@/hooks/use-mobile";
 import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import ImageUpload from "@/components/ImageUpload";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 import dairyImg from "@/assets/categories/dairy.jpg";
@@ -26,6 +28,14 @@ import cannedImg from "@/assets/categories/canned.jpg";
 import oilsImg from "@/assets/categories/oils.jpg";
 import spicesImg from "@/assets/categories/spices.jpg";
 import bakeryImg from "@/assets/categories/bakery.jpg";
+
+const CUSTOM_CATEGORIES_KEY = "custom_categories_v1";
+interface CustomCategoryMeta {
+  name: string;
+  emoji: string;
+  subtitle: string;
+  hue: string;
+}
 
 const CATEGORY_META: Record<string, { hue: string; subtitle: string; image: string }> = {
   חלבי: { hue: "200 55% 82%", subtitle: "גבינות וחלב", image: dairyImg },
@@ -55,6 +65,53 @@ const SelectIngredients = () => {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const { customIngredients } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
+
+  // Admin: custom categories persisted in localStorage
+  const [customCategories, setCustomCategories] = useState<CustomCategoryMeta[]>([]);
+  const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatEmoji, setNewCatEmoji] = useState("🍽️");
+  const [newCatSubtitle, setNewCatSubtitle] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+      if (raw) setCustomCategories(JSON.parse(raw));
+    } catch (e) {
+      console.error("Failed to parse custom categories:", e);
+    }
+  }, []);
+
+  const persistCustomCategories = (next: CustomCategoryMeta[]) => {
+    setCustomCategories(next);
+    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+  };
+
+  const handleAddCategory = () => {
+    const name = newCatName.trim();
+    if (!name) {
+      toast({ title: "שם קטגוריה חסר", description: "אנא הזינו שם לקטגוריה", variant: "destructive" });
+      return;
+    }
+    const exists =
+      FIXED_CATEGORIES.includes(name) || customCategories.some((c) => c.name === name);
+    if (exists) {
+      toast({ title: "קטגוריה כבר קיימת", description: name, variant: "destructive" });
+      return;
+    }
+    const hues = ["260 50% 82%", "180 50% 82%", "12 60% 82%", "210 55% 82%", "100 45% 82%"];
+    const hue = hues[customCategories.length % hues.length];
+    const next = [
+      ...customCategories,
+      { name, emoji: newCatEmoji || "🍽️", subtitle: newCatSubtitle.trim() || "קטגוריה חדשה", hue },
+    ];
+    persistCustomCategories(next);
+    setNewCatName("");
+    setNewCatEmoji("🍽️");
+    setNewCatSubtitle("");
+    setShowAddCategoryDialog(false);
+    toast({ title: "קטגוריה נוספה", description: name });
+  };
 
   const allIngredients = useMemo<Ingredient[]>(() => {
     const custom = customIngredients.map((c) => ({ ...c, popularityScore: 50 }));
@@ -134,8 +191,17 @@ const SelectIngredients = () => {
   };
 
   const canGenerate = selected.length >= 2;
+  const customMetaMap = useMemo(() => {
+    const m: Record<string, { hue: string; subtitle: string; image: string; emoji?: string }> = {};
+    customCategories.forEach((c) => {
+      m[c.name] = { hue: c.hue, subtitle: c.subtitle, image: "", emoji: c.emoji };
+    });
+    return m;
+  }, [customCategories]);
+
   const openMeta = openCategory
-    ? (CATEGORY_META[openCategory] ?? { hue: "30 30% 82%", subtitle: "", image: "" })
+    ? (CATEGORY_META[openCategory] ??
+        customMetaMap[openCategory] ?? { hue: "30 30% 82%", subtitle: "", image: "" })
     : null;
   const openIngredients = openCategory
     ? allIngredients
@@ -352,6 +418,40 @@ const SelectIngredients = () => {
                   );
                 })}
 
+                {/* Custom (admin-added) categories */}
+                {customCategories.map((c) => {
+                  const catIngredients = allIngredients.filter((i) => i.category === c.name);
+                  const selectedCount = catIngredients.filter((i) => selected.some((s) => s.id === i.id)).length;
+                  return (
+                    <motion.button
+                      key={`custom-${c.name}`}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => openModal(c.name)}
+                      className="group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9]"
+                      style={{
+                        background: `hsl(${c.hue})`,
+                        boxShadow: "0 4px 12px -2px hsl(0 0% 0% / 0.12)",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                      {selectedCount > 0 && (
+                        <span className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-xs px-2.5 py-1 rounded-full font-bold leading-none">
+                          {selectedCount}
+                        </span>
+                      )}
+                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1">
+                        <span className="text-4xl leading-none drop-shadow">{c.emoji}</span>
+                      </div>
+                      <div className="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-end pb-3 px-3">
+                        <p className="font-bold text-white text-sm leading-tight drop-shadow-md">{c.name}</p>
+                        <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">{c.subtitle}</p>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+
                 {/* Admin-only add category button */}
                 {isAdmin && !isMobile && (
                   <motion.button
@@ -361,9 +461,7 @@ const SelectIngredients = () => {
                     whileTap={{ scale: 0.95 }}
                     className="rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
                     style={{ minHeight: "120px" }}
-                    onClick={() => {
-                      /* TODO: admin add category dialog */
-                    }}
+                    onClick={() => setShowAddCategoryDialog(true)}
                   >
                     <Plus className="w-8 h-8" />
                     <span className="text-xs font-medium">הוסף קטגוריה</span>
@@ -498,6 +596,59 @@ const SelectIngredients = () => {
               {isGenerating ? "מחפש מתכון..." : "מצא מתכון מהתמונה"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Admin: Add Category Dialog */}
+      <Dialog open={showAddCategoryDialog} onOpenChange={setShowAddCategoryDialog}>
+        <DialogContent className="sm:max-w-[420px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-right flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" />
+              הוסיפו קטגוריה חדשה
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2" dir="rtl">
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-name">שם הקטגוריה</Label>
+              <Input
+                id="cat-name"
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="לדוגמה: ממתקים"
+                className="text-right"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-emoji">אימוג'י</Label>
+              <Input
+                id="cat-emoji"
+                value={newCatEmoji}
+                onChange={(e) => setNewCatEmoji(e.target.value)}
+                placeholder="🍫"
+                maxLength={4}
+                className="text-right text-2xl w-20"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-subtitle">כותרת משנה</Label>
+              <Input
+                id="cat-subtitle"
+                value={newCatSubtitle}
+                onChange={(e) => setNewCatSubtitle(e.target.value)}
+                placeholder="תיאור קצר"
+                className="text-right"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex-row-reverse gap-2 sm:justify-start">
+            <Button variant="hero" onClick={handleAddCategory}>
+              הוסיפו קטגוריה
+            </Button>
+            <Button variant="outline" onClick={() => setShowAddCategoryDialog(false)}>
+              ביטול
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
