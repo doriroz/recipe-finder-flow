@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat, Star } from "lucide-react";
 import CreditCounter from "@/components/CreditCounter";
@@ -28,7 +28,6 @@ import cannedImg from "@/assets/categories/canned.jpg";
 import oilsImg from "@/assets/categories/oils.jpg";
 import spicesImg from "@/assets/categories/spices.jpg";
 import bakeryImg from "@/assets/categories/bakery.jpg";
-import { useEffect } from "react";
 
 const CUSTOM_CATEGORIES_KEY = "custom_categories_v1";
 interface CustomCategoryMeta {
