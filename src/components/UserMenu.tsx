@@ -29,8 +29,8 @@ const UserMenu = ({ onOpenHistory }: UserMenuProps) => {
     setIsLoggingOut(true);
     try {
       localStorage.removeItem("sb-njjggyhqddbuzbzibbja-auth-token");
-      // Clear personalized client-side state so it doesn't leak across sessions
-      localStorage.removeItem("v2-cookbook-recipes");
+      // Note: v2-cookbook-recipes is now persisted per-user in Supabase.
+      // The local key is only used as a guest cache, so we leave it alone.
       toast({
         title: "להתראות! 👋",
         description: "התנתקת בהצלחה",

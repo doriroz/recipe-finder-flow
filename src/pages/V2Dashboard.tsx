@@ -69,12 +69,17 @@ const V2Dashboard = () => {
     );
   }, [displayedRecipes, gallerySearch]);
 
-  const trySaveRecipe = (recipe: V2CookbookRecipe) => {
-    const result = addRecipe(recipe);
-    if (result.isDuplicate) {
-      setDuplicateDialog({ open: true, recipe, existingTitle: result.existingTitle || recipe.title });
-    } else {
-      toast.success("המתכון נשמר לספר שלי! 📖");
+  const trySaveRecipe = async (recipe: V2CookbookRecipe) => {
+    try {
+      const result = await addRecipe(recipe);
+      if (result.isDuplicate) {
+        setDuplicateDialog({ open: true, recipe, existingTitle: result.existingTitle || recipe.title });
+      } else {
+        toast.success("המתכון נשמר לספר שלי! 📖");
+      }
+    } catch (err) {
+      console.error("Save recipe error:", err);
+      toast.error("שמירה נכשלה, נסו שוב");
     }
   };
 

@@ -413,6 +413,66 @@ export type Database = {
         }
         Relationships: []
       }
+      v2_cookbook_recipes: {
+        Row: {
+          cooking_time: number | null
+          created_at: string
+          cuisine_category: string | null
+          description: string | null
+          difficulty: string | null
+          heritage_image_url: string | null
+          id: string
+          ingredients: Json
+          instructions: Json
+          ocr_text: string | null
+          source: string
+          source_label: string | null
+          story: string | null
+          tips: Json | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cooking_time?: number | null
+          created_at?: string
+          cuisine_category?: string | null
+          description?: string | null
+          difficulty?: string | null
+          heritage_image_url?: string | null
+          id?: string
+          ingredients?: Json
+          instructions?: Json
+          ocr_text?: string | null
+          source?: string
+          source_label?: string | null
+          story?: string | null
+          tips?: Json | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cooking_time?: number | null
+          created_at?: string
+          cuisine_category?: string | null
+          description?: string | null
+          difficulty?: string | null
+          heritage_image_url?: string | null
+          id?: string
+          ingredients?: Json
+          instructions?: Json
+          ocr_text?: string | null
+          source?: string
+          source_label?: string | null
+          story?: string | null
+          tips?: Json | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
