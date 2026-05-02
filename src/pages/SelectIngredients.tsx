@@ -67,6 +67,53 @@ const SelectIngredients = () => {
   const { customIngredients } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
 
+  // Admin: custom categories persisted in localStorage
+  const [customCategories, setCustomCategories] = useState<CustomCategoryMeta[]>([]);
+  const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatEmoji, setNewCatEmoji] = useState("🍽️");
+  const [newCatSubtitle, setNewCatSubtitle] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+      if (raw) setCustomCategories(JSON.parse(raw));
+    } catch (e) {
+      console.error("Failed to parse custom categories:", e);
+    }
+  }, []);
+
+  const persistCustomCategories = (next: CustomCategoryMeta[]) => {
+    setCustomCategories(next);
+    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+  };
+
+  const handleAddCategory = () => {
+    const name = newCatName.trim();
+    if (!name) {
+      toast({ title: "שם קטגוריה חסר", description: "אנא הזינו שם לקטגוריה", variant: "destructive" });
+      return;
+    }
+    const exists =
+      FIXED_CATEGORIES.includes(name) || customCategories.some((c) => c.name === name);
+    if (exists) {
+      toast({ title: "קטגוריה כבר קיימת", description: name, variant: "destructive" });
+      return;
+    }
+    const hues = ["260 50% 82%", "180 50% 82%", "12 60% 82%", "210 55% 82%", "100 45% 82%"];
+    const hue = hues[customCategories.length % hues.length];
+    const next = [
+      ...customCategories,
+      { name, emoji: newCatEmoji || "🍽️", subtitle: newCatSubtitle.trim() || "קטגוריה חדשה", hue },
+    ];
+    persistCustomCategories(next);
+    setNewCatName("");
+    setNewCatEmoji("🍽️");
+    setNewCatSubtitle("");
+    setShowAddCategoryDialog(false);
+    toast({ title: "קטגוריה נוספה", description: name });
+  };
+
   const allIngredients = useMemo<Ingredient[]>(() => {
     const custom = customIngredients.map((c) => ({ ...c, popularityScore: 50 }));
     const ids = new Set(mockIngredients.map((i) => i.id));
