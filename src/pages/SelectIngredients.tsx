@@ -4,7 +4,8 @@ import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat, Star } f
 import CreditCounter from "@/components/CreditCounter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { ingredients as mockIngredients, type Ingredient } from "@/data/mockData";
@@ -15,6 +16,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIsMobile } from "@/hooks/use-mobile";
 import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import ImageUpload from "@/components/ImageUpload";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 import dairyImg from "@/assets/categories/dairy.jpg";
@@ -26,6 +28,15 @@ import cannedImg from "@/assets/categories/canned.jpg";
 import oilsImg from "@/assets/categories/oils.jpg";
 import spicesImg from "@/assets/categories/spices.jpg";
 import bakeryImg from "@/assets/categories/bakery.jpg";
+import { useEffect } from "react";
+
+const CUSTOM_CATEGORIES_KEY = "custom_categories_v1";
+interface CustomCategoryMeta {
+  name: string;
+  emoji: string;
+  subtitle: string;
+  hue: string;
+}
 
 const CATEGORY_META: Record<string, { hue: string; subtitle: string; image: string }> = {
   חלבי: { hue: "200 55% 82%", subtitle: "גבינות וחלב", image: dairyImg },
