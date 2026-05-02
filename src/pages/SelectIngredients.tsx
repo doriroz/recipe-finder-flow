@@ -419,6 +419,40 @@ const SelectIngredients = () => {
                   );
                 })}
 
+                {/* Custom (admin-added) categories */}
+                {customCategories.map((c) => {
+                  const catIngredients = allIngredients.filter((i) => i.category === c.name);
+                  const selectedCount = catIngredients.filter((i) => selected.some((s) => s.id === i.id)).length;
+                  return (
+                    <motion.button
+                      key={`custom-${c.name}`}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => openModal(c.name)}
+                      className="group relative rounded-2xl overflow-hidden cursor-pointer select-none aspect-[16/9]"
+                      style={{
+                        background: `hsl(${c.hue})`,
+                        boxShadow: "0 4px 12px -2px hsl(0 0% 0% / 0.12)",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                      {selectedCount > 0 && (
+                        <span className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-xs px-2.5 py-1 rounded-full font-bold leading-none">
+                          {selectedCount}
+                        </span>
+                      )}
+                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1">
+                        <span className="text-4xl leading-none drop-shadow">{c.emoji}</span>
+                      </div>
+                      <div className="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-end pb-3 px-3">
+                        <p className="font-bold text-white text-sm leading-tight drop-shadow-md">{c.name}</p>
+                        <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">{c.subtitle}</p>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+
                 {/* Admin-only add category button */}
                 {isAdmin && !isMobile && (
                   <motion.button
