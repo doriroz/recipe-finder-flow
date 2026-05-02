@@ -557,6 +557,59 @@ const SelectIngredients = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Admin: Add Category Dialog */}
+      <Dialog open={showAddCategoryDialog} onOpenChange={setShowAddCategoryDialog}>
+        <DialogContent className="sm:max-w-[420px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-right flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" />
+              הוסיפו קטגוריה חדשה
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2" dir="rtl">
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-name">שם הקטגוריה</Label>
+              <Input
+                id="cat-name"
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="לדוגמה: ממתקים"
+                className="text-right"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-emoji">אימוג'י</Label>
+              <Input
+                id="cat-emoji"
+                value={newCatEmoji}
+                onChange={(e) => setNewCatEmoji(e.target.value)}
+                placeholder="🍫"
+                maxLength={4}
+                className="text-right text-2xl w-20"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-subtitle">כותרת משנה</Label>
+              <Input
+                id="cat-subtitle"
+                value={newCatSubtitle}
+                onChange={(e) => setNewCatSubtitle(e.target.value)}
+                placeholder="תיאור קצר"
+                className="text-right"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex-row-reverse gap-2 sm:justify-start">
+            <Button variant="hero" onClick={handleAddCategory}>
+              הוסיפו קטגוריה
+            </Button>
+            <Button variant="outline" onClick={() => setShowAddCategoryDialog(false)}>
+              ביטול
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Category Dialog */}
       <Dialog
         open={!!openCategory}
