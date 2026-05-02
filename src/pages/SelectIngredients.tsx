@@ -419,9 +419,7 @@ const SelectIngredients = () => {
                     whileTap={{ scale: 0.95 }}
                     className="rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
                     style={{ minHeight: "120px" }}
-                    onClick={() => {
-                      /* TODO: admin add category dialog */
-                    }}
+                    onClick={() => setShowAddCategoryDialog(true)}
                   >
                     <Plus className="w-8 h-8" />
                     <span className="text-xs font-medium">הוסף קטגוריה</span>
