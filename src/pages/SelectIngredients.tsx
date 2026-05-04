@@ -18,6 +18,8 @@ import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import ImageUpload from "@/components/ImageUpload";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 import dairyImg from "@/assets/categories/dairy.jpg";
 import vegetablesImg from "@/assets/categories/vegetables.jpg";
@@ -29,13 +31,25 @@ import oilsImg from "@/assets/categories/oils.jpg";
 import spicesImg from "@/assets/categories/spices.jpg";
 import bakeryImg from "@/assets/categories/bakery.jpg";
 
-const CUSTOM_CATEGORIES_KEY = "custom_categories_v1";
 interface CustomCategoryMeta {
+  id: string;
   name: string;
   emoji: string;
   subtitle: string;
   hue: string;
+  image_url: string | null;
 }
+
+const HUE_PALETTE = [
+  { label: "כתום", value: "30 60% 82%" },
+  { label: "ורוד", value: "340 55% 82%" },
+  { label: "סגול", value: "270 45% 82%" },
+  { label: "כחול", value: "200 55% 82%" },
+  { label: "ירוק", value: "142 45% 82%" },
+  { label: "צהוב", value: "48 70% 81%" },
+  { label: "אדום", value: "12 60% 82%" },
+  { label: "טורקיז", value: "180 50% 82%" },
+];
 
 const CATEGORY_META: Record<string, { hue: string; subtitle: string; image: string }> = {
   חלבי: { hue: "200 55% 82%", subtitle: "גבינות וחלב", image: dairyImg },
@@ -57,6 +71,7 @@ const SelectIngredients = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { isAdmin } = useIsAdmin();
+  const { user } = useAuth();
   const [selected, setSelected] = useState<Ingredient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [openCategory, setOpenCategory] = useState<string | null>(null);
@@ -66,28 +81,80 @@ const SelectIngredients = () => {
   const { customIngredients } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
 
-  // Admin: custom categories persisted in localStorage
+  // Admin: custom categories from Supabase
   const [customCategories, setCustomCategories] = useState<CustomCategoryMeta[]>([]);
+  const [customDbIngredients, setCustomDbIngredients] = useState<Ingredient[]>([]);
   const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatEmoji, setNewCatEmoji] = useState("🍽️");
   const [newCatSubtitle, setNewCatSubtitle] = useState("");
+  const [newCatHue, setNewCatHue] = useState(HUE_PALETTE[0].value);
+  const [newCatImageFile, setNewCatImageFile] = useState<File | null>(null);
+  const [newCatImagePreview, setNewCatImagePreview] = useState<string | null>(null);
+  const [savingCategory, setSavingCategory] = useState(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
-      if (raw) setCustomCategories(JSON.parse(raw));
-    } catch (e) {
-      console.error("Failed to parse custom categories:", e);
+  // Inline ingredient adder (inside category dialog)
+  const [newIngName, setNewIngName] = useState("");
+  const [newIngEmoji, setNewIngEmoji] = useState("🥗");
+  const [savingIngredient, setSavingIngredient] = useState(false);
+
+  const fetchCustomCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("custom_categories")
+      .select("id, name, emoji, subtitle, hue, image_url")
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.error("Failed to load custom categories:", error);
+      return;
     }
+    setCustomCategories((data || []) as CustomCategoryMeta[]);
   }, []);
 
-  const persistCustomCategories = (next: CustomCategoryMeta[]) => {
-    setCustomCategories(next);
-    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+  const fetchDbIngredients = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("ingredients")
+      .select("id, name, emoji, category");
+    if (error) {
+      console.error("Failed to load ingredients:", error);
+      return;
+    }
+    // Map UUID rows to numeric-id Ingredient shape (hash uuid -> stable number)
+    const mapped: Ingredient[] = (data || []).map((row) => {
+      let hash = 0;
+      for (let i = 0; i < row.id.length; i++) hash = ((hash << 5) - hash + row.id.charCodeAt(i)) | 0;
+      return {
+        id: 100000 + Math.abs(hash % 900000),
+        name: row.name,
+        emoji: row.emoji,
+        category: row.category,
+        popularityScore: 50,
+      };
+    });
+    setCustomDbIngredients(mapped);
+  }, []);
+
+  useEffect(() => {
+    fetchCustomCategories();
+    fetchDbIngredients();
+  }, [fetchCustomCategories, fetchDbIngredients]);
+
+  const handleCategoryImagePick = (file: File | null) => {
+    setNewCatImageFile(file);
+    if (newCatImagePreview) URL.revokeObjectURL(newCatImagePreview);
+    setNewCatImagePreview(file ? URL.createObjectURL(file) : null);
   };
 
-  const handleAddCategory = () => {
+  const resetAddCategoryForm = () => {
+    setNewCatName("");
+    setNewCatEmoji("🍽️");
+    setNewCatSubtitle("");
+    setNewCatHue(HUE_PALETTE[0].value);
+    if (newCatImagePreview) URL.revokeObjectURL(newCatImagePreview);
+    setNewCatImageFile(null);
+    setNewCatImagePreview(null);
+  };
+
+  const handleAddCategory = async () => {
     const name = newCatName.trim();
     if (!name) {
       toast({ title: "שם קטגוריה חסר", description: "אנא הזינו שם לקטגוריה", variant: "destructive" });
@@ -99,26 +166,77 @@ const SelectIngredients = () => {
       toast({ title: "קטגוריה כבר קיימת", description: name, variant: "destructive" });
       return;
     }
-    const hues = ["260 50% 82%", "180 50% 82%", "12 60% 82%", "210 55% 82%", "100 45% 82%"];
-    const hue = hues[customCategories.length % hues.length];
-    const next = [
-      ...customCategories,
-      { name, emoji: newCatEmoji || "🍽️", subtitle: newCatSubtitle.trim() || "קטגוריה חדשה", hue },
-    ];
-    persistCustomCategories(next);
-    setNewCatName("");
-    setNewCatEmoji("🍽️");
-    setNewCatSubtitle("");
-    setShowAddCategoryDialog(false);
-    toast({ title: "קטגוריה נוספה", description: name });
+    setSavingCategory(true);
+    try {
+      let image_url: string | null = null;
+      if (newCatImageFile) {
+        const ext = newCatImageFile.name.split(".").pop() || "jpg";
+        const path = `${user?.id || "admin"}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("category-images")
+          .upload(path, newCatImageFile, { upsert: false });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("category-images").getPublicUrl(path);
+        image_url = pub.publicUrl;
+      }
+      const { error: insErr } = await supabase.from("custom_categories").insert({
+        name,
+        emoji: newCatEmoji || "🍽️",
+        subtitle: newCatSubtitle.trim() || "קטגוריה חדשה",
+        hue: newCatHue,
+        image_url,
+        created_by: user?.id ?? null,
+      });
+      if (insErr) throw insErr;
+      await fetchCustomCategories();
+      resetAddCategoryForm();
+      setShowAddCategoryDialog(false);
+      toast({ title: "קטגוריה נוספה", description: name });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "שגיאה ביצירת קטגוריה", description: e?.message || "נסו שוב", variant: "destructive" });
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const handleAddIngredientToCategory = async () => {
+    if (!openCategory) return;
+    const name = newIngName.trim();
+    if (!name) return;
+    setSavingIngredient(true);
+    try {
+      const { error } = await supabase.from("ingredients").insert({
+        name,
+        emoji: newIngEmoji || "🥗",
+        category: openCategory,
+        created_by: user?.id ?? null,
+      });
+      if (error) throw error;
+      setNewIngName("");
+      setNewIngEmoji("🥗");
+      await fetchDbIngredients();
+      toast({ title: "מצרך נוסף", description: name });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "שגיאה בהוספת מצרך", description: e?.message || "נסו שוב", variant: "destructive" });
+    } finally {
+      setSavingIngredient(false);
+    }
   };
 
   const allIngredients = useMemo<Ingredient[]>(() => {
     const custom = customIngredients.map((c) => ({ ...c, popularityScore: 50 }));
-    const ids = new Set(mockIngredients.map((i) => i.id));
-    const uniqueCustom = custom.filter((c) => !ids.has(c.id));
-    return [...mockIngredients, ...uniqueCustom];
-  }, [customIngredients]);
+    const seen = new Set<number>(mockIngredients.map((i) => i.id));
+    const out: Ingredient[] = [...mockIngredients];
+    for (const c of [...custom, ...customDbIngredients]) {
+      if (!seen.has(c.id)) {
+        seen.add(c.id);
+        out.push(c);
+      }
+    }
+    return out;
+  }, [customIngredients, customDbIngredients]);
 
   console.log("allIngredients : " + allIngredients);
   const categories = useMemo(() => Array.from(new Set(allIngredients.map((i) => i.category))), [allIngredients]);
@@ -194,7 +312,7 @@ const SelectIngredients = () => {
   const customMetaMap = useMemo(() => {
     const m: Record<string, { hue: string; subtitle: string; image: string; emoji?: string }> = {};
     customCategories.forEach((c) => {
-      m[c.name] = { hue: c.hue, subtitle: c.subtitle, image: "", emoji: c.emoji };
+      m[c.name] = { hue: c.hue, subtitle: c.subtitle, image: c.image_url || "", emoji: c.emoji };
     });
     return m;
   }, [customCategories]);
@@ -435,15 +553,25 @@ const SelectIngredients = () => {
                         boxShadow: "0 4px 12px -2px hsl(0 0% 0% / 0.12)",
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                      {c.image_url && (
+                        <img
+                          src={c.image_url}
+                          alt={c.name}
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.07]"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent" />
                       {selectedCount > 0 && (
                         <span className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-xs px-2.5 py-1 rounded-full font-bold leading-none">
                           {selectedCount}
                         </span>
                       )}
-                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1">
-                        <span className="text-4xl leading-none drop-shadow">{c.emoji}</span>
-                      </div>
+                      {!c.image_url && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1">
+                          <span className="text-4xl leading-none drop-shadow">{c.emoji}</span>
+                        </div>
+                      )}
                       <div className="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-end pb-3 px-3">
                         <p className="font-bold text-white text-sm leading-tight drop-shadow-md">{c.name}</p>
                         <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">{c.subtitle}</p>
@@ -600,7 +728,7 @@ const SelectIngredients = () => {
       </Dialog>
 
       {/* Admin: Add Category Dialog */}
-      <Dialog open={showAddCategoryDialog} onOpenChange={setShowAddCategoryDialog}>
+      <Dialog open={showAddCategoryDialog} onOpenChange={(o) => { if (!o) resetAddCategoryForm(); setShowAddCategoryDialog(o); }}>
         <DialogContent className="sm:max-w-[420px] rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-right flex items-center gap-2">
@@ -608,7 +736,7 @@ const SelectIngredients = () => {
               הוסיפו קטגוריה חדשה
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2" dir="rtl">
+          <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto" dir="rtl">
             <div className="space-y-1.5">
               <Label htmlFor="cat-name">שם הקטגוריה</Label>
               <Input
@@ -619,16 +747,36 @@ const SelectIngredients = () => {
                 className="text-right"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cat-emoji">אימוג'י</Label>
-              <Input
-                id="cat-emoji"
-                value={newCatEmoji}
-                onChange={(e) => setNewCatEmoji(e.target.value)}
-                placeholder="🍫"
-                maxLength={4}
-                className="text-right text-2xl w-20"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cat-emoji">אימוג'י</Label>
+                <Input
+                  id="cat-emoji"
+                  value={newCatEmoji}
+                  onChange={(e) => setNewCatEmoji(e.target.value)}
+                  placeholder="🍫"
+                  maxLength={4}
+                  className="text-right text-2xl w-20"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>צבע רקע</Label>
+                <div className="flex flex-wrap gap-2">
+                  {HUE_PALETTE.map((h) => (
+                    <button
+                      key={h.value}
+                      type="button"
+                      title={h.label}
+                      onClick={() => setNewCatHue(h.value)}
+                      className={cn(
+                        "w-7 h-7 rounded-full border-2 transition-all",
+                        newCatHue === h.value ? "border-primary scale-110" : "border-transparent"
+                      )}
+                      style={{ background: `hsl(${h.value})` }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cat-subtitle">כותרת משנה</Label>
@@ -640,12 +788,37 @@ const SelectIngredients = () => {
                 className="text-right"
               />
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-image">תמונת רקע (אופציונלי)</Label>
+              <Input
+                id="cat-image"
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleCategoryImagePick(e.target.files?.[0] || null)}
+                className="text-right"
+              />
+              <div
+                className="mt-2 aspect-[16/9] rounded-xl overflow-hidden relative border border-border"
+                style={{ background: `hsl(${newCatHue})` }}
+              >
+                {newCatImagePreview ? (
+                  <img src={newCatImagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-4xl">{newCatEmoji}</div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute bottom-2 inset-x-0 text-center">
+                  <p className="font-bold text-white text-sm drop-shadow">{newCatName || "שם הקטגוריה"}</p>
+                  <p className="text-xs text-white/80 drop-shadow">{newCatSubtitle || "כותרת משנה"}</p>
+                </div>
+              </div>
+            </div>
           </div>
           <DialogFooter className="flex-row-reverse gap-2 sm:justify-start">
-            <Button variant="hero" onClick={handleAddCategory}>
-              הוסיפו קטגוריה
+            <Button variant="hero" onClick={handleAddCategory} disabled={savingCategory}>
+              {savingCategory ? "שומר..." : "הוסיפו קטגוריה"}
             </Button>
-            <Button variant="outline" onClick={() => setShowAddCategoryDialog(false)}>
+            <Button variant="outline" onClick={() => { resetAddCategoryForm(); setShowAddCategoryDialog(false); }}>
               ביטול
             </Button>
           </DialogFooter>
@@ -717,7 +890,44 @@ const SelectIngredients = () => {
                     </motion.button>
                   );
                 })}
+                {openIngredients.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    אין עדיין מצרכים בקטגוריה זו
+                  </p>
+                )}
               </div>
+
+              {/* Admin inline ingredient adder */}
+              {isAdmin && (
+                <div className="px-4 py-3 border-t border-border bg-muted/30" dir="rtl">
+                  <p className="text-xs font-bold text-foreground mb-2">הוספת מצרך לקטגוריה</p>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newIngEmoji}
+                      onChange={(e) => setNewIngEmoji(e.target.value)}
+                      maxLength={4}
+                      className="text-center text-xl w-14 shrink-0"
+                    />
+                    <Input
+                      value={newIngName}
+                      onChange={(e) => setNewIngName(e.target.value)}
+                      placeholder="שם המצרך"
+                      className="text-right flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newIngName.trim()) handleAddIngredientToCategory();
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!newIngName.trim() || savingIngredient}
+                      onClick={handleAddIngredientToCategory}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div
                 className="px-4 pb-5 pt-3 border-t"

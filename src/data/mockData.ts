@@ -130,6 +130,17 @@ export const ingredients: Ingredient[] = [
   { id: 98, name: "אבקת אפייה", emoji: "🥄", category: "אחר", popularityScore: 55 },
   { id: 99, name: "וניל", emoji: "🌿", category: "אחר", popularityScore: 62 },
   { id: 100, name: "צימוקים", emoji: "🍇", category: "אחר", popularityScore: 54 },
+  // מאפים
+  { id: 101, name: "בצק עלים", emoji: "🥐", category: "מאפים", popularityScore: 78 },
+  { id: 102, name: "בצק פילו", emoji: "🥟", category: "מאפים", popularityScore: 60 },
+  { id: 103, name: "בצק פיצה", emoji: "🍕", category: "מאפים", popularityScore: 82 },
+  { id: 104, name: "בורקס", emoji: "🥟", category: "מאפים", popularityScore: 80 },
+  { id: 105, name: "קרואסון", emoji: "🥐", category: "מאפים", popularityScore: 72 },
+  { id: 106, name: "בייגלה", emoji: "🥨", category: "מאפים", popularityScore: 68 },
+  { id: 107, name: "מאפינס", emoji: "🧁", category: "מאפים", popularityScore: 65 },
+  { id: 108, name: "עוגיות", emoji: "🍪", category: "מאפים", popularityScore: 75 },
+  { id: 109, name: "חלה", emoji: "🍞", category: "מאפים", popularityScore: 84 },
+  { id: 110, name: "בייגל", emoji: "🥯", category: "מאפים", popularityScore: 70 },
 ];
 
 export const mockRecipe = {

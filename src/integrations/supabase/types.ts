@@ -86,6 +86,42 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          emoji: string
+          hue: string
+          id: string
+          image_url: string | null
+          name: string
+          subtitle: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          emoji?: string
+          hue?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          subtitle?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          emoji?: string
+          hue?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          subtitle?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fridge_challenges: {
         Row: {
           created_at: string
