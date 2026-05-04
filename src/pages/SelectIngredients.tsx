@@ -18,6 +18,8 @@ import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import ImageUpload from "@/components/ImageUpload";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 import dairyImg from "@/assets/categories/dairy.jpg";
 import vegetablesImg from "@/assets/categories/vegetables.jpg";
@@ -29,13 +31,25 @@ import oilsImg from "@/assets/categories/oils.jpg";
 import spicesImg from "@/assets/categories/spices.jpg";
 import bakeryImg from "@/assets/categories/bakery.jpg";
 
-const CUSTOM_CATEGORIES_KEY = "custom_categories_v1";
 interface CustomCategoryMeta {
+  id: string;
   name: string;
   emoji: string;
   subtitle: string;
   hue: string;
+  image_url: string | null;
 }
+
+const HUE_PALETTE = [
+  { label: "כתום", value: "30 60% 82%" },
+  { label: "ורוד", value: "340 55% 82%" },
+  { label: "סגול", value: "270 45% 82%" },
+  { label: "כחול", value: "200 55% 82%" },
+  { label: "ירוק", value: "142 45% 82%" },
+  { label: "צהוב", value: "48 70% 81%" },
+  { label: "אדום", value: "12 60% 82%" },
+  { label: "טורקיז", value: "180 50% 82%" },
+];
 
 const CATEGORY_META: Record<string, { hue: string; subtitle: string; image: string }> = {
   חלבי: { hue: "200 55% 82%", subtitle: "גבינות וחלב", image: dairyImg },
@@ -57,6 +71,7 @@ const SelectIngredients = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { isAdmin } = useIsAdmin();
+  const { user } = useAuth();
   const [selected, setSelected] = useState<Ingredient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [openCategory, setOpenCategory] = useState<string | null>(null);
@@ -66,28 +81,80 @@ const SelectIngredients = () => {
   const { customIngredients } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
 
-  // Admin: custom categories persisted in localStorage
+  // Admin: custom categories from Supabase
   const [customCategories, setCustomCategories] = useState<CustomCategoryMeta[]>([]);
+  const [customDbIngredients, setCustomDbIngredients] = useState<Ingredient[]>([]);
   const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatEmoji, setNewCatEmoji] = useState("🍽️");
   const [newCatSubtitle, setNewCatSubtitle] = useState("");
+  const [newCatHue, setNewCatHue] = useState(HUE_PALETTE[0].value);
+  const [newCatImageFile, setNewCatImageFile] = useState<File | null>(null);
+  const [newCatImagePreview, setNewCatImagePreview] = useState<string | null>(null);
+  const [savingCategory, setSavingCategory] = useState(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
-      if (raw) setCustomCategories(JSON.parse(raw));
-    } catch (e) {
-      console.error("Failed to parse custom categories:", e);
+  // Inline ingredient adder (inside category dialog)
+  const [newIngName, setNewIngName] = useState("");
+  const [newIngEmoji, setNewIngEmoji] = useState("🥗");
+  const [savingIngredient, setSavingIngredient] = useState(false);
+
+  const fetchCustomCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("custom_categories")
+      .select("id, name, emoji, subtitle, hue, image_url")
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.error("Failed to load custom categories:", error);
+      return;
     }
+    setCustomCategories((data || []) as CustomCategoryMeta[]);
   }, []);
 
-  const persistCustomCategories = (next: CustomCategoryMeta[]) => {
-    setCustomCategories(next);
-    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+  const fetchDbIngredients = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("ingredients")
+      .select("id, name, emoji, category");
+    if (error) {
+      console.error("Failed to load ingredients:", error);
+      return;
+    }
+    // Map UUID rows to numeric-id Ingredient shape (hash uuid -> stable number)
+    const mapped: Ingredient[] = (data || []).map((row) => {
+      let hash = 0;
+      for (let i = 0; i < row.id.length; i++) hash = ((hash << 5) - hash + row.id.charCodeAt(i)) | 0;
+      return {
+        id: 100000 + Math.abs(hash % 900000),
+        name: row.name,
+        emoji: row.emoji,
+        category: row.category,
+        popularityScore: 50,
+      };
+    });
+    setCustomDbIngredients(mapped);
+  }, []);
+
+  useEffect(() => {
+    fetchCustomCategories();
+    fetchDbIngredients();
+  }, [fetchCustomCategories, fetchDbIngredients]);
+
+  const handleCategoryImagePick = (file: File | null) => {
+    setNewCatImageFile(file);
+    if (newCatImagePreview) URL.revokeObjectURL(newCatImagePreview);
+    setNewCatImagePreview(file ? URL.createObjectURL(file) : null);
   };
 
-  const handleAddCategory = () => {
+  const resetAddCategoryForm = () => {
+    setNewCatName("");
+    setNewCatEmoji("🍽️");
+    setNewCatSubtitle("");
+    setNewCatHue(HUE_PALETTE[0].value);
+    if (newCatImagePreview) URL.revokeObjectURL(newCatImagePreview);
+    setNewCatImageFile(null);
+    setNewCatImagePreview(null);
+  };
+
+  const handleAddCategory = async () => {
     const name = newCatName.trim();
     if (!name) {
       toast({ title: "שם קטגוריה חסר", description: "אנא הזינו שם לקטגוריה", variant: "destructive" });
@@ -99,26 +166,77 @@ const SelectIngredients = () => {
       toast({ title: "קטגוריה כבר קיימת", description: name, variant: "destructive" });
       return;
     }
-    const hues = ["260 50% 82%", "180 50% 82%", "12 60% 82%", "210 55% 82%", "100 45% 82%"];
-    const hue = hues[customCategories.length % hues.length];
-    const next = [
-      ...customCategories,
-      { name, emoji: newCatEmoji || "🍽️", subtitle: newCatSubtitle.trim() || "קטגוריה חדשה", hue },
-    ];
-    persistCustomCategories(next);
-    setNewCatName("");
-    setNewCatEmoji("🍽️");
-    setNewCatSubtitle("");
-    setShowAddCategoryDialog(false);
-    toast({ title: "קטגוריה נוספה", description: name });
+    setSavingCategory(true);
+    try {
+      let image_url: string | null = null;
+      if (newCatImageFile) {
+        const ext = newCatImageFile.name.split(".").pop() || "jpg";
+        const path = `${user?.id || "admin"}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("category-images")
+          .upload(path, newCatImageFile, { upsert: false });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("category-images").getPublicUrl(path);
+        image_url = pub.publicUrl;
+      }
+      const { error: insErr } = await supabase.from("custom_categories").insert({
+        name,
+        emoji: newCatEmoji || "🍽️",
+        subtitle: newCatSubtitle.trim() || "קטגוריה חדשה",
+        hue: newCatHue,
+        image_url,
+        created_by: user?.id ?? null,
+      });
+      if (insErr) throw insErr;
+      await fetchCustomCategories();
+      resetAddCategoryForm();
+      setShowAddCategoryDialog(false);
+      toast({ title: "קטגוריה נוספה", description: name });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "שגיאה ביצירת קטגוריה", description: e?.message || "נסו שוב", variant: "destructive" });
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const handleAddIngredientToCategory = async () => {
+    if (!openCategory) return;
+    const name = newIngName.trim();
+    if (!name) return;
+    setSavingIngredient(true);
+    try {
+      const { error } = await supabase.from("ingredients").insert({
+        name,
+        emoji: newIngEmoji || "🥗",
+        category: openCategory,
+        created_by: user?.id ?? null,
+      });
+      if (error) throw error;
+      setNewIngName("");
+      setNewIngEmoji("🥗");
+      await fetchDbIngredients();
+      toast({ title: "מצרך נוסף", description: name });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "שגיאה בהוספת מצרך", description: e?.message || "נסו שוב", variant: "destructive" });
+    } finally {
+      setSavingIngredient(false);
+    }
   };
 
   const allIngredients = useMemo<Ingredient[]>(() => {
     const custom = customIngredients.map((c) => ({ ...c, popularityScore: 50 }));
-    const ids = new Set(mockIngredients.map((i) => i.id));
-    const uniqueCustom = custom.filter((c) => !ids.has(c.id));
-    return [...mockIngredients, ...uniqueCustom];
-  }, [customIngredients]);
+    const seen = new Set<number>(mockIngredients.map((i) => i.id));
+    const out: Ingredient[] = [...mockIngredients];
+    for (const c of [...custom, ...customDbIngredients]) {
+      if (!seen.has(c.id)) {
+        seen.add(c.id);
+        out.push(c);
+      }
+    }
+    return out;
+  }, [customIngredients, customDbIngredients]);
 
   console.log("allIngredients : " + allIngredients);
   const categories = useMemo(() => Array.from(new Set(allIngredients.map((i) => i.category))), [allIngredients]);
