@@ -312,7 +312,7 @@ const SelectIngredients = () => {
   const customMetaMap = useMemo(() => {
     const m: Record<string, { hue: string; subtitle: string; image: string; emoji?: string }> = {};
     customCategories.forEach((c) => {
-      m[c.name] = { hue: c.hue, subtitle: c.subtitle, image: "", emoji: c.emoji };
+      m[c.name] = { hue: c.hue, subtitle: c.subtitle, image: c.image_url || "", emoji: c.emoji };
     });
     return m;
   }, [customCategories]);
