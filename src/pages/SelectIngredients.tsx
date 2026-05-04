@@ -553,15 +553,25 @@ const SelectIngredients = () => {
                         boxShadow: "0 4px 12px -2px hsl(0 0% 0% / 0.12)",
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                      {c.image_url && (
+                        <img
+                          src={c.image_url}
+                          alt={c.name}
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.07]"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent" />
                       {selectedCount > 0 && (
                         <span className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-xs px-2.5 py-1 rounded-full font-bold leading-none">
                           {selectedCount}
                         </span>
                       )}
-                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1">
-                        <span className="text-4xl leading-none drop-shadow">{c.emoji}</span>
-                      </div>
+                      {!c.image_url && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1">
+                          <span className="text-4xl leading-none drop-shadow">{c.emoji}</span>
+                        </div>
+                      )}
                       <div className="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-end pb-3 px-3">
                         <p className="font-bold text-white text-sm leading-tight drop-shadow-md">{c.name}</p>
                         <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">{c.subtitle}</p>
