@@ -728,7 +728,7 @@ const SelectIngredients = () => {
       </Dialog>
 
       {/* Admin: Add Category Dialog */}
-      <Dialog open={showAddCategoryDialog} onOpenChange={setShowAddCategoryDialog}>
+      <Dialog open={showAddCategoryDialog} onOpenChange={(o) => { if (!o) resetAddCategoryForm(); setShowAddCategoryDialog(o); }}>
         <DialogContent className="sm:max-w-[420px] rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-right flex items-center gap-2">
@@ -736,7 +736,7 @@ const SelectIngredients = () => {
               הוסיפו קטגוריה חדשה
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2" dir="rtl">
+          <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto" dir="rtl">
             <div className="space-y-1.5">
               <Label htmlFor="cat-name">שם הקטגוריה</Label>
               <Input
@@ -747,16 +747,36 @@ const SelectIngredients = () => {
                 className="text-right"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cat-emoji">אימוג'י</Label>
-              <Input
-                id="cat-emoji"
-                value={newCatEmoji}
-                onChange={(e) => setNewCatEmoji(e.target.value)}
-                placeholder="🍫"
-                maxLength={4}
-                className="text-right text-2xl w-20"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cat-emoji">אימוג'י</Label>
+                <Input
+                  id="cat-emoji"
+                  value={newCatEmoji}
+                  onChange={(e) => setNewCatEmoji(e.target.value)}
+                  placeholder="🍫"
+                  maxLength={4}
+                  className="text-right text-2xl w-20"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>צבע רקע</Label>
+                <div className="flex flex-wrap gap-2">
+                  {HUE_PALETTE.map((h) => (
+                    <button
+                      key={h.value}
+                      type="button"
+                      title={h.label}
+                      onClick={() => setNewCatHue(h.value)}
+                      className={cn(
+                        "w-7 h-7 rounded-full border-2 transition-all",
+                        newCatHue === h.value ? "border-primary scale-110" : "border-transparent"
+                      )}
+                      style={{ background: `hsl(${h.value})` }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cat-subtitle">כותרת משנה</Label>
@@ -768,12 +788,37 @@ const SelectIngredients = () => {
                 className="text-right"
               />
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-image">תמונת רקע (אופציונלי)</Label>
+              <Input
+                id="cat-image"
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleCategoryImagePick(e.target.files?.[0] || null)}
+                className="text-right"
+              />
+              <div
+                className="mt-2 aspect-[16/9] rounded-xl overflow-hidden relative border border-border"
+                style={{ background: `hsl(${newCatHue})` }}
+              >
+                {newCatImagePreview ? (
+                  <img src={newCatImagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-4xl">{newCatEmoji}</div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute bottom-2 inset-x-0 text-center">
+                  <p className="font-bold text-white text-sm drop-shadow">{newCatName || "שם הקטגוריה"}</p>
+                  <p className="text-xs text-white/80 drop-shadow">{newCatSubtitle || "כותרת משנה"}</p>
+                </div>
+              </div>
+            </div>
           </div>
           <DialogFooter className="flex-row-reverse gap-2 sm:justify-start">
-            <Button variant="hero" onClick={handleAddCategory}>
-              הוסיפו קטגוריה
+            <Button variant="hero" onClick={handleAddCategory} disabled={savingCategory}>
+              {savingCategory ? "שומר..." : "הוסיפו קטגוריה"}
             </Button>
-            <Button variant="outline" onClick={() => setShowAddCategoryDialog(false)}>
+            <Button variant="outline" onClick={() => { resetAddCategoryForm(); setShowAddCategoryDialog(false); }}>
               ביטול
             </Button>
           </DialogFooter>
@@ -845,7 +890,44 @@ const SelectIngredients = () => {
                     </motion.button>
                   );
                 })}
+                {openIngredients.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    אין עדיין מצרכים בקטגוריה זו
+                  </p>
+                )}
               </div>
+
+              {/* Admin inline ingredient adder */}
+              {isAdmin && (
+                <div className="px-4 py-3 border-t border-border bg-muted/30" dir="rtl">
+                  <p className="text-xs font-bold text-foreground mb-2">הוספת מצרך לקטגוריה</p>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newIngEmoji}
+                      onChange={(e) => setNewIngEmoji(e.target.value)}
+                      maxLength={4}
+                      className="text-center text-xl w-14 shrink-0"
+                    />
+                    <Input
+                      value={newIngName}
+                      onChange={(e) => setNewIngName(e.target.value)}
+                      placeholder="שם המצרך"
+                      className="text-right flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newIngName.trim()) handleAddIngredientToCategory();
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!newIngName.trim() || savingIngredient}
+                      onClick={handleAddIngredientToCategory}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div
                 className="px-4 pb-5 pt-3 border-t"
