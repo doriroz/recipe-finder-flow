@@ -111,9 +111,7 @@ const SelectIngredients = () => {
   }, []);
 
   const fetchDbIngredients = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("ingredients")
-      .select("id, name, emoji, category");
+    const { data, error } = await supabase.from("ingredients").select("id, name, emoji, category");
     if (error) {
       console.error("Failed to load ingredients:", error);
       return;
@@ -160,8 +158,7 @@ const SelectIngredients = () => {
       toast({ title: "שם קטגוריה חסר", description: "אנא הזינו שם לקטגוריה", variant: "destructive" });
       return;
     }
-    const exists =
-      FIXED_CATEGORIES.includes(name) || customCategories.some((c) => c.name === name);
+    const exists = FIXED_CATEGORIES.includes(name) || customCategories.some((c) => c.name === name);
     if (exists) {
       toast({ title: "קטגוריה כבר קיימת", description: name, variant: "destructive" });
       return;
@@ -241,8 +238,10 @@ const SelectIngredients = () => {
   console.log("allIngredients : " + allIngredients);
   const categories = useMemo(() => Array.from(new Set(allIngredients.map((i) => i.category))), [allIngredients]);
 
-  const { relatedCategories, pairedIngredientIds, pairingSources, hasSelection } =
-    useIngredientPairings(selected, allIngredients);
+  const { relatedCategories, pairedIngredientIds, pairingSources, hasSelection } = useIngredientPairings(
+    selected,
+    allIngredients,
+  );
 
   const filteredBySearch = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -318,8 +317,7 @@ const SelectIngredients = () => {
   }, [customCategories]);
 
   const openMeta = openCategory
-    ? (CATEGORY_META[openCategory] ??
-        customMetaMap[openCategory] ?? { hue: "30 30% 82%", subtitle: "", image: "" })
+    ? (CATEGORY_META[openCategory] ?? customMetaMap[openCategory] ?? { hue: "30 30% 82%", subtitle: "", image: "" })
     : null;
   const openIngredients = openCategory
     ? allIngredients
@@ -728,8 +726,14 @@ const SelectIngredients = () => {
       </Dialog>
 
       {/* Admin: Add Category Dialog */}
-      <Dialog open={showAddCategoryDialog} onOpenChange={(o) => { if (!o) resetAddCategoryForm(); setShowAddCategoryDialog(o); }}>
-        <DialogContent className="sm:max-w-[420px] rounded-3xl">
+      <Dialog
+        open={showAddCategoryDialog}
+        onOpenChange={(o) => {
+          if (!o) resetAddCategoryForm();
+          setShowAddCategoryDialog(o);
+        }}
+      >
+        <DialogContent className="sm:max-w-[600px] rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-right flex items-center gap-2">
               <Plus className="w-5 h-5 text-primary" />
@@ -770,7 +774,7 @@ const SelectIngredients = () => {
                       onClick={() => setNewCatHue(h.value)}
                       className={cn(
                         "w-7 h-7 rounded-full border-2 transition-all",
-                        newCatHue === h.value ? "border-primary scale-110" : "border-transparent"
+                        newCatHue === h.value ? "border-primary scale-110" : "border-transparent",
                       )}
                       style={{ background: `hsl(${h.value})` }}
                     />
@@ -818,7 +822,13 @@ const SelectIngredients = () => {
             <Button variant="hero" onClick={handleAddCategory} disabled={savingCategory}>
               {savingCategory ? "שומר..." : "הוסיפו קטגוריה"}
             </Button>
-            <Button variant="outline" onClick={() => { resetAddCategoryForm(); setShowAddCategoryDialog(false); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resetAddCategoryForm();
+                setShowAddCategoryDialog(false);
+              }}
+            >
               ביטול
             </Button>
           </DialogFooter>
@@ -854,16 +864,18 @@ const SelectIngredients = () => {
                       key={ing.id}
                       layout
                       initial={isPaired ? { backgroundColor: "hsl(38 95% 60% / 0.25)" } : false}
-                      animate={{ backgroundColor: isPending ? `hsl(${openMeta.hue} / 0.45)` : isPaired ? "hsl(38 95% 60% / 0.12)" : "transparent" }}
+                      animate={{
+                        backgroundColor: isPending
+                          ? `hsl(${openMeta.hue} / 0.45)`
+                          : isPaired
+                            ? "hsl(38 95% 60% / 0.12)"
+                            : "transparent",
+                      }}
                       transition={{ duration: 0.4 }}
                       onClick={() => togglePending(ing.id)}
                       className={cn(
                         "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right border",
-                        isPending
-                          ? "border-current/30"
-                          : isPaired
-                            ? "border-primary/40"
-                            : "border-transparent",
+                        isPending ? "border-current/30" : isPaired ? "border-primary/40" : "border-transparent",
                       )}
                       onMouseEnter={(e) => {
                         if (!isPending) e.currentTarget.style.backgroundColor = `hsl(${openMeta.hue} / 0.2)`;
@@ -891,9 +903,7 @@ const SelectIngredients = () => {
                   );
                 })}
                 {openIngredients.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-6">
-                    אין עדיין מצרכים בקטגוריה זו
-                  </p>
+                  <p className="text-sm text-muted-foreground text-center py-6">אין עדיין מצרכים בקטגוריה זו</p>
                 )}
               </div>
 
