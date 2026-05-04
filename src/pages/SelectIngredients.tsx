@@ -733,7 +733,7 @@ const SelectIngredients = () => {
           setShowAddCategoryDialog(o);
         }}
       >
-        <DialogContent className="sm:max-w-[420px] rounded-3xl">
+        <DialogContent className="sm:max-w-[500px] rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-right flex items-center gap-2">
               <Plus className="w-5 h-5 text-primary" />
