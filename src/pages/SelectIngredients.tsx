@@ -360,7 +360,7 @@ const SelectIngredients = () => {
           </div>
         </div>
       </header>
-      {/* bg-accent */}
+      {/* bg-accent */} 
       {/* bg-gradient-to-l from-primary/10 via-accent to-card */}
       <div className="flex min-h-screen bg-gradient-to-br from-background via-cream to-accent">
         {/* Main content */}
@@ -740,7 +740,7 @@ const SelectIngredients = () => {
               הוסיפו קטגוריה חדשה
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2 px-6 max-h-[70vh] overflow-y-auto" dir="rtl">
+          <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto" dir="rtl">
             <div className="space-y-1.5">
               <Label htmlFor="cat-name">שם הקטגוריה</Label>
               <Input
