@@ -1,4 +1,4 @@
-5import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat, Star } from "lucide-react";
 import CreditCounter from "@/components/CreditCounter";
