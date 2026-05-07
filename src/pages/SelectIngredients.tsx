@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+5import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat, Star } from "lucide-react";
 import CreditCounter from "@/components/CreditCounter";
@@ -748,7 +748,7 @@ const SelectIngredients = () => {
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
                 placeholder="לדוגמה: ממתקים"
-                className="text-right"
+                className="text-right px-5"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
