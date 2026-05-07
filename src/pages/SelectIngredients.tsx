@@ -748,7 +748,7 @@ const SelectIngredients = () => {
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
                 placeholder="לדוגמה: ממתקים"
-                className="text-right"
+                className="text-right mx-3"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
