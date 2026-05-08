@@ -655,6 +655,32 @@ const SelectIngredients = () => {
                           {selectedCount}
                         </span>
                       )}
+                      {isAdmin && (
+                        <div className="absolute top-2 right-2 z-20 flex gap-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditCategory(c);
+                            }}
+                            aria-label={`ערוך ${c.name}`}
+                            className="p-1.5 rounded-full bg-white/90 hover:bg-white text-foreground shadow-md"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCategory(c);
+                            }}
+                            aria-label={`מחק ${c.name}`}
+                            className="p-1.5 rounded-full bg-white/90 hover:bg-destructive hover:text-destructive-foreground text-destructive shadow-md"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                       {!c.image_url && (
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1">
                           <span className="text-4xl leading-none drop-shadow">{c.emoji}</span>
@@ -669,14 +695,13 @@ const SelectIngredients = () => {
                 })}
 
                 {/* Admin-only add category button */}
-                {isAdmin && !isMobile && (
+                {isAdmin && (
                   <motion.button
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
-                    style={{ minHeight: "120px" }}
+                    className="rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer aspect-[16/9]"
                     onClick={() => setShowAddCategoryDialog(true)}
                   >
                     <Plus className="w-8 h-8" />
