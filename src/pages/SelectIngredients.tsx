@@ -852,7 +852,7 @@ const SelectIngredients = () => {
           <DialogHeader>
             <DialogTitle className="text-right flex items-center gap-2">
               <Plus className="w-5 h-5 text-primary" />
-              הוסיפו קטגוריה חדשה
+              {editingCategoryId ? "ערוך קטגוריה" : "הוסיפו קטגוריה חדשה"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2 px-6 max-h-[70vh] overflow-y-auto" dir="rtl">
@@ -935,7 +935,7 @@ const SelectIngredients = () => {
           </div>
           <DialogFooter className="flex-row-reverse gap-2 sm:justify-start">
             <Button variant="hero" onClick={handleAddCategory} disabled={savingCategory}>
-              {savingCategory ? "שומר..." : "הוסיפו קטגוריה"}
+              {savingCategory ? "שומר..." : editingCategoryId ? "שמור שינויים" : "הוסיפו קטגוריה"}
             </Button>
             <Button
               variant="outline"
@@ -974,8 +974,9 @@ const SelectIngredients = () => {
                   const isPending = pendingSelections.has(ing.id);
                   const isPaired = pairedIngredientIds.has(ing.id);
                   const pairSource = pairingSources.get(ing.id);
+                  const isDbIngredient = dbIngredientUuidById.has(ing.id);
                   return (
-                    <motion.button
+                    <motion.div
                       key={ing.id}
                       layout
                       initial={isPaired ? { backgroundColor: "hsl(38 95% 60% / 0.25)" } : false}
@@ -987,11 +988,11 @@ const SelectIngredients = () => {
                             : "transparent",
                       }}
                       transition={{ duration: 0.4 }}
-                      onClick={() => togglePending(ing.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right border",
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right border cursor-pointer",
                         isPending ? "border-current/30" : isPaired ? "border-primary/40" : "border-transparent",
                       )}
+                      onClick={() => togglePending(ing.id)}
                       onMouseEnter={(e) => {
                         if (!isPending) e.currentTarget.style.backgroundColor = `hsl(${openMeta.hue} / 0.2)`;
                       }}
@@ -1014,7 +1015,20 @@ const SelectIngredients = () => {
                           </span>
                         )}
                       </span>
-                    </motion.button>
+                      {isAdmin && isDbIngredient && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteIngredient(ing);
+                          }}
+                          aria-label={`מחק ${ing.name}`}
+                          className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </motion.div>
                   );
                 })}
                 {openIngredients.length === 0 && (
