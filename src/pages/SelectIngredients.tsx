@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat, Star } from "lucide-react";
+import { Search, X, Sparkles, Check, Camera, Plus, ArrowRight, ChefHat, Star, Pencil, Trash2 } from "lucide-react";
 import CreditCounter from "@/components/CreditCounter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +84,10 @@ const SelectIngredients = () => {
   // Admin: custom categories from Supabase
   const [customCategories, setCustomCategories] = useState<CustomCategoryMeta[]>([]);
   const [customDbIngredients, setCustomDbIngredients] = useState<Ingredient[]>([]);
+  // Map numeric synthetic id -> DB uuid (for admin delete)
+  const [dbIngredientUuidById, setDbIngredientUuidById] = useState<Map<number, string>>(new Map());
   const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [newCatName, setNewCatName] = useState("");
   const [newCatEmoji, setNewCatEmoji] = useState("🍽️");
   const [newCatSubtitle, setNewCatSubtitle] = useState("");
@@ -117,11 +120,14 @@ const SelectIngredients = () => {
       return;
     }
     // Map UUID rows to numeric-id Ingredient shape (hash uuid -> stable number)
+    const uuidMap = new Map<number, string>();
     const mapped: Ingredient[] = (data || []).map((row) => {
       let hash = 0;
       for (let i = 0; i < row.id.length; i++) hash = ((hash << 5) - hash + row.id.charCodeAt(i)) | 0;
+      const numericId = 100000 + Math.abs(hash % 900000);
+      uuidMap.set(numericId, row.id);
       return {
-        id: 100000 + Math.abs(hash % 900000),
+        id: numericId,
         name: row.name,
         emoji: row.emoji,
         category: row.category,
@@ -129,6 +135,7 @@ const SelectIngredients = () => {
       };
     });
     setCustomDbIngredients(mapped);
+    setDbIngredientUuidById(uuidMap);
   }, []);
 
   useEffect(() => {
@@ -143,6 +150,7 @@ const SelectIngredients = () => {
   };
 
   const resetAddCategoryForm = () => {
+    setEditingCategoryId(null);
     setNewCatName("");
     setNewCatEmoji("🍽️");
     setNewCatSubtitle("");
@@ -152,13 +160,59 @@ const SelectIngredients = () => {
     setNewCatImagePreview(null);
   };
 
+  const openEditCategory = (c: CustomCategoryMeta) => {
+    setEditingCategoryId(c.id);
+    setNewCatName(c.name);
+    setNewCatEmoji(c.emoji);
+    setNewCatSubtitle(c.subtitle);
+    setNewCatHue(c.hue);
+    setNewCatImageFile(null);
+    setNewCatImagePreview(c.image_url);
+    setShowAddCategoryDialog(true);
+  };
+
+  const handleDeleteCategory = async (c: CustomCategoryMeta) => {
+    if (!confirm(`למחוק את הקטגוריה "${c.name}"?`)) return;
+    const { error } = await supabase.from("custom_categories").delete().eq("id", c.id);
+    if (error) {
+      toast({ title: "שגיאה במחיקה", description: error.message, variant: "destructive" });
+      return;
+    }
+    await fetchCustomCategories();
+    toast({ title: "קטגוריה נמחקה", description: c.name });
+  };
+
+  const handleDeleteIngredient = async (ing: Ingredient) => {
+    const uuid = dbIngredientUuidById.get(ing.id);
+    if (!uuid) {
+      toast({ title: "לא ניתן למחוק", description: "ניתן למחוק רק מצרכים שנוספו ידנית", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`למחוק את "${ing.name}"?`)) return;
+    const { error } = await supabase.from("ingredients").delete().eq("id", uuid);
+    if (error) {
+      toast({ title: "שגיאה במחיקה", description: error.message, variant: "destructive" });
+      return;
+    }
+    setSelected((prev) => prev.filter((s) => s.id !== ing.id));
+    setPendingSelections((prev) => {
+      const next = new Set(prev);
+      next.delete(ing.id);
+      return next;
+    });
+    await fetchDbIngredients();
+    toast({ title: "מצרך נמחק", description: ing.name });
+  };
+
   const handleAddCategory = async () => {
     const name = newCatName.trim();
     if (!name) {
       toast({ title: "שם קטגוריה חסר", description: "אנא הזינו שם לקטגוריה", variant: "destructive" });
       return;
     }
-    const exists = FIXED_CATEGORIES.includes(name) || customCategories.some((c) => c.name === name);
+    const exists =
+      FIXED_CATEGORIES.includes(name) ||
+      customCategories.some((c) => c.name === name && c.id !== editingCategoryId);
     if (exists) {
       toast({ title: "קטגוריה כבר קיימת", description: name, variant: "destructive" });
       return;
@@ -175,23 +229,41 @@ const SelectIngredients = () => {
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("category-images").getPublicUrl(path);
         image_url = pub.publicUrl;
+      } else if (editingCategoryId) {
+        // keep existing image when editing without a new file
+        image_url = customCategories.find((c) => c.id === editingCategoryId)?.image_url ?? null;
       }
-      const { error: insErr } = await supabase.from("custom_categories").insert({
-        name,
-        emoji: newCatEmoji || "🍽️",
-        subtitle: newCatSubtitle.trim() || "קטגוריה חדשה",
-        hue: newCatHue,
-        image_url,
-        created_by: user?.id ?? null,
-      });
-      if (insErr) throw insErr;
+      if (editingCategoryId) {
+        const { error: updErr } = await supabase
+          .from("custom_categories")
+          .update({
+            name,
+            emoji: newCatEmoji || "🍽️",
+            subtitle: newCatSubtitle.trim() || "קטגוריה חדשה",
+            hue: newCatHue,
+            image_url,
+          })
+          .eq("id", editingCategoryId);
+        if (updErr) throw updErr;
+      } else {
+        const { error: insErr } = await supabase.from("custom_categories").insert({
+          name,
+          emoji: newCatEmoji || "🍽️",
+          subtitle: newCatSubtitle.trim() || "קטגוריה חדשה",
+          hue: newCatHue,
+          image_url,
+          created_by: user?.id ?? null,
+        });
+        if (insErr) throw insErr;
+      }
       await fetchCustomCategories();
+      const wasEditing = !!editingCategoryId;
       resetAddCategoryForm();
       setShowAddCategoryDialog(false);
-      toast({ title: "קטגוריה נוספה", description: name });
+      toast({ title: wasEditing ? "קטגוריה עודכנה" : "קטגוריה נוספה", description: name });
     } catch (e: any) {
       console.error(e);
-      toast({ title: "שגיאה ביצירת קטגוריה", description: e?.message || "נסו שוב", variant: "destructive" });
+      toast({ title: "שגיאה בשמירת קטגוריה", description: e?.message || "נסו שוב", variant: "destructive" });
     } finally {
       setSavingCategory(false);
     }
@@ -201,8 +273,26 @@ const SelectIngredients = () => {
     if (!openCategory) return;
     const name = newIngName.trim();
     if (!name) return;
+    // Global, case-insensitive duplicate check across the whole ingredients catalog
+    const lower = name.toLowerCase();
+    const localDup = mockIngredients.some((i) => i.name.toLowerCase() === lower);
+    if (localDup) {
+      toast({ title: "מצרך זה כבר קיים", description: name, variant: "destructive" });
+      return;
+    }
     setSavingIngredient(true);
     try {
+      const { data: existing, error: chkErr } = await supabase
+        .from("ingredients")
+        .select("id")
+        .ilike("name", name)
+        .limit(1);
+      if (chkErr) throw chkErr;
+      if (existing && existing.length > 0) {
+        toast({ title: "מצרך זה כבר קיים", description: name, variant: "destructive" });
+        setSavingIngredient(false);
+        return;
+      }
       const { error } = await supabase.from("ingredients").insert({
         name,
         emoji: newIngEmoji || "🥗",
