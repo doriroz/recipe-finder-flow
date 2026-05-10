@@ -567,14 +567,14 @@ const SelectIngredients = () => {
               {/* No results — offer to add as pending */}
               {searchQuery.trim() && filteredBySearch.length === 0 && (
                 <div className="relative">
-                  <div className="absolute top-2 left-0 right-0 z-20 bg-card border border-border rounded-2xl shadow-sm p-3">
+                  <div className="absolute top-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-sm p-3">
                     <p className="text-sm text-muted-foreground mb-2 text-right">
                       לא נמצאו תוצאות עבור "{searchQuery.trim()}"
                     </p>
                     <Button
                       onClick={handleAddPendingIngredient}
                       disabled={addingPending}
-                      className="w-full rounded-xl"
+                      className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 opacity-100"
                       variant="default"
                     >
                       <Plus className="w-4 h-4 ml-1" />
