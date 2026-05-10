@@ -100,6 +100,8 @@ const SelectIngredients = () => {
   const [newIngName, setNewIngName] = useState("");
   const [newIngEmoji, setNewIngEmoji] = useState("🥗");
   const [savingIngredient, setSavingIngredient] = useState(false);
+  // "Add missing ingredient" (pending) — flow from search bar
+  const [addingPending, setAddingPending] = useState(false);
 
   const fetchCustomCategories = useCallback(async () => {
     const { data, error } = await supabase
@@ -338,6 +340,62 @@ const SelectIngredients = () => {
     return allIngredients.filter((i) => i.name.includes(searchQuery.trim()));
   }, [allIngredients, searchQuery]);
 
+  const handleAddPendingIngredient = useCallback(async () => {
+    const name = searchQuery.trim();
+    if (!name) return;
+    if (!user) {
+      toast({ title: "יש להתחבר", description: "התחברו כדי להוסיף מצרך חדש", variant: "destructive" });
+      return;
+    }
+    const lower = name.toLowerCase();
+    // Local catalog duplicate (mock + already-loaded DB)
+    const localDup = allIngredients.some((i) => i.name.toLowerCase() === lower);
+    if (localDup) {
+      toast({ title: "מצרך זה כבר קיים", description: name, variant: "destructive" });
+      return;
+    }
+    setAddingPending(true);
+    try {
+      // Server-side case-insensitive duplicate check across approved + pending (RLS-visible)
+      const { data: existing, error: chkErr } = await supabase
+        .from("ingredients")
+        .select("id")
+        .ilike("name", name)
+        .limit(1);
+      if (chkErr) throw chkErr;
+      if (existing && existing.length > 0) {
+        toast({ title: "מצרך זה כבר קיים", description: name, variant: "destructive" });
+        return;
+      }
+      const { error } = await supabase.from("ingredients").insert({
+        name,
+        emoji: "🥗",
+        category: "ממתין לסיווג",
+        status: "pending",
+        created_by: user.id,
+      });
+      if (error) throw error;
+      // Build a local-only Ingredient so the user sees it in their selected list immediately.
+      // (Pending rows are not visible via RLS to non-admins, so we can't refetch.)
+      const localId = 900000 + Math.floor(Math.random() * 99999);
+      const localIng: Ingredient = {
+        id: localId,
+        name,
+        emoji: "🥗",
+        category: "ממתין לסיווג",
+        popularityScore: 50,
+      };
+      setSelected((prev) => [...prev, localIng]);
+      setSearchQuery("");
+      toast({ title: "המצרך נוסף", description: `${name} נוסף לרשימה שלך` });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "שגיאה בהוספת מצרך", description: e?.message || "נסו שוב", variant: "destructive" });
+    } finally {
+      setAddingPending(false);
+    }
+  }, [searchQuery, allIngredients, user]);
+
   const toggle = useCallback((ingredient: Ingredient) => {
     setSelected((prev) => {
       const exists = prev.find((i) => i.id === ingredient.id);
@@ -503,6 +561,26 @@ const SelectIngredients = () => {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+              )}
+
+              {/* No results — offer to add as pending */}
+              {searchQuery.trim() && filteredBySearch.length === 0 && (
+                <div className="relative">
+                  <div className="absolute top-2 left-0 right-0 z-20 bg-card border border-border rounded-2xl shadow-sm p-3">
+                    <p className="text-sm text-muted-foreground mb-2 text-right">
+                      לא נמצאו תוצאות עבור "{searchQuery.trim()}"
+                    </p>
+                    <Button
+                      onClick={handleAddPendingIngredient}
+                      disabled={addingPending}
+                      className="w-full rounded-xl"
+                      variant="default"
+                    >
+                      <Plus className="w-4 h-4 ml-1" />
+                      {addingPending ? "מוסיף..." : `הוספת "${searchQuery.trim()}" לרשימה שלי`}
+                    </Button>
                   </div>
                 </div>
               )}
