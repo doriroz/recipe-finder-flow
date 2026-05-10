@@ -539,7 +539,7 @@ const SelectIngredients = () => {
               {/* Search results dropdown */}
               {searchQuery.trim() && filteredBySearch.length > 0 && (
                 <div className="relative">
-                  <div className="absolute top-2 left-0 right-0 z-20 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto">
+                  <div className="absolute top-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto">
                     {filteredBySearch.map((ing) => {
                       const isSelected = selected.some((s) => s.id === ing.id);
                       return (
