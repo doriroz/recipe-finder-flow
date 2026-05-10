@@ -524,6 +524,54 @@ const SelectIngredients = () => {
                     placeholder="מה יש לכם במקרר היום?"
                     className="pr-10 rounded-2xl h-12 text-base border-primary bg-muted/30 focus:bg-card"
                   />
+
+                  {/* Search results dropdown */}
+                  {searchQuery.trim() && filteredBySearch.length > 0 && (
+                    <div className="relative">
+                      <div className="absolute top-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto">
+                        {filteredBySearch.map((ing) => {
+                          const isSelected = selected.some((s) => s.id === ing.id);
+                          return (
+                            <button
+                              key={ing.id}
+                              onClick={() => {
+                                toggle(ing);
+                                setSearchQuery("");
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-muted/60 transition-colors",
+                                isSelected && "bg-accent",
+                              )}
+                            >
+                              <span className="text-xl">{ing.emoji}</span>
+                              <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
+                              {isSelected && <Check className="w-4 h-4 text-primary" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No results — offer to add as pending */}
+                  {searchQuery.trim() && filteredBySearch.length === 0 && (
+                    <div className="relative">
+                      <div className="absolute top-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-sm p-3">
+                        <p className="text-sm text-muted-foreground mb-2 text-right">
+                          לא נמצאו תוצאות עבור "{searchQuery.trim()}"
+                        </p>
+                        <Button
+                          onClick={handleAddPendingIngredient}
+                          disabled={addingPending}
+                          className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 opacity-100"
+                          variant="default"
+                        >
+                          <Plus className="w-4 h-4 ml-1" />
+                          {addingPending ? "מוסיף..." : `הוספת "${searchQuery.trim()}" לרשימה שלי`}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <Button
                   variant="outline"
@@ -535,54 +583,6 @@ const SelectIngredients = () => {
                   <Camera className="w-5 h-5 text-white" />
                 </Button>
               </div>
-
-              {/* Search results dropdown */}
-              {searchQuery.trim() && filteredBySearch.length > 0 && (
-                <div className="relative">
-                  <div className="absolute top-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto">
-                    {filteredBySearch.map((ing) => {
-                      const isSelected = selected.some((s) => s.id === ing.id);
-                      return (
-                        <button
-                          key={ing.id}
-                          onClick={() => {
-                            toggle(ing);
-                            setSearchQuery("");
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-muted/60 transition-colors",
-                            isSelected && "bg-accent",
-                          )}
-                        >
-                          <span className="text-xl">{ing.emoji}</span>
-                          <span className="flex-1 text-sm font-medium text-foreground">{ing.name}</span>
-                          {isSelected && <Check className="w-4 h-4 text-primary" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* No results — offer to add as pending */}
-              {searchQuery.trim() && filteredBySearch.length === 0 && (
-                <div className="relative">
-                  <div className="absolute top-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-sm p-3">
-                    <p className="text-sm text-muted-foreground mb-2 text-right">
-                      לא נמצאו תוצאות עבור "{searchQuery.trim()}"
-                    </p>
-                    <Button
-                      onClick={handleAddPendingIngredient}
-                      disabled={addingPending}
-                      className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 opacity-100"
-                      variant="default"
-                    >
-                      <Plus className="w-4 h-4 ml-1" />
-                      {addingPending ? "מוסיף..." : `הוספת "${searchQuery.trim()}" לרשימה שלי`}
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
