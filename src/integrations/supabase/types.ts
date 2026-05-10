@@ -203,6 +203,7 @@ export type Database = {
           is_core_anchor: boolean | null
           is_staple: boolean | null
           name: string
+          status: string
         }
         Insert: {
           category?: string
@@ -213,6 +214,7 @@ export type Database = {
           is_core_anchor?: boolean | null
           is_staple?: boolean | null
           name: string
+          status?: string
         }
         Update: {
           category?: string
@@ -223,6 +225,7 @@ export type Database = {
           is_core_anchor?: boolean | null
           is_staple?: boolean | null
           name?: string
+          status?: string
         }
         Relationships: []
       }
