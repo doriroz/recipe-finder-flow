@@ -213,8 +213,7 @@ const SelectIngredients = () => {
       return;
     }
     const exists =
-      FIXED_CATEGORIES.includes(name) ||
-      customCategories.some((c) => c.name === name && c.id !== editingCategoryId);
+      FIXED_CATEGORIES.includes(name) || customCategories.some((c) => c.name === name && c.id !== editingCategoryId);
     if (exists) {
       toast({ title: "קטגוריה כבר קיימת", description: name, variant: "destructive" });
       return;
@@ -575,7 +574,7 @@ const SelectIngredients = () => {
                     <Button
                       onClick={handleAddPendingIngredient}
                       disabled={addingPending}
-                      className="w-full rounded-xl"
+                      className="w-full rounded-xl z-9999"
                       variant="default"
                     >
                       <Plus className="w-4 h-4 ml-1" />
