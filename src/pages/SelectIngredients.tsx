@@ -574,7 +574,7 @@ const SelectIngredients = () => {
                     <Button
                       onClick={handleAddPendingIngredient}
                       disabled={addingPending}
-                      className="w-full rounded-xl z-9999"
+                      className="w-full rounded-xl"
                       variant="default"
                     >
                       <Plus className="w-4 h-4 ml-1" />
