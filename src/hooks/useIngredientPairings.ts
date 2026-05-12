@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getEnglishNames, fuzzyMatchHebrew } from "@/lib/ingredientI18n";
 import { violatesKosher } from "@/lib/kosherCategories";
+import { pickCuratedPairing } from "@/lib/chefPairings";
 
 interface Ingredient {
   id: number;
@@ -123,7 +124,9 @@ export function useIngredientPairings(
         const sources = new Map<number, string>();
         const selectedIds = new Set(ingredients.map((i) => i.id));
         const selectedNames = ingredients.map((i) => i.name);
-        let topPairing: { source: string; pairing: string } | undefined;
+        // Track all valid Hebrew pairings (in Spoonacular ranking order) so
+        // we can pick the best curated chef-tip below.
+        const orderedHebrewPairings: string[] = [];
 
         // Take primary selected ingredient as the "source" attribution for the toast
         const primarySource = ingredients[ingredients.length - 1]?.name;
@@ -140,9 +143,16 @@ export function useIngredientPairings(
           if (!sources.has(match.id) && primarySource) {
             sources.set(match.id, primarySource);
           }
-          if (!topPairing && primarySource) {
-            topPairing = { source: primarySource, pairing: heName };
-          }
+          orderedHebrewPairings.push(heName);
+        }
+
+        // Only suggest a chef tip when the pairing is in our curated whitelist.
+        // Spoonacular's "missed ingredients" reflect co-occurrence (e.g. tomato +
+        // yellow cheese in pizza), which is not the same as a real culinary match.
+        let topPairing: { source: string; pairing: string } | undefined;
+        if (primarySource) {
+          const curated = pickCuratedPairing(primarySource, orderedHebrewPairings);
+          if (curated) topPairing = { source: primarySource, pairing: curated };
         }
 
         const payload: CachedPayload = {
