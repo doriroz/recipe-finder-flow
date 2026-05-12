@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     const raw = await req.json().catch(() => null);
     const parsed = BodySchema.safeParse(raw);
     if (!parsed.success) {
-      return json(400, { error: "האימייל או הסיסמה לא תקינים. הסיסמה חייבת להכיל לפחות 6 תווים." });
+      return json(200, { error: "האימייל או הסיסמה לא תקינים. הסיסמה חייבת להכיל לפחות 6 תווים." });
     }
     const { email, password } = parsed.data;
 
@@ -52,13 +52,13 @@ Deno.serve(async (req) => {
       console.error("signup createUser error:", error);
 
       if (msg.includes("already") || msg.includes("registered") || msg.includes("exists") || msg.includes("duplicate")) {
-        return json(409, { error: "כבר קיים חשבון עם אימייל זה. נסה להתחבר." });
+        return json(200, { error: "כבר קיים חשבון עם אימייל זה. נסה להתחבר." });
       }
       if (msg.includes("password")) {
-        return json(400, { error: "הסיסמה חייבת להכיל לפחות 6 תווים." });
+        return json(200, { error: "הסיסמה חייבת להכיל לפחות 6 תווים." });
       }
       if (msg.includes("email") && msg.includes("invalid")) {
-        return json(400, { error: "כתובת האימייל אינה תקינה." });
+        return json(200, { error: "כתובת האימייל אינה תקינה." });
       }
       return json(500, { error: "משהו השתבש בהרשמה. נסה שוב בעוד רגע." });
     }
