@@ -549,7 +549,6 @@ const SelectIngredients = () => {
                             </button>
                           );
                         })}
-                        <div className="h-4 w-full" />
                       </div>
                     </div>
                   )}
