@@ -32,7 +32,7 @@ const LandingPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-cream to-accent">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4 py-4">
           <nav className="flex items-center justify-between">
             <UserMenu onOpenHistory={() => setIsSidebarOpen(true)} />
 
