@@ -111,7 +111,7 @@ const V2Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
+    <div className="h-screen overflow-hidden bg-background flex flex-col scrollbar-hide" dir="rtl">
       {/* ===== TOP HEADER (vibrant orange gradient) ===== */}
       <header
         className="relative z-20 shrink-0"
