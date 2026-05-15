@@ -121,7 +121,7 @@ const RecipeResult = () => {
                 <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
                   <ChefHat className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <h1 className="text-xl font-bold text-primary-foreground">הפרופיל שלי</h1>
+                <h1 className="text-xl font-bold text-primary-foreground">מה שיש</h1>
               </div>
             </div>
           </div>
