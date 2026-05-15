@@ -38,7 +38,7 @@ const Upgrade = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-background">
       {/* Header */}
       <header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
-        <div className="container mx-auto px-4 py-4">
+        <div className="w-full px-0 py-4">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -57,7 +57,7 @@ const Upgrade = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 pb-24 max-w-2xl space-y-8">
+      <main className="w-full px-0 py-8 pb-24 max-w-2xl space-y-8">
         {/* Hero */}
         <div className="text-center space-y-3">
           <div className="text-5xl">✨</div>

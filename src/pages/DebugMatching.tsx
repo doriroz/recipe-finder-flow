@@ -232,7 +232,7 @@ function RecipeTable({ recipes, title, expandable }: { recipes: DebugRecipeResul
   return (
     <Card>
       <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
-      <CardContent className="overflow-auto">
+      <CardContent className="overflow-auto scrollbar-hide">
         <Table>
           <TableHeader>
             <TableRow>
@@ -404,7 +404,7 @@ function Step2LiveCard({ step2 }: { step2: Step2LiveData }) {
       {accepted.length > 0 && (
         <Card>
           <CardHeader><CardTitle>✅ שלב 2 – עברו Chef Logic ({accepted.length})</CardTitle></CardHeader>
-          <CardContent className="overflow-auto">
+          <CardContent className="overflow-auto scrollbar-hide">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -450,7 +450,7 @@ function Step2LiveCard({ step2 }: { step2: Step2LiveData }) {
       {rejected.length > 0 && (
         <Card>
           <CardHeader><CardTitle>❌ שלב 2 – נדחו ב-Chef Logic ({rejected.length})</CardTitle></CardHeader>
-          <CardContent className="overflow-auto">
+          <CardContent className="overflow-auto scrollbar-hide">
             <Table>
               <TableHeader>
                 <TableRow>

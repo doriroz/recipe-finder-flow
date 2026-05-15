@@ -68,7 +68,7 @@ const CookingMode = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-4">
+        <div className="w-full px-0 py-4">
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
@@ -88,13 +88,13 @@ const CookingMode = () => {
 
       {/* Progress */}
       <div className="bg-card border-b border-border py-4">
-        <div className="container mx-auto px-4">
+        <div className="w-full px-0">
           <StepProgress currentStep={currentStep} totalSteps={totalSteps} />
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 w-full px-0 py-8">
         {currentStep === 1 && (
           <IngredientReadinessCard ingredients={ingredients} />
         )}
@@ -107,7 +107,7 @@ const CookingMode = () => {
 
       {/* Navigation Buttons */}
       <footer className="bg-card border-t border-border p-4">
-        <div className="container mx-auto flex gap-4">
+        <div className="w-full flex gap-4">
           <Button
             variant="outline"
             size="lg"

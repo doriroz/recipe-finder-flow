@@ -75,7 +75,7 @@ const IngredientInput = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="w-full px-0 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -101,7 +101,7 @@ const IngredientInput = () => {
 
       {/* Tabs */}
       <div className="sticky top-0 z-30 bg-background border-b border-border" style={{ height: '48px' }}>
-        <div className="container mx-auto px-4 flex">
+        <div className="w-full px-0 flex">
           <button
             onClick={() => setActiveTab("ingredients")}
             className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors ${
@@ -138,7 +138,7 @@ const IngredientInput = () => {
         />
       )}
 
-      <main className="container mx-auto px-4 py-4 space-y-4 pb-8">
+      <main className="w-full px-0 py-4 space-y-4 pb-8">
         {activeTab === "photo" ? (
           <div className="max-w-md mx-auto space-y-4">
             <div className="text-center space-y-1 py-2">

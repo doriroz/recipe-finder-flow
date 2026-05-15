@@ -214,7 +214,7 @@ const CategorySelection = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="w-full px-0 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -239,7 +239,7 @@ const CategorySelection = () => {
         {/* Page title */}
         {/* bg-background */}
         <div className="sticky top-0 z-30 border-border" style={{ height: "48px" }}>
-          <div className="container mx-auto px-4 flex items-center justify-center h-full">
+          <div className="w-full px-0 flex items-center justify-center h-full">
             <h1 className="text-sm font-semibold text-foreground">בחירת קטגוריה 🍽️</h1>
           </div>
         </div>
@@ -320,9 +320,9 @@ const CategorySelection = () => {
           </aside>
 
           {/* Content area (grid + search) */}
-          <main className="flex-1 px-4 py-4 space-y-4 pb-8 overflow-y-auto">
+          <main className="flex-1 px-4 py-4 space-y-4 pb-8 overflow-y-auto scrollbar-hide">
             {/* Search bar — aligned to grid width */}
-            <div className="max-w-[63rem] mx-auto px-4 md:px-8">
+            <div className="w-full px-0">
               <div className="relative">
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                 <input
@@ -355,7 +355,7 @@ const CategorySelection = () => {
 
             {/* Search results */}
             {(isSearching || (hasSearched && !isSearching)) && (
-              <div className="max-w-[63rem] mx-auto px-4 md:px-8">
+              <div className="w-full px-0">
                 {isSearching && (
                   <div className="flex flex-col items-center gap-3 py-8">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -420,7 +420,7 @@ const CategorySelection = () => {
             )}
 
             {/* Category grid */}
-            <div className="max-w-[63rem] mx-auto px-2 md:px-8 py-6">
+            <div className="w-full px-0 py-6">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {filtered.map((cat, idx) => {
                   const imgUrl = CATEGORY_IMAGES[cat.id] || "";
@@ -475,7 +475,7 @@ const CategorySelection = () => {
 
       {/* Recipe popup dialog */}
       <Dialog open={showRecipeDialog} onOpenChange={setShowRecipeDialog}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto scrollbar-hide" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
               {selectedCategory?.emoji} {selectedCategory?.nameHe}
