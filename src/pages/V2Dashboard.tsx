@@ -198,7 +198,8 @@ const V2Dashboard = () => {
               background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)",
             }}
           >
-            <div className="w-full flex-1 flex flex-col min-h-0 bg-card/80 backdrop-blur-sm border border-border/50 shadow-card p-5">
+            <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-card p-5">
+              {/*<div className="w-full flex-1 flex flex-col min-h-0 bg-card/80 backdrop-blur-sm border border-border/50 shadow-card p-5">*/}
               <div className="flex items-center justify-between gap-3 mb-3">
                 <h2 className="text-lg md:text-xl font-bold text-foreground">הגלריה המשותפת..</h2>
                 {/* Search */}
