@@ -137,6 +137,7 @@
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    scrollbar-gutter: auto;
   }
 
   body {
@@ -255,6 +256,17 @@
     margin-right: 0;
     padding-left: 0;
     padding-right: 0;
+  }
+
+  .app-edge-flush [class*="overflow-y-auto"],
+  .app-edge-flush [class*="overflow-auto"] {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .app-edge-flush [class*="overflow-y-auto"]::-webkit-scrollbar,
+  .app-edge-flush [class*="overflow-auto"]::-webkit-scrollbar {
+    display: none;
   }
 
   .app-edge-flush main > [class*="max-w-"][class*="mx-auto"],
