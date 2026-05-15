@@ -107,7 +107,7 @@ const CookingMode = () => {
 
       {/* Navigation Buttons */}
       <footer className="bg-card border-t border-border p-4">
-        <div className="container mx-auto flex gap-4">
+        <div className="w-full flex gap-4">
           <Button
             variant="outline"
             size="lg"
