@@ -479,7 +479,7 @@ const SelectIngredients = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background" dir="rtl">
       {isGenerating && <GeneratingRecipeLoader />}
       <header
         className="relative z-20"
@@ -487,7 +487,7 @@ const SelectIngredients = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="w-full px-0 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -509,12 +509,12 @@ const SelectIngredients = () => {
       </header>
       {/* bg-accent */}
       {/* bg-gradient-to-l from-primary/10 via-accent to-card */}
-      <div className="flex min-h-screen bg-gradient-to-br from-background via-cream to-accent">
+      <div className="flex min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-background via-cream to-accent">
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Search bar border-border */}
-          <div className="px-4 md:px-8 md:pt-8 flex items-center" style={{ height: "70px" }}>
-            <div className="max-w-3xl mx-auto w-full">
+          <div className="px-0 md:pt-8 flex items-center" style={{ height: "70px" }}>
+            <div className="w-full">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -587,8 +587,8 @@ const SelectIngredients = () => {
           </div>
 
           {/* Bento Category Grid */}
-          <main className="flex-1 overflow-y-auto pb-32 md:pb-8">
-            <div className="max-w-[63rem] mx-auto px-4 md:px-8 py-6">
+          <main className="flex-1 overflow-y-auto scrollbar-hide pb-32 md:pb-8">
+            <div className="w-full px-0 py-6">
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
 
               {/* Uniform 3x3 Grid */}
