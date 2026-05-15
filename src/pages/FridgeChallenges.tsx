@@ -191,7 +191,7 @@ const FridgeChallenges = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
-        <div className="container mx-auto px-4 py-3">
+        <div className="w-full px-0 py-3">
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="flex items-center gap-1 hover:bg-primary/10">
               <ArrowRight className="w-4 h-4" />
@@ -202,7 +202,7 @@ const FridgeChallenges = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-5 max-w-5xl">
+      <main className="w-full px-0 py-5 max-w-5xl">
         {/* Page Title */}
         <div className="text-center space-y-1 mb-5">
           <h1 className="text-2xl font-bold text-foreground">אתגרי המקרר שלי 🧊</h1>

@@ -91,7 +91,7 @@ const CookbookBuilder = () => {
             background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
           }}
         >
-          <div className="container mx-auto px-4 py-3">
+          <div className="w-full px-0 py-3">
             <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
@@ -110,7 +110,7 @@ const CookbookBuilder = () => {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-12 text-center">
+        <main className="w-full px-0 py-12 text-center">
           <div className="text-6xl mb-6">📚</div>
           <h1 className="text-2xl font-bold text-foreground mb-4">יש להתחבר כדי ליצור ספר מתכונים</h1>
           <p className="text-muted-foreground mb-8">התחברו כדי לבחור מתכונים מהגלריה שלכם</p>
@@ -132,7 +132,7 @@ const CookbookBuilder = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="w-full px-0 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -274,7 +274,7 @@ const CookbookBuilder = () => {
                   </div>
 
                   {/* Recipe Grid */}
-                  <div className="flex-1 overflow-y-auto p-4">
+                  <div className="flex-1 overflow-y-auto scrollbar-hide p-4">
                     <div className="container mx-auto">
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                         {filteredItems.map((item, index) => (
@@ -321,7 +321,7 @@ const CookbookBuilder = () => {
               className="flex-1 flex overflow-hidden"
             >
               {/* Main Editor */}
-              <div className="flex-1 p-6 overflow-y-auto">
+              <div className="flex-1 p-6 overflow-y-auto scrollbar-hide">
                 <div className="max-w-lg mx-auto">
                   <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">עיצוב השער</h2>
                   <CookbookCoverEditor

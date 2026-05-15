@@ -220,7 +220,7 @@ const V2Dashboard = () => {
               <p className="text-xs text-muted-foreground mb-4">לכל המתכונים שתאספו או תוסיפו פריט לאסוף או לשמור!</p>
 
               {/* Grid */}
-              <div className="flex-1 overflow-y-auto scrollbar-hide pb-2">
+              <div className="flex-1 overflow-y-auto scrollbar-hide scrollbar-hide pb-2">
                 {filteredRecipes.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {filteredRecipes.map((recipe) => {
@@ -381,7 +381,7 @@ const V2Dashboard = () => {
 
       {/* ===== LIBRARY DIALOG ===== */}
       <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
-        <DialogContent className="max-w-2xl backdrop-blur-md bg-card/95 rounded-2xl max-h-[85vh] overflow-y-auto border-border">
+        <DialogContent className="max-w-2xl backdrop-blur-md bg-card/95 rounded-2xl max-h-[85vh] overflow-y-auto scrollbar-hide border-border">
           <DialogHeader>
             <DialogTitle className="text-xl text-right">מתכונים פופולריים</DialogTitle>
             <DialogDescription className="text-right">בחרו קטגוריה וגלו מתכונים מהמטבח העולמי</DialogDescription>

@@ -54,8 +54,8 @@ const AddRecipe = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="container mx-auto px-4 py-3">
-          {/* <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between"> */}
+        <div className="w-full px-0 py-3">
+          {/* <div className="w-full px-0 md:px-6 py-3 flex items-center justify-between"> */}
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -87,7 +87,7 @@ const AddRecipe = () => {
       </header>
 
       {/* Hero */}
-      <section className="max-w-3xl mx-auto px-4 pt-10 pb-6 text-center space-y-4">
+      <section className="w-full px-0 pt-10 pb-6 text-center space-y-4">
         <img
           src={addRecipeBook}
           alt="ספר מתכונים פתוח עם כפית עץ ועלי תבלין"
@@ -100,7 +100,7 @@ const AddRecipe = () => {
       </section>
 
       {/* Options */}
-      <section className="max-w-5xl mx-auto px-4 pb-20 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <section className="w-full px-0 pb-20 grid grid-cols-1 md:grid-cols-3 gap-4">
         {options.map((opt) => {
           const Icon = opt.icon;
           return (
