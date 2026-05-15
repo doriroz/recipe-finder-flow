@@ -381,7 +381,7 @@ const V2Dashboard = () => {
 
       {/* ===== LIBRARY DIALOG ===== */}
       <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
-        <DialogContent className="max-w-2xl backdrop-blur-md bg-card/95 rounded-2xl max-h-[85vh] overflow-y-auto scrollbar-hide border-border">
+        <DialogContent className="max-w-2xl backdrop-blur-md bg-card/95 rounded-2xl max-h-[85vh] overflow-y-auto border-border">
           <DialogHeader>
             <DialogTitle className="text-xl text-right">מתכונים פופולריים</DialogTitle>
             <DialogDescription className="text-right">בחרו קטגוריה וגלו מתכונים מהמטבח העולמי</DialogDescription>

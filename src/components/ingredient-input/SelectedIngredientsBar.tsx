@@ -30,7 +30,7 @@ const SelectedIngredientsBar = ({
   if (selected.length === 0) {
     return (
       <div className="sticky top-[48px] z-20 bg-background/95 backdrop-blur border-b border-border">
-        <div className="w-full px-4 py-2.5">
+        <div className="container mx-auto px-4 py-2.5">
           <p className="text-muted-foreground text-sm text-center">
             בחרו לפחות 2 מצרכים כדי להמשיך...
           </p>
@@ -41,7 +41,7 @@ const SelectedIngredientsBar = ({
 
   return (
     <div className="sticky top-[48px] z-20 bg-background/95 backdrop-blur border-b border-border shadow-soft">
-      <div className="w-full px-4 py-2.5 space-y-2.5">
+      <div className="container mx-auto px-4 py-2.5 space-y-2.5">
         {/* Chips row */}
         <div className="flex items-center gap-2 flex-wrap">
           {selected.map((ing) => (

@@ -83,8 +83,8 @@ const V2Cookbook = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="w-full px-0 py-3">
-          {/*<div className="w-full px-0 md:px-6 py-3 flex items-center justify-between">*/}
+        <div className="container mx-auto px-4 py-3">
+          {/*<div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">*/}
           <div className="flex items-center justify-between">
             {/* RIGHT: Back button */}
             <Button
@@ -112,7 +112,7 @@ const V2Cookbook = () => {
       </header>
 
       {/* Search & Filters */}
-      <div className="w-full px-0 py-4 space-y-3">
+      <div className="max-w-5xl mx-auto px-4 py-4 space-y-3">
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -151,7 +151,7 @@ const V2Cookbook = () => {
       </div>
 
       {/* Recipe Grid */}
-      <div className="w-full px-0 pb-32">
+      <div className="max-w-5xl mx-auto px-4 pb-32">
         {filtered.length === 0 ? (
           <div className="text-center py-20 space-y-4">
             <div className="w-16 h-16 mx-auto rounded-2xl bg-muted flex items-center justify-center">
@@ -277,7 +277,7 @@ const V2Cookbook = () => {
 
       {/* Recipe Detail Dialog */}
       <Dialog open={!!selectedRecipe} onOpenChange={(o) => !o && setSelectedRecipe(null)}>
-        <DialogContent className="max-w-lg backdrop-blur-sm bg-background/95 rounded-2xl max-h-[85vh] overflow-y-auto scrollbar-hide">
+        <DialogContent className="max-w-lg backdrop-blur-sm bg-background/95 rounded-2xl max-h-[85vh] overflow-y-auto">
           {selectedRecipe && (
             <>
               <DialogHeader>

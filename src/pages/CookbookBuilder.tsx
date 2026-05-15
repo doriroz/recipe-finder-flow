@@ -91,7 +91,7 @@ const CookbookBuilder = () => {
             background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
           }}
         >
-          <div className="w-full px-0 py-3">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
@@ -110,7 +110,7 @@ const CookbookBuilder = () => {
           </div>
         </header>
 
-        <main className="w-full px-0 py-12 text-center">
+        <main className="container mx-auto px-4 py-12 text-center">
           <div className="text-6xl mb-6">📚</div>
           <h1 className="text-2xl font-bold text-foreground mb-4">יש להתחבר כדי ליצור ספר מתכונים</h1>
           <p className="text-muted-foreground mb-8">התחברו כדי לבחור מתכונים מהגלריה שלכם</p>
@@ -132,7 +132,7 @@ const CookbookBuilder = () => {
           background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
         }}
       >
-        <div className="w-full px-0 py-3">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -199,7 +199,7 @@ const CookbookBuilder = () => {
                         transition={{ duration: 0.25 }}
                         className="shrink-0 bg-primary/8 border-b border-primary/20 px-4 py-3"
                       >
-                        <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
+                        <div className="container mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
                           <div className="flex items-center gap-3">
                             <BookText className="w-5 h-5 text-primary shrink-0" />
                             <div>
@@ -244,7 +244,7 @@ const CookbookBuilder = () => {
 
                   {/* Search & Actions Bar */}
                   <div className="p-4 border-b border-border bg-card shrink-0">
-                    <div className="w-full flex flex-col sm:flex-row gap-4 items-center justify-between">
+                    <div className="container mx-auto flex flex-col sm:flex-row gap-4 items-center justify-between">
                       <div className="relative w-full sm:w-80">
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -274,8 +274,8 @@ const CookbookBuilder = () => {
                   </div>
 
                   {/* Recipe Grid */}
-                  <div className="flex-1 overflow-y-auto scrollbar-hide p-4">
-                    <div className="w-full">
+                  <div className="flex-1 overflow-y-auto p-4">
+                    <div className="container mx-auto">
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                         {filteredItems.map((item, index) => (
                           <CookbookRecipeCard
@@ -321,7 +321,7 @@ const CookbookBuilder = () => {
               className="flex-1 flex overflow-hidden"
             >
               {/* Main Editor */}
-              <div className="flex-1 p-6 overflow-y-auto scrollbar-hide">
+              <div className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-lg mx-auto">
                   <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">עיצוב השער</h2>
                   <CookbookCoverEditor
@@ -367,7 +367,7 @@ const CookbookBuilder = () => {
 
               {/* Actions */}
               <div className="p-4 border-t border-border bg-card shrink-0">
-                <div className="w-full flex justify-center gap-4">
+                <div className="container mx-auto flex justify-center gap-4">
                   <Button variant="outline" onClick={cookbook.prevStep}>
                     חזרה לעריכה
                   </Button>

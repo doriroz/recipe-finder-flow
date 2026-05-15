@@ -58,7 +58,7 @@ const Gallery = () => {
     return (
       <div className="min-h-screen bg-background">
         <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
-          <div className="w-full px-0 py-3">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
@@ -77,7 +77,7 @@ const Gallery = () => {
           </div>
         </header>
 
-        <main className="w-full px-0 py-12 text-center">
+        <main className="container mx-auto px-4 py-12 text-center">
           <div className="text-6xl mb-6">🔐</div>
           <h1 className="text-2xl font-bold text-foreground mb-4">
             יש להתחבר כדי לצפות בגלריה
@@ -96,7 +96,7 @@ const Gallery = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
-        <div className="w-full px-0 py-3">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -126,7 +126,7 @@ const Gallery = () => {
         </div>
       </header>
 
-      <main className="w-full px-0 py-8">
+      <main className="container mx-auto px-4 py-8">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />

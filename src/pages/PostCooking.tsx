@@ -149,7 +149,7 @@ const PostCooking = () => {
         className="relative z-20"
         style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
       >
-        <div className="w-full px-0 py-3">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -172,7 +172,7 @@ const PostCooking = () => {
       </header>
 
       {/*<header className="sticky top-0 z-50 bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
-        <div className="w-full px-0 py-3">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             <Button
               variant="ghost"
@@ -191,7 +191,7 @@ const PostCooking = () => {
         </div>
       </header>*/}
 
-      <main className="w-full px-0 py-12 text-center">
+      <main className="container mx-auto px-4 py-12 text-center">
         {/* Celebration */}
         <div className="animate-scale-in">
           <div className="text-8xl mb-6">🎉</div>

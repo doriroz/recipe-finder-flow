@@ -105,7 +105,7 @@ const RecipeResult = () => {
           className="relative z-20"
           style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
         >
-          <div className="w-full px-0 py-3">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
@@ -128,7 +128,7 @@ const RecipeResult = () => {
         </header>
 
         {/*<header className="bg-card border-b border-border sticky top-0 z-10">
-          <div className="w-full px-0 py-4">
+          <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
                 <ArrowRight className="w-5 h-5" />
@@ -141,7 +141,7 @@ const RecipeResult = () => {
             </div>
           </div>
         </header>*/}
-        <main className="w-full px-0 py-8 pb-24">
+        <main className="container mx-auto px-4 py-8 pb-24">
           <div className="text-center space-y-4 mb-8">
             <div className="text-5xl">🍽️</div>
             <h2 className="text-xl font-bold text-foreground">{noMatchMessage}</h2>
@@ -193,7 +193,7 @@ const RecipeResult = () => {
           className="relative z-20"
           style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
         >
-          <div className="w-full px-0 py-3">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
@@ -215,7 +215,7 @@ const RecipeResult = () => {
           </div>
         </header>
         {/*<header className="bg-card border-b border-border sticky top-0 z-10">
-          <div className="w-full px-0 py-4">
+          <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               {!cookingSessionActive && (
                 <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
@@ -231,7 +231,7 @@ const RecipeResult = () => {
           </div>
         </header>*/}
 
-        <main className="w-full px-0 py-8 pb-24">
+        <main className="container mx-auto px-4 py-8 pb-24">
           {/* AI Disclaimer */}
           <div className="mb-6 bg-accent/50 border border-primary/20 rounded-xl px-4 py-3 text-center animate-fade-in">
             <p className="text-sm text-muted-foreground">
@@ -301,7 +301,7 @@ const RecipeResult = () => {
         className="relative z-20"
         style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
       >
-        <div className="w-full px-0 py-3">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -323,7 +323,7 @@ const RecipeResult = () => {
         </div>
       </header>
       {/*<header className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="w-full px-0 py-4">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
               <ArrowRight className="w-5 h-5" />
@@ -337,7 +337,7 @@ const RecipeResult = () => {
         </div>
       </header>*/}
 
-      <main className="w-full px-0 py-8 pb-24">
+      <main className="container mx-auto px-4 py-8 pb-24">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />

@@ -188,7 +188,7 @@ const UserProfile = () => {
         className="relative z-20"
         style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
       >
-        <div className="w-full px-0 py-3">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -210,7 +210,7 @@ const UserProfile = () => {
         </div>
       </header>
 
-      <main className="w-full px-0 py-8 max-w-3xl">
+      <main className="container mx-auto px-4 py-8 max-w-3xl">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />

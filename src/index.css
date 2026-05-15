@@ -134,20 +134,13 @@
     direction: rtl;
     margin: 0;
     padding: 0;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-    scrollbar-gutter: auto;
   }
 
   body {
     @apply bg-background text-foreground font-heebo;
     margin: 0;
     padding: 0;
-    width: 100%;
-    max-width: 100%;
     min-width: 100%;
-    overflow-x: hidden;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
@@ -157,9 +150,7 @@
     margin: 0;
     padding: 0;
     width: 100%;
-    max-width: none;
     min-height: 100vh;
-    overflow-x: hidden;
   }
 }
 
@@ -241,56 +232,6 @@
 }
 
 @layer utilities {
-  .app-edge-flush,
-  .app-edge-flush > * {
-    width: 100%;
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  .app-edge-flush > [class*="min-h-screen"],
-  .app-edge-flush > main,
-  .app-edge-flush > section {
-    width: 100%;
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .app-edge-flush .container {
-    width: 100%;
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .app-edge-flush [class*="overflow-y-auto"],
-  .app-edge-flush [class*="overflow-auto"] {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .app-edge-flush [class*="overflow-y-auto"]::-webkit-scrollbar,
-  .app-edge-flush [class*="overflow-auto"]::-webkit-scrollbar {
-    display: none;
-  }
-
-  .app-edge-flush main > [class*="max-w-"][class*="mx-auto"],
-  .app-edge-flush section[class*="max-w-"][class*="mx-auto"],
-  .app-edge-flush header > [class*="max-w-"][class*="mx-auto"] {
-    width: 100%;
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
-
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

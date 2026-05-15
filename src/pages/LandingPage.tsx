@@ -32,7 +32,7 @@ const LandingPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-cream to-accent">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
-        <div className="w-full px-0 py-4">
+        <div className="container mx-auto px-4 py-4">
           <nav className="flex items-center justify-between">
             <UserMenu onOpenHistory={() => setIsSidebarOpen(true)} />
 
@@ -47,7 +47,7 @@ const LandingPage = () => {
       </header>
 
       {/* Hero Section */}
-      <main className="w-full px-0 pt-8 pb-24">
+      <main className="container mx-auto px-4 pt-8 pb-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
           {/* Text Content with entrance animations */}
           <div className="text-center lg:text-right order-2 lg:order-1">
