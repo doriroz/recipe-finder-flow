@@ -249,6 +249,17 @@
     margin-right: 0;
   }
 
+  .app-edge-flush > [class*="min-h-screen"],
+  .app-edge-flush > main,
+  .app-edge-flush > section {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .app-edge-flush .container {
     width: 100%;
     max-width: none;
