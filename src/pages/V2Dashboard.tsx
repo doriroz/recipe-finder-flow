@@ -149,7 +149,7 @@ const V2Dashboard = () => {
         <div className="w-full md:w-[55%] flex flex-col order-2">
           {/* --- Heritage row (top) --- */}
           <section
-            className="relative px-4 md:px-6 py-5 md:py-6 border-b border-border/40 overflow-hidden"
+            className="relative px-0 py-4 border-b border-border/40 overflow-hidden"
             style={{
               background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)",
             }}
@@ -165,7 +165,7 @@ const V2Dashboard = () => {
               <PenTool className="w-12 h-12 text-secondary/60" />
             </div>
 
-            <div className="max-w-xl mx-auto bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-card p-5 text-center">
+            <div className="w-full bg-card/80 backdrop-blur-sm border border-border/50 shadow-card p-5 text-center">
               <h2 className="text-lg md:text-xl font-bold text-foreground mb-3">שימור זיכרון משפחתי</h2>
 
               <div className="flex items-center justify-center gap-2 mb-3">
@@ -193,12 +193,12 @@ const V2Dashboard = () => {
 
           {/* --- Gallery (bottom) --- */}
           <section
-            className="flex-1 px-4 md:px-6 py-5 md:py-6 flex flex-col min-h-0"
+            className="flex-1 px-0 py-4 flex flex-col min-h-0"
             style={{
               background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)",
             }}
           >
-            <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-card p-5">
+            <div className="w-full flex-1 flex flex-col min-h-0 bg-card/80 backdrop-blur-sm border border-border/50 shadow-card p-5">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <h2 className="text-lg md:text-xl font-bold text-foreground">הגלריה המשותפת..</h2>
                 {/* Search */}
@@ -220,7 +220,7 @@ const V2Dashboard = () => {
               <p className="text-xs text-muted-foreground mb-4">לכל המתכונים שתאספו או תוסיפו פריט לאסוף או לשמור!</p>
 
               {/* Grid */}
-              <div className="flex-1 overflow-y-auto pb-2">
+              <div className="flex-1 overflow-y-auto scrollbar-hide pb-2">
                 {filteredRecipes.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {filteredRecipes.map((recipe) => {

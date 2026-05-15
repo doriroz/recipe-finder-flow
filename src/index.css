@@ -240,6 +240,15 @@
     display: none;
   }
 
+  /* Hide scrollbars globally on every scrollable element while keeping scroll */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
