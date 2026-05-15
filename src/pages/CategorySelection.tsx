@@ -320,7 +320,7 @@ const CategorySelection = () => {
           </aside>
 
           {/* Content area (grid + search) */}
-          <main className="flex-1 px-4 py-4 space-y-4 pb-8 overflow-y-auto scrollbar-hide scrollbar-hide">
+          <main className="flex-1 px-4 py-4 space-y-4 pb-8 overflow-y-auto scrollbar-hide">
             {/* Search bar — aligned to grid width */}
             <div className="w-full px-0">
               <div className="relative">
@@ -475,7 +475,7 @@ const CategorySelection = () => {
 
       {/* Recipe popup dialog */}
       <Dialog open={showRecipeDialog} onOpenChange={setShowRecipeDialog}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto scrollbar-hide scrollbar-hide" dir="rtl">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto scrollbar-hide" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
               {selectedCategory?.emoji} {selectedCategory?.nameHe}

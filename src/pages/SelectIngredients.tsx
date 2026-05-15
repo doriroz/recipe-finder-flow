@@ -528,7 +528,7 @@ const SelectIngredients = () => {
                   {/* Search results dropdown */}
                   {searchQuery.trim() && filteredBySearch.length > 0 && (
                     <div className="relative">
-                      <div className="absolute top-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto scrollbar-hide scrollbar-hide">
+                      <div className="absolute top-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-sm max-h-48 overflow-y-auto scrollbar-hide">
                         {filteredBySearch.map((ing) => {
                           const isSelected = selected.some((s) => s.id === ing.id);
                           return (
@@ -587,7 +587,7 @@ const SelectIngredients = () => {
           </div>
 
           {/* Bento Category Grid */}
-          <main className="flex-1 overflow-y-auto scrollbar-hide scrollbar-hide pb-32 md:pb-8">
+          <main className="flex-1 overflow-y-auto scrollbar-hide pb-32 md:pb-8">
             <div className="w-full px-0 py-6">
               <h2 className="text-lg font-bold text-foreground mb-4">בחרו קטגוריה</h2>
 
@@ -797,7 +797,7 @@ const SelectIngredients = () => {
             <div className="px-5 flex items-center" style={{ height: "70px" }}>
               <h2 className="font-bold text-primary text-base">המצרכים שלי</h2>
             </div>
-            <div className="flex-1 overflow-y-auto scrollbar-hide scrollbar-hide px-4 py-3 space-y-1.5">
+            <div className="flex-1 overflow-y-auto scrollbar-hide px-4 py-3 space-y-1.5">
               <Button
                 variant="hero"
                 className="w-full"
@@ -932,7 +932,7 @@ const SelectIngredients = () => {
               {editingCategoryId ? "ערוך קטגוריה" : "הוסיפו קטגוריה חדשה"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2 px-6 max-h-[70vh] overflow-y-auto scrollbar-hide scrollbar-hide" dir="rtl">
+          <div className="space-y-4 py-2 px-6 max-h-[70vh] overflow-y-auto scrollbar-hide" dir="rtl">
             <div className="space-y-1.5">
               <Label htmlFor="cat-name">שם הקטגוריה</Label>
               <Input
@@ -1046,7 +1046,7 @@ const SelectIngredients = () => {
                 </DialogHeader>
               </div>
 
-              <div className="max-h-[50vh] overflow-y-auto scrollbar-hide scrollbar-hide px-4 py-3 space-y-1">
+              <div className="max-h-[50vh] overflow-y-auto scrollbar-hide px-4 py-3 space-y-1">
                 {openIngredients.map((ing) => {
                   const isPending = pendingSelections.has(ing.id);
                   const isPaired = pairedIngredientIds.has(ing.id);

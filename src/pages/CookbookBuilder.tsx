@@ -274,7 +274,7 @@ const CookbookBuilder = () => {
                   </div>
 
                   {/* Recipe Grid */}
-                  <div className="flex-1 overflow-y-auto scrollbar-hide scrollbar-hide p-4">
+                  <div className="flex-1 overflow-y-auto scrollbar-hide p-4">
                     <div className="w-full">
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                         {filteredItems.map((item, index) => (
@@ -321,7 +321,7 @@ const CookbookBuilder = () => {
               className="flex-1 flex overflow-hidden"
             >
               {/* Main Editor */}
-              <div className="flex-1 p-6 overflow-y-auto scrollbar-hide scrollbar-hide">
+              <div className="flex-1 p-6 overflow-y-auto scrollbar-hide">
                 <div className="max-w-lg mx-auto">
                   <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">עיצוב השער</h2>
                   <CookbookCoverEditor
