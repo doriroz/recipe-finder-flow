@@ -164,8 +164,8 @@ const V2Dashboard = () => {
             <div className="hidden md:block absolute top-3 right-6 rotate-[8deg] opacity-80 pointer-events-none">
               <PenTool className="w-12 h-12 text-secondary/60" />
             </div>
-
-            <div className="w-full bg-card/80 backdrop-blur-sm border border-border/50 shadow-card p-5 text-center">
+            <div className="max-w-xl mx-auto bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-card p-5 text-center">
+              {/*<div className="w-full bg-card/80 backdrop-blur-sm border border-border/50 shadow-card p-5 text-center">*/}
               <h2 className="text-lg md:text-xl font-bold text-foreground mb-3">שימור זיכרון משפחתי</h2>
 
               <div className="flex items-center justify-center gap-2 mb-3">
