@@ -241,13 +241,9 @@
   }
 
   /* Hide scrollbars globally on every scrollable element while keeping scroll */
-  html,
-  body,
   *::-webkit-scrollbar {
     display: none;
   }
-  html,
-  body,
   * {
     scrollbar-width: none;
     -ms-overflow-style: none;
