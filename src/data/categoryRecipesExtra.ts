@@ -1,5 +1,6 @@
 import type { CategoryRecipe } from "./categoryRecipes";
 
+
 // Additional recipe pool per category id. Merged into CUISINE_CATEGORIES at module load.
 // Goal: enrich each category to ~10 recipes so the dialog can randomly show 3 and shuffle from a real pool.
 export const EXTRA_RECIPES: Record<string, CategoryRecipe[]> = {
