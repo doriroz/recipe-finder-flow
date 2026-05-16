@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles, Check } from "lucide-react";
+import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles, Check, Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
@@ -105,6 +105,8 @@ const CategorySelection = () => {
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [savingResult, setSavingResult] = useState<string | null>(null);
+  const [displayedRecipes, setDisplayedRecipes] = useState<CategoryRecipe[]>([]);
+  const [shuffleKey, setShuffleKey] = useState(0);
   const { search, saveGeneratedRecipe, clearResults, isSearching, results, error } = useRecipeSearch();
 
   const selectedCategory = CUISINE_CATEGORIES.find((c) => c.id === selectedCategoryId) || null;
@@ -158,7 +160,23 @@ const CategorySelection = () => {
 
   const handleViewRecipes = () => {
     if (!selectedCategory) return;
+    setDisplayedRecipes(pickRandomRecipes(selectedCategory.recipes, 3));
+    setShuffleKey((k) => k + 1);
     setShowRecipeDialog(true);
+  };
+
+  const pickRandomRecipes = (pool: CategoryRecipe[], count: number, exclude: CategoryRecipe[] = []): CategoryRecipe[] => {
+    const excludeTitles = new Set(exclude.map((r) => r.title));
+    const candidates = pool.filter((r) => !excludeTitles.has(r.title));
+    const source = candidates.length >= count ? candidates : pool;
+    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(count, shuffled.length));
+  };
+
+  const handleShuffleRecipes = () => {
+    if (!selectedCategory) return;
+    setDisplayedRecipes(pickRandomRecipes(selectedCategory.recipes, 3, displayedRecipes));
+    setShuffleKey((k) => k + 1);
   };
 
   const handleRecipeClick = async (recipe: CategoryRecipe) => {
@@ -477,45 +495,70 @@ const CategorySelection = () => {
       <Dialog open={showRecipeDialog} onOpenChange={setShowRecipeDialog}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              {selectedCategory?.emoji} {selectedCategory?.nameHe}
-            </DialogTitle>
+            <div className="flex items-center justify-between gap-2 pl-6">
+              <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                {selectedCategory?.emoji} {selectedCategory?.nameHe}
+              </DialogTitle>
+              {selectedCategory && selectedCategory.recipes.length > 3 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShuffleRecipes}
+                  className="rounded-full gap-1.5 h-8 px-3 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
+                >
+                  <Shuffle className="w-3.5 h-3.5" />
+                  החלף הכל
+                </Button>
+              )}
+            </div>
           </DialogHeader>
           <div className="space-y-3 mt-2">
-            {selectedCategory?.recipes.map((recipe, i) => (
-              <motion.button
-                key={recipe.title}
-                initial={{ opacity: 0, y: 8 }}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={shuffleKey}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                onClick={() => handleRecipeClick(recipe)}
-                disabled={!!loadingRecipe}
-                className={cn(
-                  "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border",
-                  "hover:border-primary/30 hover:shadow-sm transition-all duration-150 text-right",
-                  loadingRecipe && loadingRecipe !== recipe.title && "opacity-50 pointer-events-none",
-                )}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-3"
               >
-                <div className="flex items-center justify-between">
-                  <p className="font-bold text-foreground text-sm">{recipe.title}</p>
-                  {loadingRecipe === recipe.title && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-                </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {recipe.cookingTime} דק׳
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <ChefHat className="w-3.5 h-3.5" />
-                    {recipe.difficulty}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Leaf className="w-3.5 h-3.5" />
-                    {recipe.ingredients.length} מצרכים
-                  </span>
-                </div>
-              </motion.button>
-            ))}
+                {displayedRecipes.map((recipe, i) => (
+                  <motion.button
+                    key={recipe.title}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => handleRecipeClick(recipe)}
+                    disabled={!!loadingRecipe}
+                    className={cn(
+                      "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border",
+                      "hover:border-primary/30 hover:shadow-sm transition-all duration-150 text-right",
+                      loadingRecipe && loadingRecipe !== recipe.title && "opacity-50 pointer-events-none",
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-foreground text-sm">{recipe.title}</p>
+                      {loadingRecipe === recipe.title && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {recipe.cookingTime} דק׳
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <ChefHat className="w-3.5 h-3.5" />
+                        {recipe.difficulty}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Leaf className="w-3.5 h-3.5" />
+                        {recipe.ingredients.length} מצרכים
+                      </span>
+                    </div>
+                  </motion.button>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </DialogContent>
       </Dialog>
