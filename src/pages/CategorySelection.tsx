@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles, Check } from "lucide-react";
+import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles, Check, Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
@@ -105,6 +105,8 @@ const CategorySelection = () => {
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [savingResult, setSavingResult] = useState<string | null>(null);
+  const [displayedRecipes, setDisplayedRecipes] = useState<CategoryRecipe[]>([]);
+  const [shuffleKey, setShuffleKey] = useState(0);
   const { search, saveGeneratedRecipe, clearResults, isSearching, results, error } = useRecipeSearch();
 
   const selectedCategory = CUISINE_CATEGORIES.find((c) => c.id === selectedCategoryId) || null;
@@ -158,7 +160,23 @@ const CategorySelection = () => {
 
   const handleViewRecipes = () => {
     if (!selectedCategory) return;
+    setDisplayedRecipes(pickRandomRecipes(selectedCategory.recipes, 3));
+    setShuffleKey((k) => k + 1);
     setShowRecipeDialog(true);
+  };
+
+  const pickRandomRecipes = (pool: CategoryRecipe[], count: number, exclude: CategoryRecipe[] = []): CategoryRecipe[] => {
+    const excludeTitles = new Set(exclude.map((r) => r.title));
+    const candidates = pool.filter((r) => !excludeTitles.has(r.title));
+    const source = candidates.length >= count ? candidates : pool;
+    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(count, shuffled.length));
+  };
+
+  const handleShuffleRecipes = () => {
+    if (!selectedCategory) return;
+    setDisplayedRecipes(pickRandomRecipes(selectedCategory.recipes, 3, displayedRecipes));
+    setShuffleKey((k) => k + 1);
   };
 
   const handleRecipeClick = async (recipe: CategoryRecipe) => {
