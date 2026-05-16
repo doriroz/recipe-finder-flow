@@ -17,7 +17,9 @@ export interface CuisineCategory {
   recipes: CategoryRecipe[];
 }
 
-export const CUISINE_CATEGORIES: CuisineCategory[] = [
+import { EXTRA_RECIPES } from "./categoryRecipesExtra";
+
+const BASE_CUISINE_CATEGORIES: CuisineCategory[] = [
   {
     id: "italian",
     name: "Italian",
@@ -521,3 +523,8 @@ export const CUISINE_CATEGORIES: CuisineCategory[] = [
     ],
   },
 ];
+
+export const CUISINE_CATEGORIES: CuisineCategory[] = BASE_CUISINE_CATEGORIES.map((cat) => ({
+  ...cat,
+  recipes: [...cat.recipes, ...(EXTRA_RECIPES[cat.id] || [])],
+}));
