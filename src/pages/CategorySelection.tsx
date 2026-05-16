@@ -183,13 +183,6 @@ const CategorySelection = () => {
     setShuffleKey((k) => k + 1);
   };
 
-  const handleRecipeClick = (recipeId: string) => {
-    navigate(`/recipe?id=${recipeId}`);
-    onClose();
-  };
-
-  {
-    /*
   const handleRecipeClick = async (recipe: CategoryRecipe) => {
     if (loadingRecipe) return;
     setLoadingRecipe(recipe.title);
@@ -223,8 +216,6 @@ const CategorySelection = () => {
       setLoadingRecipe(null);
     }
   };
-*/
-  }
 
   const filtered = query.trim()
     ? CUISINE_CATEGORIES.filter(
@@ -542,7 +533,7 @@ const CategorySelection = () => {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    onClick={() => handleRecipeClick(recipe.id)}
+                    onClick={() => handleRecipeClick(recipe)}
                     disabled={!!loadingRecipe}
                     className={cn(
                       "w-full flex flex-col gap-1.5 px-4 py-3 rounded-2xl bg-card border border-border",
