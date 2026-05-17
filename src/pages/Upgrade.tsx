@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useState } from "react";
+import SEO from "@/components/SEO";
 
 const Upgrade = () => {
   const navigate = useNavigate();
@@ -36,6 +37,11 @@ const Upgrade = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-background">
+      <SEO
+        title="שדרוג חשבון וקרדיטים"
+        description="קבלו עוד קרדיטים ליצירת מתכונים עם AI ופתחו פיצ׳רים מתקדמים בספר המתכונים הדיגיטלי."
+        path="/upgrade"
+      />
       {/* Header */}
       <header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
         <div className="container mx-auto px-4 py-4">

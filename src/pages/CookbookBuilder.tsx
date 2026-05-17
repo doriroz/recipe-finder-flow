@@ -18,6 +18,7 @@ import CookbookStepIndicator from "@/components/cookbook/CookbookStepIndicator";
 import type { CookbookRecipe } from "@/types/cookbook";
 import type { UserGalleryItem } from "@/types/recipe";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import SEO from "@/components/SEO";
 
 const CookbookBuilder = () => {
   const navigate = useNavigate();
@@ -124,6 +125,17 @@ const CookbookBuilder = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO
+        title="ספר המתכונים שלי"
+        description="בנו את ספר המתכונים האישי שלכם: בחרו מתכונים, סדרו אותם, והפיקו ספר דיגיטלי או מודפס יפהפה."
+        path="/cookbook"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "ספר המתכונים שלי",
+          url: "https://recipe-finder-flow.lovable.app/cookbook",
+        }}
+      />
       {/* Header */}
       {/*<header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">*/}
       <header

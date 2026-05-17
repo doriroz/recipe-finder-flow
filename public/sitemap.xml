@@ -8,4 +8,9 @@
   <url><loc>https://recipe-finder-flow.lovable.app/gallery</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>https://recipe-finder-flow.lovable.app/login</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://recipe-finder-flow.lovable.app/upgrade</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://recipe-finder-flow.lovable.app/profile</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://recipe-finder-flow.lovable.app/ingredients</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://recipe-finder-flow.lovable.app/recipe</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://recipe-finder-flow.lovable.app/cooking</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://recipe-finder-flow.lovable.app/complete</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>

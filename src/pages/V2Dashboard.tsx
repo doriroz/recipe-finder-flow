@@ -32,6 +32,7 @@ import HeritageUploadDialog from "@/components/HeritageUploadDialog";
 import UserMenu from "@/components/UserMenu";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
 import { useAuth } from "@/hooks/useAuth";
+import SEO from "@/components/SEO";
 
 const V2Dashboard = () => {
   const navigate = useNavigate();
@@ -112,6 +113,17 @@ const V2Dashboard = () => {
 
   return (
     <div className="h-screen overflow-hidden bg-background flex flex-col scrollbar-hide" dir="rtl">
+      <SEO
+        title="ספר המתכונים הדיגיטלי"
+        description="גלו מתכונים חכמים עם AI, שמרו מתכונים משפחתיים, ובנו ספר מתכונים אישי בעברית."
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "ספר המתכונים הדיגיטלי",
+          url: "https://recipe-finder-flow.lovable.app/",
+        }}
+      />
       {/* ===== TOP HEADER (vibrant orange gradient) ===== */}
       <header
         className="relative z-20 shrink-0"

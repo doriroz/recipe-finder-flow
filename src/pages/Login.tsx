@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import SEO from "@/components/SEO";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -113,6 +114,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-cream to-accent flex items-center justify-center p-4">
+      <SEO
+        title="התחברות והרשמה"
+        description="התחברו או הירשמו לספר המתכונים הדיגיטלי כדי לשמור מתכונים, לבנות ספר אישי ולהשתמש ב-AI."
+        path="/login"
+      />
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">

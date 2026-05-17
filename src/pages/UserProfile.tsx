@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
+import SEO from "@/components/SEO";
 
 type Rank = {
   key: "amateur" | "home" | "master";
@@ -183,6 +184,11 @@ const UserProfile = () => {
       dir="rtl"
       style={{ background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)" }}
     >
+      <SEO
+        title="הפרופיל שלי"
+        description="היסטוריית המתכונים, ההישגים והעדפות הבישול האישיות שלכם בספר המתכונים הדיגיטלי."
+        path="/profile"
+      />
       {/* Header — same pattern as AddRecipe */}
       <header
         className="relative z-20"

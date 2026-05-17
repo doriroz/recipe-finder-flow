@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import SEO from "@/components/SEO";
 
 interface FridgeChallenge {
   id: string;
@@ -189,6 +190,11 @@ const FridgeChallenges = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="אתגרי המקרר שלי"
+        description="חזרו לשילובי מצרכים שניסיתם בעבר ובשלו שוב מתכונים שאהבתם. ההיסטוריה האישית של אתגרי המקרר שלכם."
+        path="/challenges"
+      />
       {/* Header */}
       <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
