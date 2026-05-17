@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import SEO from "@/components/SEO";
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -95,6 +96,17 @@ const Gallery = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="גלריית המתכונים שלי"
+        description="צפו בגלריית המתכונים האישית שלכם — תמונות מהמנות שבישלתם, מתכונים ששמרתם והעדפות אישיות."
+        path="/gallery"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "גלריית המתכונים שלי",
+          url: "https://recipe-finder-flow.lovable.app/gallery",
+        }}
+      />
       <header className="bg-gradient-to-l from-primary/10 via-accent to-card border-b border-primary/20 shadow-soft">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">

@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import SEO from "@/components/SEO";
 
 import dairyImg from "@/assets/categories/dairy.jpg";
 import vegetablesImg from "@/assets/categories/vegetables.jpg";
@@ -480,6 +481,11 @@ const SelectIngredients = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      <SEO
+        title="אתגר המקרר עם AI"
+        description="בחרו את המצרכים שיש לכם במקרר וקבלו מתכון מותאם אישית בעזרת בינה מלאכותית — מהיר, חכם וטעים."
+        path="/select-ingredients"
+      />
       {isGenerating && <GeneratingRecipeLoader />}
       <header
         className="relative z-20"

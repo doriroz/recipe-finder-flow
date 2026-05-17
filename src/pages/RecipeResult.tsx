@@ -10,6 +10,7 @@ import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
 import { mockRecipe } from "@/data/mockData";
 import { calculateDifficulty } from "@/lib/calculateDifficulty";
 import { RecipeResultItem } from "@/types/recipe";
+import SEO from "@/components/SEO";
 
 const RecipeResult = () => {
   const navigate = useNavigate();
@@ -297,6 +298,11 @@ const RecipeResult = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="המתכון שלך"
+        description="מתכון מותאם אישית עם הוראות שלב-אחר-שלב, רשימת מצרכים מדויקת וטיפים מהמטבח."
+        path="/recipe"
+      />
       <header
         className="relative z-20"
         style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}

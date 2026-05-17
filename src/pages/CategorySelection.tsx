@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { useRecipeSearch, SearchRecipeResult } from "@/hooks/useRecipeSearch";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import SEO from "@/components/SEO";
 
 const CATEGORY_IMAGES: Record<string, string> = {
   italian: "https://images.unsplash.com/photo-1498579150354-977475b7ea0b?auto=format&fit=crop&w=600&q=80",
@@ -228,6 +229,11 @@ const CategorySelection = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      <SEO
+        title="מתכונים לפי קטגוריות"
+        description="גלו מתכונים פופולריים לפי מטבחים: איטלקי, אסייתי, ים תיכוני, מקסיקני, ארוחות בוקר, קינוחים וסלטים."
+        path="/categories"
+      />
       {/* App Header */}
       {/*<header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">*/}
       <header
