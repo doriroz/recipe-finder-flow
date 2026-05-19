@@ -34,10 +34,10 @@ const HowItWorksModal = () => {
       <Button
         type="button"
         onClick={() => setOpen(true)}
-        size="sm"
-        className="rounded-full gap-1.5 bg-primary/30 hover:bg-primary/40 backdrop-blur-md text-primary-foreground border border-primary-foreground/30 shadow-soft"
+        size="lg"
+        className="rounded-full gap-2 px-8 py-6 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-elevated"
       >
-        <HelpCircle className="w-4 h-4" />
+        <HelpCircle className="w-5 h-5" />
         איך זה עובד?
       </Button>
 
