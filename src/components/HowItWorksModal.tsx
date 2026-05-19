@@ -37,7 +37,7 @@ const HowItWorksModal = () => {
         size="sm"
         className="rounded-full gap-1.5 bg-primary/30 hover:bg-primary/40 backdrop-blur-md text-primary-foreground border border-primary-foreground/30 shadow-soft"
       >
-        <HelpCircle className="w-6 h-4" />
+        <HelpCircle className="w-4 h-4" />
         איך זה עובד?
       </Button>
 
