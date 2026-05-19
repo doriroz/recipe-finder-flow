@@ -34,18 +34,15 @@ const HowItWorksModal = () => {
       <Button
         type="button"
         onClick={() => setOpen(true)}
-        size="lg"
-        className="rounded-full gap-2 px-8 py-6 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-elevated"
+        size="sm"
+        className="rounded-full gap-1.5 bg-primary/30 hover:bg-primary/40 backdrop-blur-md text-primary-foreground border border-primary-foreground/30 shadow-soft"
       >
-        <HelpCircle className="w-5 h-5" />
+        <HelpCircle className="w-6 h-4" />
         איך זה עובד?
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent
-          dir="rtl"
-          className="max-w-3xl bg-card rounded-3xl p-6 md:p-8 text-center"
-        >
+        <DialogContent dir="rtl" className="max-w-3xl bg-card rounded-3xl p-6 md:p-8 text-center">
           <DialogHeader className="space-y-2 text-center sm:text-center">
             <DialogTitle className="text-2xl md:text-3xl font-bold text-primary text-center">
               ?איך זה עובד? - המדריך המהיר
