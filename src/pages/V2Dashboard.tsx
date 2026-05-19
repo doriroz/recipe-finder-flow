@@ -381,6 +381,11 @@ const V2Dashboard = () => {
             </div>
 
             {/* Big CTA button */}
+            <div className="w-full max-w-xs rounded-full text-base font-bold gap-2 shadow-elevated bg-primary hover:bg-primary/90 text-primary-foreground py-6">
+              <HowItWorksModal />
+            </div>
+
+            {/*
             <Button
               size="lg"
               className="w-full max-w-xs rounded-full text-base font-bold gap-2 shadow-elevated bg-primary hover:bg-primary/90 text-primary-foreground py-6"
@@ -389,6 +394,7 @@ const V2Dashboard = () => {
               <ChefHat className="w-5 h-5" />
               בנו מתכון!
             </Button>
+            */}
           </div>
         </aside>
       </div>
