@@ -366,8 +366,8 @@ const V2Dashboard = () => {
               </button>
             </div>
 
-            {/* Big CTA button */}
-            <div className="w-full max-w-xs rounded-full text-base font-bold gap-2 shadow-elevated bg-primary hover:bg-primary/90 text-primary-foreground py-6">
+            {/* How it works button (below the two cards) */}
+            <div className="flex justify-center w-full mt-2">
               <HowItWorksModal />
             </div>
 
