@@ -33,6 +33,7 @@ import UserMenu from "@/components/UserMenu";
 import RecentRecipesSidebar from "@/components/RecentRecipesSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import SEO from "@/components/SEO";
+import HowItWorksModal from "@/components/HowItWorksModal";
 
 const V2Dashboard = () => {
   const navigate = useNavigate();
@@ -135,6 +136,9 @@ const V2Dashboard = () => {
           {/* Right side: title + chef hat */}
           <UserMenu onOpenHistory={() => setIsSidebarOpen(true)} />
 
+          <div className="hidden sm:block">
+            <HowItWorksModal />
+          </div>
           {/*<Button
             variant="secondary"
             size="sm"
