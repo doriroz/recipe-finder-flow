@@ -136,10 +136,7 @@ const V2Dashboard = () => {
           {/* Right side: title + chef hat */}
           <UserMenu onOpenHistory={() => setIsSidebarOpen(true)} />
 
-          <div className="hidden sm:block">
-            <HowItWorksModal />
-          </div>
-          {/*<Button
+          <Button
             variant="secondary"
             size="sm"
             className="rounded-2xl gap-1.5 bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-soft font-bold"
@@ -147,7 +144,7 @@ const V2Dashboard = () => {
           >
             <BookOpen className="w-4 h-4" />
             הספר שלי
-          </Button>*/}
+          </Button>
           {/* Left side: My Book button */}
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
