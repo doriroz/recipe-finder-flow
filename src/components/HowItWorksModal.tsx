@@ -35,7 +35,7 @@ const HowItWorksModal = () => {
         type="button"
         onClick={() => setOpen(true)}
         size="lg"
-        className="rounded-full gap-1.5 bg-primary/30 hover:bg-primary/40 backdrop-blur-md text-primary-foreground border border-primary-foreground/30 shadow-soft"
+        className="rounded-full gap-1.5 bg-primary hover:bg-primary/90 backdrop-blur-md text-primary-foreground border border-primary-foreground/30 shadow-soft"
       >
         <HelpCircle className="w-4 h-4" />
         איך זה עובד?
