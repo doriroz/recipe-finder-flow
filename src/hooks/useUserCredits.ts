@@ -30,7 +30,7 @@ export const useUserCredits = () => {
 
       if (error && error.code === "PGRST116") {
         // No record yet — will be created on first AI call
-        setCredits({ credits_remaining: 10, daily_ai_calls: 0, total_ai_calls: 0, total_local_matches: 0 });
+        setCredits({ credits_remaining: 5, daily_ai_calls: 0, total_ai_calls: 0, total_local_matches: 0 });
       } else if (data) {
         setCredits(data as any);
       }

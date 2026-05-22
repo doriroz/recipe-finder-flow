@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     const { data, error } = await adminClient
       .from("user_credits")
-      .update({ credits_remaining: 10, daily_ai_calls: 0 })
+      .update({ credits_remaining: 5, daily_ai_calls: 0 })
       .eq("user_id", userId)
       .select("credits_remaining")
       .single();
@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       if (error.code === "PGRST116") {
         const { data: inserted, error: insertErr } = await adminClient
           .from("user_credits")
-          .insert({ user_id: userId, credits_remaining: 10 })
+          .insert({ user_id: userId, credits_remaining: 5 })
           .select("credits_remaining")
           .single();
 
