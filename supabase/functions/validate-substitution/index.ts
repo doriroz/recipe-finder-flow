@@ -131,8 +131,8 @@ serve(async (req) => {
           .single();
 
         if (!userCredits) {
-          await supabaseAdmin.from("user_credits").insert({ user_id: userId, credits_remaining: 10 });
-          userCredits = { credits_remaining: 10 };
+          await supabaseAdmin.from("user_credits").insert({ user_id: userId, credits_remaining: 5 });
+          userCredits = { credits_remaining: 5 };
         }
 
         if (userCredits.credits_remaining < 1) {

@@ -436,7 +436,7 @@ async function checkAndDeductCredits(
   if (!userCredits) {
     const { data: newCredits } = await supabaseAdmin
       .from("user_credits")
-      .insert({ user_id: userId, credits_remaining: 10 })
+      .insert({ user_id: userId, credits_remaining: 5 })
       .select()
       .single();
     userCredits = newCredits;
