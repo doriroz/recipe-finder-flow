@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -21,8 +21,14 @@ interface GenerateRecipeOptions {
 export const useGenerateRecipe = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
+  // Guards against double-clicks / React batching that can fire the
+  // generator twice before `isGenerating` propagates to the button's
+  // `disabled` prop — which previously pushed /recipe twice into history.
+  const inFlightRef = useRef(false);
 
   const generateRecipe = async ({ ingredients, imageBase64, forceCreative, skipChallengeSave }: GenerateRecipeOptions) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setIsGenerating(true);
 
     try {
@@ -183,6 +189,7 @@ export const useGenerateRecipe = () => {
       toast.error("שגיאה בלתי צפויה. נסו שוב.");
     } finally {
       setIsGenerating(false);
+      inFlightRef.current = false;
     }
   };
 
