@@ -981,6 +981,20 @@ serve(async (req) => {
     // ---- AI-ONLY PIPELINE ----
     console.log("=== AI-Only Recipe Generation ===");
 
+    // Enforce user credit balance (1 credit per AI recipe). Only admins can grant more credits.
+    const aiCreditCheck = await checkAndDeductCredits(supabaseAdmin, userId, 1, "recipe_generation");
+    if (!aiCreditCheck.allowed) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: aiCreditCheck.reason || "אין לכם מספיק קרדיטים. פנו למנהל המערכת לקבלת קרדיטים נוספים.",
+          tries_exhausted: true,
+          redirect: "/upgrade",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Check daily tries (3 free per day)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
