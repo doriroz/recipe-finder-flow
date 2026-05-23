@@ -14,11 +14,11 @@ const CookingMode = () => {
   const [searchParams] = useSearchParams();
   const recipeId = searchParams.get("id");
   const [currentStep, setCurrentStep] = useState(1);
-  
-  const { data: recipe, isLoading } = useRecipe(recipeId !== 'mock' ? recipeId : null);
-  
+
+  const { data: recipe, isLoading } = useRecipe(recipeId !== "mock" ? recipeId : null);
+
   // Transform DB recipe instructions to steps format, or use mock
-  const steps = recipe?.instructions 
+  const steps = recipe?.instructions
     ? recipe.instructions.map((instruction, index) => ({
         number: index + 1,
         title: `שלב ${index + 1}`,
@@ -31,21 +31,21 @@ const CookingMode = () => {
   const ingredients: RecipeIngredient[] = recipe?.ingredients
     ? recipe.ingredients
     : mockRecipe.ingredients.map((s) => ({ name: s }));
-  
+
   const displayTitle = recipe?.title || mockRecipe.title;
   const totalSteps = steps.length;
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     } else {
-      navigate(`/complete?id=${recipeId || 'mock'}`);
+      navigate(`/complete?id=${recipeId || "mock"}`);
     }
   };
 
   const handlePrev = () => {
     if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
@@ -67,14 +67,17 @@ const CookingMode = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-card border-b border-border">
+
+      {/*className="bg-card border-b border-border"*/}
+      <header
+        className="relative z-20 shrink-0"
+        style={{
+          background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
+        }}
+      >
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              onClick={handleExit}
-              className="text-destructive hover:text-destructive"
-            >
+            <Button variant="ghost" onClick={handleExit} className="text-destructive hover:text-destructive">
               <X className="w-5 h-5" />
               יציאה
             </Button>
@@ -95,35 +98,19 @@ const CookingMode = () => {
 
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-8">
-        {currentStep === 1 && (
-          <IngredientReadinessCard ingredients={ingredients} />
-        )}
+        {currentStep === 1 && <IngredientReadinessCard ingredients={ingredients} />}
 
-        <CookingStep 
-          step={steps[currentStep - 1]} 
-          totalSteps={totalSteps}
-        />
+        <CookingStep step={steps[currentStep - 1]} totalSteps={totalSteps} />
       </main>
 
       {/* Navigation Buttons */}
       <footer className="bg-card border-t border-border p-4">
         <div className="container mx-auto flex gap-4">
-          <Button
-            variant="outline"
-            size="lg"
-            className="flex-1"
-            onClick={handlePrev}
-            disabled={currentStep <= 1}
-          >
+          <Button variant="outline" size="lg" className="flex-1" onClick={handlePrev} disabled={currentStep <= 1}>
             <ArrowRight className="w-5 h-5" />
             הקודם
           </Button>
-          <Button
-            variant="hero"
-            size="lg"
-            className="flex-1"
-            onClick={handleNext}
-          >
+          <Button variant="hero" size="lg" className="flex-1" onClick={handleNext}>
             {currentStep === totalSteps ? (
               <>
                 סיימתי!
