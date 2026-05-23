@@ -1063,7 +1063,7 @@ serve(async (req) => {
     }
 
     // Log usage
-    await logAiUsage(supabaseAdmin, userId, "recipe_generation", 1024, 0, "ai");
+    await logAiUsage(supabaseAdmin, userId, "recipe_generation", 1024, 1, "ai");
 
     // Find DB substitutions
     const hebrewIngNames = aiRecipe.ingredients.map((i: any) => i.name);
