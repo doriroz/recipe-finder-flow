@@ -108,10 +108,8 @@ const CookingMode = () => {
               יציאה
             </Button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
-                <ChefHat className="w-5 h-5 text-primary-foreground" />
-                <span className="font-bold text-foreground">{displayTitle}</span>
-              </div>
+              <ChefHat className="w-5 h-5 text-primary-foreground" />
+              <span className="font-bold text-foreground">{displayTitle}</span>
             </div>
           </div>
         </div>
