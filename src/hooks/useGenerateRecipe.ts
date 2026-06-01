@@ -75,7 +75,7 @@ export const useGenerateRecipe = () => {
         }
 
         if (isTriesExhausted) {
-          toast.error("ניצלתם את 3 הניסיונות היומיים 🎯", {
+          toast.error(errorMessage || "אין מספיק קרדיטים 🎯", {
             action: {
               label: "שדרוג",
               onClick: () => navigate("/upgrade"),
@@ -101,7 +101,7 @@ export const useGenerateRecipe = () => {
       }
 
       if (data?.tries_exhausted) {
-        toast.error("ניצלתם את 3 הניסיונות היומיים 🎯", {
+        toast.error(data?.error || "אין מספיק קרדיטים 🎯", {
           action: {
             label: "שדרוג",
             onClick: () => navigate("/upgrade"),
