@@ -651,7 +651,13 @@ No extra text.`,
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content?.trim();
     const jsonMatch = content?.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : (content || "{}"));
+    } catch (e) {
+      console.error("generateCreativeFallback JSON parse failed:", e, "content:", content);
+      return null;
+    }
 
     return {
       title: parsed.title || `מתכון יצירתי עם ${hebrewIngredients[0]}`,
