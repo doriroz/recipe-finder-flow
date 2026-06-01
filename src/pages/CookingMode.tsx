@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight, ArrowLeft, X, ChefHat, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import CookingStep from "@/components/CookingStep";
 import StepProgress from "@/components/StepProgress";
 import IngredientReadinessCard from "@/components/IngredientReadinessCard";
@@ -12,25 +12,48 @@ import type { RecipeIngredient } from "@/types/recipe";
 const CookingMode = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const recipeId = searchParams.get("id");
   const [currentStep, setCurrentStep] = useState(1);
 
   const { data: recipe, isLoading } = useRecipe(recipeId !== "mock" ? recipeId : null);
 
+  // Session-only ingredient swaps coming from the recipe screen.
+  // Format: [{ original: "milk", alternative: "oat milk" }]. Not persisted.
+  const acceptedSubs: { original: string; alternative: string }[] =
+    (location.state as any)?.acceptedSubstitutions || [];
+
   // Transform DB recipe instructions to steps format, or use mock
-  const steps = recipe?.instructions
-    ? recipe.instructions.map((instruction, index) => ({
-        number: index + 1,
-        title: `שלב ${index + 1}`,
-        instruction,
-        tip: undefined,
-      }))
-    : mockRecipe.steps;
+  const steps = useMemo(() => {
+    const applySwaps = (text: string) => {
+      let out = text;
+      for (const s of acceptedSubs) {
+        if (!s.original) continue;
+        out = out.split(s.original).join(s.alternative);
+      }
+      return out;
+    };
+    return recipe?.instructions
+      ? recipe.instructions.map((instruction, index) => ({
+          number: index + 1,
+          title: `שלב ${index + 1}`,
+          instruction: applySwaps(instruction),
+          tip: undefined,
+        }))
+      : mockRecipe.steps;
+  }, [recipe?.instructions, acceptedSubs]);
 
   // Ingredients for mise en place
-  const ingredients: RecipeIngredient[] = recipe?.ingredients
-    ? recipe.ingredients
-    : mockRecipe.ingredients.map((s) => ({ name: s }));
+  const ingredients: RecipeIngredient[] = useMemo(() => {
+    const base: RecipeIngredient[] = recipe?.ingredients
+      ? recipe.ingredients
+      : mockRecipe.ingredients.map((s) => ({ name: s }));
+    if (acceptedSubs.length === 0) return base;
+    return base.map((ing) => {
+      const swap = acceptedSubs.find((s) => s.original && ing.name?.includes(s.original));
+      return swap ? { ...ing, name: ing.name.replace(swap.original, swap.alternative) } : ing;
+    });
+  }, [recipe?.ingredients, acceptedSubs]);
 
   const displayTitle = recipe?.title || mockRecipe.title;
   const totalSteps = steps.length;
