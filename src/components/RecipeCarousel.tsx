@@ -8,7 +8,7 @@ import { calculateDifficulty } from "@/lib/calculateDifficulty";
 
 interface RecipeCarouselProps {
   recipeItems: RecipeResultItem[];
-  onStartCooking: (recipeId: string) => void;
+  onStartCooking: (recipeId: string, acceptedSubstitutions?: { original: string; alternative: string }[]) => void;
   onGenerateAI?: () => void;
   userIngredientCount?: number;
 }
@@ -140,7 +140,7 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI, userIngredi
               <p className="text-muted-foreground text-sm mt-2">{recipeItems[0].contextLine}</p>
             )}
           </div>
-          <RecipeCard recipe={display} onStartCooking={() => onStartCooking(recipeItems[0].recipe.id)} />
+          <RecipeCard recipe={display} onStartCooking={(subs) => onStartCooking(recipeItems[0].recipe.id, subs)} />
         </motion.div>
 
 
@@ -176,7 +176,7 @@ const RecipeCarousel = ({ recipeItems, onStartCooking, onGenerateAI, userIngredi
             <p className="text-muted-foreground text-sm mt-2">{item.contextLine}</p>
           )}
         </div>
-        <RecipeCard recipe={display} onStartCooking={() => onStartCooking(item.recipe.id)} />
+        <RecipeCard recipe={display} onStartCooking={(subs) => onStartCooking(item.recipe.id, subs)} />
       </motion.div>
     );
   }
