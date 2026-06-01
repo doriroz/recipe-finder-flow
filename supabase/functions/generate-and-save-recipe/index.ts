@@ -867,9 +867,9 @@ serve(async (req) => {
     let ingredientNames: string[] = [];
 
     if (imageBase64) {
-      const creditCheck = await checkAndDeductCredits(supabaseAdmin, userId, 3, "image_analysis");
+      const creditCheck = await checkCreditsAvailable(supabaseAdmin, userId, 3);
       if (!creditCheck.allowed) {
-        return new Response(JSON.stringify({ error: creditCheck.reason }), {
+        return new Response(JSON.stringify({ error: creditCheck.reason, tries_exhausted: true, redirect: "/upgrade" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -877,14 +877,23 @@ serve(async (req) => {
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is required for image analysis");
       ingredientNames = await extractIngredientsFromImage(imageBase64, LOVABLE_API_KEY);
 
-      await logAiUsage(supabaseAdmin, userId, "image_analysis", 256, 3, "ai");
-
       if (ingredientNames.length === 0) {
+        // AI failed to extract — do NOT charge the user
         return new Response(
           JSON.stringify({ error: "לא הצלחנו לזהות מצרכים בתמונה. נסו שוב עם תמונה ברורה יותר" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+
+      // Success — deduct atomically (3 credits for image analysis)
+      const deducted = await deductCreditAtomic(supabaseAdmin, userId, 3);
+      if (!deducted) {
+        return new Response(
+          JSON.stringify({ error: "אין מספיק קרדיטים", tries_exhausted: true, redirect: "/upgrade" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      await logAiUsage(supabaseAdmin, userId, "image_analysis", 256, 3, "ai");
       console.log("Extracted ingredients from image:", ingredientNames);
     } else if (ingredients && Array.isArray(ingredients)) {
       ingredientNames = ingredients.map((i: any) => typeof i === "string" ? i : i.name);
@@ -893,9 +902,9 @@ serve(async (req) => {
     // ---- forceCreative: AI On-Demand ----
     if (forceCreative) {
       console.log("=== AI On-Demand: forceCreative ===");
-      const creditCheck = await checkAndDeductCredits(supabaseAdmin, userId, 2, "creative_recipe");
+      const creditCheck = await checkCreditsAvailable(supabaseAdmin, userId, 2);
       if (!creditCheck.allowed) {
-        return new Response(JSON.stringify({ error: creditCheck.reason }), {
+        return new Response(JSON.stringify({ error: creditCheck.reason, tries_exhausted: true, redirect: "/upgrade" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -907,12 +916,21 @@ serve(async (req) => {
 
       const fallback = await generateCreativeFallback(englishIngredients, ingredientNames, LOVABLE_API_KEY);
       if (!fallback) {
+        // AI failed — do NOT charge
         return new Response(
           JSON.stringify({ error: "לא הצלחנו ליצור מתכון AI. נסו שוב." }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
+      // Success — deduct atomically
+      const deducted = await deductCreditAtomic(supabaseAdmin, userId, 2);
+      if (!deducted) {
+        return new Response(
+          JSON.stringify({ error: "אין מספיק קרדיטים", tries_exhausted: true, redirect: "/upgrade" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       await logAiUsage(supabaseAdmin, userId, "creative_recipe", 1024, 2, "ai");
 
       // Find DB substitutions for creative recipes too
@@ -961,10 +979,77 @@ serve(async (req) => {
     }
 
     // ---- AI-ONLY PIPELINE ----
-    console.log("=== AI-Only Recipe Generation ===");
+    console.log("=== Tiered Recipe Generation ===");
 
-    // Enforce user credit balance (1 credit per AI recipe). Only admins can grant more credits.
-    const aiCreditCheck = await checkAndDeductCredits(supabaseAdmin, userId, 1, "recipe_generation");
+    // ---- TIER 1: Local recipe_library lookup (FREE) ----
+    // If we find a saved recipe that uses most of the user's ingredients, return it without AI cost.
+    try {
+      const normalized = ingredientNames.map(n => (n || "").trim().toLowerCase()).filter(Boolean);
+      if (normalized.length >= 2) {
+        const { data: libraryRows } = await supabaseAdmin
+          .from("recipe_library")
+          .select("id, title, ingredients, ingredient_names, instructions, substitutions, cooking_time, difficulty")
+          .overlaps("ingredient_names", normalized)
+          .limit(50);
+
+        if (libraryRows && libraryRows.length > 0) {
+          const scored = libraryRows
+            .map((r: any) => {
+              const libNames: string[] = (r.ingredient_names || []).map((s: string) => s.toLowerCase());
+              const used = libNames.filter(n => normalized.some(u => n.includes(u) || u.includes(n)));
+              const missed = libNames.filter(n => !used.includes(n));
+              return { recipe: r, used_count: used.length, missed_count: missed.length, used_ingredient_names: used };
+            })
+            .filter(s => s.used_count >= 2 && s.missed_count <= 3)
+            .sort((a, b) => (b.used_count - b.missed_count) - (a.used_count - a.missed_count));
+
+          if (scored.length > 0) {
+            const best = scored[0];
+            const { data: inserted, error: insErr } = await supabase
+              .from("recipes")
+              .insert({
+                title: best.recipe.title,
+                ingredients: best.recipe.ingredients,
+                instructions: best.recipe.instructions,
+                substitutions: best.recipe.substitutions || [],
+                cooking_time: best.recipe.cooking_time || null,
+                user_id: userId,
+              })
+              .select()
+              .single();
+            if (!insErr && inserted) {
+              await incrementLocalMatchCount(supabaseAdmin, userId);
+              return new Response(
+                JSON.stringify({
+                  success: true,
+                  recipes: [{
+                    recipe: inserted,
+                    badge: "מצאנו מתכון מהספרייה 📚",
+                    contextLine: `${best.used_count} מצרכים מתאימים, ${best.missed_count} חסרים`,
+                    why_it_works: "מתכון בדוק מהספרייה שלנו",
+                    reliability_score: "high",
+                    spoonacular_verified: false,
+                    source: "local",
+                    used_count: best.used_count,
+                    missed_count: best.missed_count,
+                    used_ingredient_names: best.used_ingredient_names,
+                    showAIButton: true,
+                  }],
+                  source: "local",
+                }),
+                { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Local library tier failed (continuing to AI):", e);
+    }
+
+    // ---- TIER 2: AI generation (costs 1 credit) ----
+    // Pre-flight check — does the user have a credit? Do NOT deduct yet.
+    const aiCreditCheck = await checkCreditsAvailable(supabaseAdmin, userId, 1);
     if (!aiCreditCheck.allowed) {
       return new Response(
         JSON.stringify({
@@ -973,34 +1058,13 @@ serve(async (req) => {
           tries_exhausted: true,
           redirect: "/upgrade",
         }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Check daily tries (3 free per day)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const { count: dailyCount } = await supabaseAdmin
-      .from("ai_usage_logs")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", today.toISOString())
-      .eq("user_id", userId)
-      .eq("action_type", "recipe_generation");
-
-    if ((dailyCount || 0) >= 3) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "ניצלתם את 3 הניסיונות היומיים. שדרגו לעוד מתכונים!",
-          tries_exhausted: true,
-          redirect: "/upgrade",
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Global rate limit check
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const { data: globalCap } = await supabaseAdmin
       .from("app_settings")
       .select("value")
@@ -1038,13 +1102,26 @@ serve(async (req) => {
     // Generate recipe with AI
     const aiRecipe = await generateCreativeFallback(englishIngredients, ingredientNames, LOVABLE_API_KEY);
     if (!aiRecipe) {
+      // AI failure — do NOT charge the user
       return new Response(
         JSON.stringify({ error: "לא הצלחנו ליצור מתכון. נסו שוב." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Log usage
+    // Success — deduct atomically
+    const deducted = await deductCreditAtomic(supabaseAdmin, userId, 1);
+    if (!deducted) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "אין מספיק קרדיטים",
+          tries_exhausted: true,
+          redirect: "/upgrade",
+        }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     await logAiUsage(supabaseAdmin, userId, "recipe_generation", 1024, 1, "ai");
 
     // Find DB substitutions
