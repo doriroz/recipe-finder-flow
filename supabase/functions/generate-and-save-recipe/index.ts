@@ -514,8 +514,13 @@ async function extractIngredientsFromImage(imageBase64: string, apiKey: string):
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content?.trim();
   const jsonMatch = content?.match(/\[[\s\S]*\]/);
-  const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
-  return Array.isArray(parsed) ? parsed : [];
+  try {
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : (content || "[]"));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error("extractIngredientsFromImage JSON parse failed:", e, "content:", content);
+    return [];
+  }
 }
 
 // ============ IMPERIAL → METRIC CONVERSION ============
