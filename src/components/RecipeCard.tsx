@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Clock, Users, ChefHat, Plus, Minus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import SubstitutionSection from "@/components/SubstitutionSection";
+import SubstitutionSection, { AcceptedSubstitution } from "@/components/SubstitutionSection";
 
 interface Substitution {
   original: string;
@@ -39,7 +39,8 @@ export interface RecipeCardData {
 
 interface RecipeCardProps {
   recipe: RecipeCardData;
-  onStartCooking: () => void;
+  /** Receives the user's accepted ingredient swaps (not persisted) */
+  onStartCooking: (acceptedSubstitutions?: AcceptedSubstitution[]) => void;
 }
 
 // ─── Ingredient Scaling (pure math, no AI) ────────────────────────────────────
