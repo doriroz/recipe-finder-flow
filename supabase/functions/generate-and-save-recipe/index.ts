@@ -381,11 +381,15 @@ function scoreSpoonacularCandidates(findData: any[], userCount: number): ScoredS
 
 // ============ CREDIT & RATE LIMITING ============
 
-async function checkAndDeductCredits(
+/**
+ * Pre-flight check: does the user have at least `creditsNeeded` credits?
+ * Does NOT deduct anything. Auto-provisions a row with 5 free credits on first use.
+ * Returns { allowed, reason }.
+ */
+async function checkCreditsAvailable(
   supabaseAdmin: any,
   userId: string,
   creditsNeeded: number,
-  actionType: string
 ): Promise<{ allowed: boolean; reason?: string }> {
   const { data: globalCap } = await supabaseAdmin
     .from("app_settings")
@@ -408,68 +412,35 @@ async function checkAndDeductCredits(
     return { allowed: false, reason: "המערכת עמוסה כרגע, נסו שוב מאוחר יותר" };
   }
 
-  const { data: userCap } = await supabaseAdmin
-    .from("app_settings")
-    .select("value")
-    .eq("key", "ai_daily_user_cap")
-    .single();
-
-  const userDailyLimit = parseInt(String(userCap?.value || "20"));
-
-  const { count: userToday } = await supabaseAdmin
-    .from("ai_usage_logs")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", today.toISOString())
-    .eq("user_id", userId)
-    .eq("source", "ai");
-
-  if ((userToday || 0) >= userDailyLimit) {
-    return { allowed: false, reason: "הגעתם למגבלת השימוש היומית. נסו שוב מחר" };
+  const { data: remaining, error } = await supabaseAdmin.rpc("check_user_credits", { _user_id: userId });
+  if (error) {
+    console.error("check_user_credits error:", error);
+    return { allowed: false, reason: "שגיאה בבדיקת הקרדיטים" };
   }
-
-  let { data: userCredits } = await supabaseAdmin
-    .from("user_credits")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
-
-  if (!userCredits) {
-    const { data: newCredits } = await supabaseAdmin
-      .from("user_credits")
-      .insert({ user_id: userId, credits_remaining: 5 })
-      .select()
-      .single();
-    userCredits = newCredits;
+  if ((remaining ?? 0) < creditsNeeded) {
+    return {
+      allowed: false,
+      reason: `אין לכם מספיק קרדיטים (נדרשים ${creditsNeeded}, נותרו ${remaining ?? 0}). פנו למנהל המערכת לקבלת קרדיטים נוספים.`,
+    };
   }
-
-  if (userCredits) {
-    const resetAt = new Date(userCredits.daily_reset_at);
-    if (resetAt < today) {
-      await supabaseAdmin
-        .from("user_credits")
-        .update({ daily_ai_calls: 0, daily_reset_at: new Date().toISOString() })
-        .eq("user_id", userId);
-      userCredits.daily_ai_calls = 0;
-    }
-  }
-
-  if (userCredits && userCredits.credits_remaining < creditsNeeded) {
-    return { allowed: false, reason: `אין מספיק קרדיטים (נדרשים ${creditsNeeded}, נותרו ${userCredits.credits_remaining})` };
-  }
-
-  if (userCredits) {
-    await supabaseAdmin
-      .from("user_credits")
-      .update({
-        credits_remaining: userCredits.credits_remaining - creditsNeeded,
-        daily_ai_calls: (userCredits.daily_ai_calls || 0) + 1,
-        total_ai_calls: (userCredits.total_ai_calls || 0) + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
-  }
-
   return { allowed: true };
+}
+
+/**
+ * Atomic deduction via Postgres RPC. Returns true on success, false if balance was insufficient.
+ * Call ONLY after the work (e.g. AI generation) succeeded.
+ */
+async function deductCreditAtomic(
+  supabaseAdmin: any,
+  userId: string,
+  amount: number,
+): Promise<boolean> {
+  const { data, error } = await supabaseAdmin.rpc("deduct_user_credit", { _user_id: userId, _amount: amount });
+  if (error) {
+    console.error("deduct_user_credit error:", error);
+    return false;
+  }
+  return typeof data === "number" && data >= 0;
 }
 
 async function logAiUsage(
