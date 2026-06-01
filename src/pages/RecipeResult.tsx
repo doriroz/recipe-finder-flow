@@ -82,10 +82,17 @@ const RecipeResult = () => {
 
   const isLoading = authLoading || (!noMatch && recipeItems === null && (loadingSpecific || loadingRecipes));
 
-  const handleStartCooking = (selectedRecipeId: string) => {
+  const handleStartCooking = (
+    selectedRecipeId: string,
+    acceptedSubstitutions?: { original: string; alternative: string }[]
+  ) => {
     setCookingSessionActive(true);
     setLockedRecipeId(selectedRecipeId);
-    navigate(`/cooking?id=${selectedRecipeId}`);
+    navigate(`/cooking?id=${selectedRecipeId}`, {
+      state: acceptedSubstitutions?.length
+        ? { acceptedSubstitutions }
+        : undefined,
+    });
   };
 
   const handleGenerateAI =
@@ -374,7 +381,10 @@ const RecipeResult = () => {
               {!user && <p className="text-sm text-muted-foreground mt-2">התחברו כדי לשמור מתכונים משלכם</p>}
             </div>
 
-            <RecipeCard recipe={displayRecipe} onStartCooking={() => handleStartCooking(recipe?.id || "mock")} />
+            <RecipeCard
+              recipe={displayRecipe}
+              onStartCooking={(subs) => handleStartCooking(recipe?.id || "mock", subs)}
+            />
           </>
         )}
       </main>
