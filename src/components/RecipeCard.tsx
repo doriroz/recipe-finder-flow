@@ -148,6 +148,7 @@ const ingredientToString = (ing: StructuredIngredient | string): string => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
+  const [acceptedSubs, setAcceptedSubs] = useState<AcceptedSubstitution[]>([]);
   const [servings, setServings] = useState(recipe.servings);
   const baseServings = recipe.servings;
   const scaleFactor = servings / baseServings;
@@ -297,6 +298,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
               typeof ing === "string" ? ing : ingredientToString(ing)
             )}
             recipeTitle={recipe.title}
+            onAcceptedSubstitutionsChange={setAcceptedSubs}
           />
         </div>
       )}
@@ -306,7 +308,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         variant="hero"
         size="xl"
         className="w-full"
-        onClick={onStartCooking}>
+        onClick={() => onStartCooking(acceptedSubs)}>
 
         <ChefHat className="w-6 h-6" />
         בואו נבשל!
