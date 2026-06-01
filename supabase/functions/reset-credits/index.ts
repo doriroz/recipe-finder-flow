@@ -37,16 +37,42 @@ Deno.serve(async (req) => {
 
     const userId = claimsData.claims.sub;
 
-    // Use service role to reset credits
+    // Use service role for both the admin-role check and the reset itself
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // ADMIN-ONLY: verify caller has the 'admin' role before resetting credits
+    const { data: roleRow, error: roleErr } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (roleErr || !roleRow) {
+      return new Response(
+        JSON.stringify({ error: "פעולה זו זמינה למנהלי מערכת בלבד" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Optional: admin may pass targetUserId to reset another user's credits
+    let targetUserId = userId;
+    try {
+      if (req.headers.get("content-type")?.includes("application/json")) {
+        const body = await req.json().catch(() => ({}));
+        if (body?.targetUserId && typeof body.targetUserId === "string") {
+          targetUserId = body.targetUserId;
+        }
+      }
+    } catch { /* ignore */ }
+
     const { data, error } = await adminClient
       .from("user_credits")
       .update({ credits_remaining: 5, daily_ai_calls: 0 })
-      .eq("user_id", userId)
+      .eq("user_id", targetUserId)
       .select("credits_remaining")
       .single();
 
@@ -55,7 +81,7 @@ Deno.serve(async (req) => {
       if (error.code === "PGRST116") {
         const { data: inserted, error: insertErr } = await adminClient
           .from("user_credits")
-          .insert({ user_id: userId, credits_remaining: 5 })
+          .insert({ user_id: targetUserId, credits_remaining: 5 })
           .select("credits_remaining")
           .single();
 
