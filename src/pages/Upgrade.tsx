@@ -1,4 +1,4 @@
-import { ArrowRight, Sparkles, BookOpen, Zap, Crown, RotateCcw } from "lucide-react";
+import { ArrowRight, BookOpen, Zap, Crown, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -18,16 +18,10 @@ const Upgrade = () => {
     if (!user) return;
     setResetting(true);
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { error } = await supabase
-        .from("ai_usage_logs" as any)
-        .delete()
-        .eq("user_id", user.id)
-        .eq("action_type", "recipe_generation")
-        .gte("created_at", today.toISOString());
-      if (error) throw error;
-      toast.success("הניסיונות אופסו בהצלחה!");
+      // Calls the admin-guarded reset-credits edge function to restore the credit balance.
+      const { data, error } = await supabase.functions.invoke("reset-credits", { body: {} });
+      if (error || data?.error) throw error || new Error(data?.error);
+      toast.success("הקרדיטים אופסו בהצלחה!");
     } catch {
       toast.error("שגיאה באיפוס");
     } finally {
@@ -99,10 +93,10 @@ const Upgrade = () => {
               <Button
                 className="w-full"
                 variant="outline"
-                onClick={() => {/* TODO: payment integration */}}
+                disabled
+                title="בקרוב"
               >
-                <Sparkles className="w-4 h-4" />
-                רכישה
+                בקרוב
               </Button>
             </div>
 
@@ -123,10 +117,10 @@ const Upgrade = () => {
               </div>
               <Button
                 className="w-full"
-                onClick={() => {/* TODO: payment integration */}}
+                disabled
+                title="בקרוב"
               >
-                <Crown className="w-4 h-4" />
-                שדרוג
+                בקרוב
               </Button>
             </div>
           </div>

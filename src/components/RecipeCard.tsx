@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Clock, Users, ChefHat, Plus, Minus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import SubstitutionSection from "@/components/SubstitutionSection";
+import SubstitutionSection, { AcceptedSubstitution } from "@/components/SubstitutionSection";
 
 interface Substitution {
   original: string;
@@ -39,7 +39,8 @@ export interface RecipeCardData {
 
 interface RecipeCardProps {
   recipe: RecipeCardData;
-  onStartCooking: () => void;
+  /** Receives the user's accepted ingredient swaps (not persisted) */
+  onStartCooking: (acceptedSubstitutions?: AcceptedSubstitution[]) => void;
 }
 
 // ─── Ingredient Scaling (pure math, no AI) ────────────────────────────────────
@@ -147,6 +148,7 @@ const ingredientToString = (ing: StructuredIngredient | string): string => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
+  const [acceptedSubs, setAcceptedSubs] = useState<AcceptedSubstitution[]>([]);
   const [servings, setServings] = useState(recipe.servings);
   const baseServings = recipe.servings;
   const scaleFactor = servings / baseServings;
@@ -296,6 +298,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
               typeof ing === "string" ? ing : ingredientToString(ing)
             )}
             recipeTitle={recipe.title}
+            onAcceptedSubstitutionsChange={setAcceptedSubs}
           />
         </div>
       )}
@@ -305,7 +308,7 @@ const RecipeCard = ({ recipe, onStartCooking }: RecipeCardProps) => {
         variant="hero"
         size="xl"
         className="w-full"
-        onClick={onStartCooking}>
+        onClick={() => onStartCooking(acceptedSubs)}>
 
         <ChefHat className="w-6 h-6" />
         בואו נבשל!

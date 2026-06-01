@@ -1,20 +1,21 @@
 import { Zap } from "lucide-react";
-import { useDailyTries } from "@/hooks/useDailyTries";
+import { useUserCredits } from "@/hooks/useUserCredits";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 const CreditCounter = () => {
   const { user } = useAuth();
-  const { remaining, loading } = useDailyTries();
+  const { credits, loading } = useUserCredits();
   const navigate = useNavigate();
 
-  if (!user || loading) return null;
+  if (!user || loading || !credits) return null;
 
+  const remaining = credits.credits_remaining;
   const isEmpty = remaining <= 0;
 
   return (
     <button
-      onClick={() => isEmpty ? navigate("/upgrade") : navigate("/profile")}
+      onClick={() => navigate("/upgrade")}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
         isEmpty
           ? "bg-destructive/15 hover:bg-destructive/25"
@@ -25,7 +26,7 @@ const CreditCounter = () => {
       <span className={`font-medium ${isEmpty ? "text-destructive" : "text-foreground"}`}>
         {remaining}
       </span>
-      <span className="text-muted-foreground text-xs">ניסיונות</span>
+      <span className="text-muted-foreground text-xs">קרדיטים</span>
     </button>
   );
 };

@@ -26,13 +26,23 @@ interface UserSuggestion {
   isLoading: boolean;
 }
 
+export interface AcceptedSubstitution {
+  original: string;
+  alternative: string;
+}
+
 interface SubstitutionSectionProps {
   substitutions: Substitution[];
   ingredients: string[];
   recipeTitle: string;
+  /**
+   * Called when the user's set of valid (accepted) substitutions changes.
+   * Parent can pass these to cooking mode via navigation state. Not persisted.
+   */
+  onAcceptedSubstitutionsChange?: (subs: AcceptedSubstitution[]) => void;
 }
 
-const SubstitutionSection = ({ substitutions, ingredients, recipeTitle }: SubstitutionSectionProps) => {
+const SubstitutionSection = ({ substitutions, ingredients, recipeTitle, onAcceptedSubstitutionsChange }: SubstitutionSectionProps) => {
   const navigate = useNavigate();
   const [selectedIngredient, setSelectedIngredient] = useState<string>("");
   const [suggestedReplacement, setSuggestedReplacement] = useState("");
@@ -83,13 +93,21 @@ const SubstitutionSection = ({ substitutions, ingredients, recipeTitle }: Substi
       }
 
       // Update the suggestion with result
-      setUserSuggestions(prev => 
-        prev.map((s, i) => 
-          i === prev.length - 1 
+      setUserSuggestions(prev => {
+        const next = prev.map((s, i) =>
+          i === prev.length - 1
             ? { ...s, result: data.result, isLoading: false }
             : s
-        )
-      );
+        );
+        // Emit accepted substitutions (valid ones) to parent
+        if (onAcceptedSubstitutionsChange) {
+          const accepted = next
+            .filter(s => s.result?.isValid)
+            .map(s => ({ original: s.original, alternative: s.suggested }));
+          onAcceptedSubstitutionsChange(accepted);
+        }
+        return next;
+      });
 
       // Clear inputs
       setSelectedIngredient("");
@@ -102,8 +120,8 @@ const SubstitutionSection = ({ substitutions, ingredients, recipeTitle }: Substi
       if (err?.isCredit || errorMessage.includes("קרדיטים")) {
         toast.error(errorMessage, {
           action: {
-            label: "חידוש קרדיטים",
-            onClick: () => navigate("/profile"),
+            label: "שדרוג",
+            onClick: () => navigate("/upgrade"),
           },
           duration: 8000,
         });
