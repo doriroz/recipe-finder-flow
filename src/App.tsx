@@ -14,6 +14,7 @@ import Gallery from "./pages/Gallery";
 import CookbookBuilder from "./pages/CookbookBuilder";
 import Login from "./pages/Login";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminCredits from "./pages/AdminCredits";
 import DebugMatching from "./pages/DebugMatching";
 import CategorySelection from "./pages/CategorySelection";
 import Upgrade from "./pages/Upgrade";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/cookbook" element={<CookbookBuilder />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin/credits" element={<AdminCredits />} />
             <Route path="/debug" element={<DebugMatching />} />
             <Route path="/categories" element={<CategorySelection />} />
             <Route path="/upgrade" element={<Upgrade />} />
