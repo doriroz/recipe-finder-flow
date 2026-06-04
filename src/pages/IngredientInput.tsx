@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ingredients as mockIngredients, type Ingredient } from "@/data/mockData";
 import { useCustomIngredients } from "@/hooks/useCustomIngredients";
 import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
-import { useDailyTries } from "@/hooks/useDailyTries";
+import { useUserCredits } from "@/hooks/useUserCredits";
 import GeneratingRecipeLoader from "@/components/GeneratingRecipeLoader";
 import ImageUpload from "@/components/ImageUpload";
 import CreditCounter from "@/components/CreditCounter";
@@ -22,7 +22,8 @@ const IngredientInput = () => {
   const [activeTab, setActiveTab] = useState<"ingredients" | "photo">("ingredients");
   const { customIngredients, addCustomIngredient } = useCustomIngredients();
   const { generateRecipe, isGenerating } = useGenerateRecipe();
-  const { remaining: remainingTries } = useDailyTries();
+  const { credits } = useUserCredits();
+  const creditsRemaining = credits?.credits_remaining ?? 0;
 
   const allIngredients = useMemo<Ingredient[]>(() => {
     const custom = customIngredients.map((c) => ({
@@ -134,7 +135,7 @@ const IngredientInput = () => {
           onRemove={remove}
           onGenerate={handleGenerate}
           isGenerating={isGenerating}
-          remainingTries={remainingTries}
+          creditsRemaining={creditsRemaining}
         />
       )}
 
