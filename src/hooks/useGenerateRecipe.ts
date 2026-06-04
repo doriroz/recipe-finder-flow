@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { saveFridgeChallenge } from "./useFridgeChallenge";
+import { useQueryClient } from "@tanstack/react-query";
+import { USER_CREDITS_QUERY_KEY } from "./useUserCredits";
 
 interface Ingredient {
   id: number;
@@ -21,6 +23,7 @@ interface GenerateRecipeOptions {
 export const useGenerateRecipe = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   // Guards against double-clicks / React batching that can fire the
   // generator twice before `isGenerating` propagates to the button's
   // `disabled` prop — which previously pushed /recipe twice into history.
@@ -57,6 +60,9 @@ export const useGenerateRecipe = () => {
       const { data, error } = await supabase.functions.invoke("generate-and-save-recipe", {
         body: payload,
       });
+
+      // Any response (success or error) may have mutated credits — invalidate.
+      queryClient.invalidateQueries({ queryKey: USER_CREDITS_QUERY_KEY });
 
       if (error) {
         console.error("Edge function error:", error);
