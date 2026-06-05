@@ -37,7 +37,47 @@ const Upgrade = () => {
         path="/upgrade"
       />
       {/* Header */}
-      <header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-soft">
+      {/*
+      <header
+        className="relative z-20"
+        style={{
+          background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
+        }}
+      >
+        <div className="container mx-auto px-4 py-3">
+          
+          <div className="flex items-center justify-between">
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
+              onClick={() => navigate("/v2-dashboard")}
+              aria-label="חזרה"
+            >
+              חזרה
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+            
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-xl font-bold text-primary-foreground">הספר שלי</h1>
+              <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-xs backdrop-blur-sm">
+                {recipes.length} מתכונים
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </header> */}
+
+      <header
+        className="relative z-20"
+        style={{
+          background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
+        }}
+      >
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button
@@ -61,9 +101,7 @@ const Upgrade = () => {
         {/* Hero */}
         <div className="text-center space-y-3">
           <div className="text-5xl">✨</div>
-          <h1 className="text-2xl font-bold text-foreground">
-            ניצלתם את הניסיונות היומיים
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground">ניצלתם את הניסיונות היומיים</h1>
           <p className="text-muted-foreground leading-relaxed">
             קיבלתם 3 ניסיונות חינמיים ליום ליצירת מתכונים עם AI.
             <br />
@@ -90,12 +128,7 @@ const Upgrade = () => {
                   <span className="text-2xl font-bold text-foreground">₪9.90</span>
                 </div>
               </div>
-              <Button
-                className="w-full"
-                variant="outline"
-                disabled
-                title="בקרוב"
-              >
+              <Button className="w-full" variant="outline" disabled title="בקרוב">
                 בקרוב
               </Button>
             </div>
@@ -115,11 +148,7 @@ const Upgrade = () => {
                   <span className="text-xs text-muted-foreground block">/לחודש</span>
                 </div>
               </div>
-              <Button
-                className="w-full"
-                disabled
-                title="בקרוב"
-              >
+              <Button className="w-full" disabled title="בקרוב">
                 בקרוב
               </Button>
             </div>
@@ -137,9 +166,7 @@ const Upgrade = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-foreground">ספר מתכונים אישי</h3>
-                <p className="text-sm text-muted-foreground">
-                  אספו את המתכונים האהובים לספר מודפס ומעוצב
-                </p>
+                <p className="text-sm text-muted-foreground">אספו את המתכונים האהובים לספר מודפס ומעוצב</p>
               </div>
               <div className="text-left">
                 <span className="text-2xl font-bold text-foreground">₪49.90</span>
