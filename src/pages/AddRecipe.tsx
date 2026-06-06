@@ -61,7 +61,7 @@ const AddRecipe = () => {
               variant="ghost"
               size="sm"
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={() => navigate("/v2-dashboard")}
+              onClick={() => navigate("/v2-cookbook")}
               aria-label="חזרה"
             >
               חזרה
