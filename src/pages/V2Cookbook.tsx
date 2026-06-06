@@ -76,11 +76,7 @@ const V2RecipeImage = ({
 }) => {
   if (recipe.heritageImageUrl) {
     return (
-      <img
-        src={recipe.heritageImageUrl}
-        alt={recipe.title}
-        className={cn("w-full h-full object-cover", className)}
-      />
+      <img src={recipe.heritageImageUrl} alt={recipe.title} className={cn("w-full h-full object-cover", className)} />
     );
   }
   return (
@@ -119,12 +115,7 @@ const V2RecipeCard = ({
         <V2RecipeImage recipe={recipe} className="transition-transform duration-300 group-hover:scale-105" />
 
         {/* Floating tag */}
-        <Badge
-          className={cn(
-            "absolute top-2 right-2 text-[10px] shadow-soft backdrop-blur-sm",
-            badge.color,
-          )}
-        >
+        <Badge className={cn("absolute top-2 right-2 text-[10px] shadow-soft backdrop-blur-sm", badge.color)}>
           {badge.emoji} {badge.label}
         </Badge>
 
@@ -143,9 +134,7 @@ const V2RecipeCard = ({
 
       {/* Body */}
       <div className="p-4 space-y-2">
-        <h3 className="font-bold text-foreground leading-tight line-clamp-2 min-h-[2.5rem]">
-          {recipe.title}
-        </h3>
+        <h3 className="font-bold text-foreground leading-tight line-clamp-2 min-h-[2.5rem]">{recipe.title}</h3>
 
         {/* Flexible meta-data row */}
         <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
@@ -270,9 +259,7 @@ const V2RecipeModal = ({
             </div>
 
             {recipe.story && (
-              <p className="text-sm text-muted-foreground italic leading-relaxed pt-1">
-                "{recipe.story}"
-              </p>
+              <p className="text-sm text-muted-foreground italic leading-relaxed pt-1">"{recipe.story}"</p>
             )}
           </div>
 
@@ -322,9 +309,7 @@ const V2RecipeModal = ({
           {recipe.ocrText && (
             <section className="p-4 rounded-xl bg-muted/60 border border-border">
               <p className="text-xs font-medium text-muted-foreground mb-1">טקסט מקורי שחולץ:</p>
-              <p className="text-xs text-foreground whitespace-pre-line leading-relaxed">
-                {recipe.ocrText}
-              </p>
+              <p className="text-xs text-foreground whitespace-pre-line leading-relaxed">{recipe.ocrText}</p>
             </section>
           )}
         </div>
@@ -338,15 +323,15 @@ const V2RecipeModal = ({
             className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="w-4 h-4" />
-            מחקו
+            מחק
           </Button>
           <Button variant="outline" size="sm" onClick={onEdit} className="gap-1.5">
             <Pencil className="w-4 h-4" />
-            ערכו
+            ערוך
           </Button>
           <Button size="sm" onClick={onDownload} disabled={downloading} className="gap-1.5">
             <Download className="w-4 h-4" />
-            {downloading ? "מכין PDF..." : "הורידו מתכון"}
+            {downloading ? "מכין PDF..." : "הורד מתכון"}
           </Button>
         </div>
       </div>
@@ -526,12 +511,7 @@ const V2Cookbook = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map((r) => (
-              <V2RecipeCard
-                key={r.id}
-                recipe={r}
-                onOpen={() => setSelected(r)}
-                onDelete={() => handleDelete(r.id)}
-              />
+              <V2RecipeCard key={r.id} recipe={r} onOpen={() => setSelected(r)} onDelete={() => handleDelete(r.id)} />
             ))}
           </div>
         )}
@@ -554,9 +534,7 @@ const V2Cookbook = () => {
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <BookMarked className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-sm font-medium text-foreground leading-snug">
-                מוכנים להפוך את האוסף שלכם לספר אמיתי?
-              </p>
+              <p className="text-sm font-medium text-foreground leading-snug">מוכנים להפוך את האוסף שלכם לספר אמיתי?</p>
             </div>
             <Button
               size="default"
