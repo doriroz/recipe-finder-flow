@@ -14,10 +14,12 @@ export const useUserGallery = () => {
 
       const { data, error } = await supabase
         .from("user_gallery")
-        .select(`
+        .select(
+          `
           *,
           recipe:recipes(id, title, ingredients, instructions, cooking_time, substitutions)
-        `)
+        `,
+        )
         .eq("user_id", session.session.user.id)
         .order("created_at", { ascending: false });
 
@@ -32,18 +34,14 @@ export const useInsertGalleryItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (item: {
-      recipe_id?: string;
-      image_url: string;
-      user_notes?: string;
-    }) => {
+    mutationFn: async (item: { recipe_id?: string; image_url: string; user_notes?: string }) => {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) {
         throw new Error("User must be logged in to save to gallery");
       }
-
+      //.from("user_gallery")
       const { data, error } = await supabase
-        .from("user_gallery")
+        .from("v2_cookbook_recipes")
         .insert({
           user_id: session.session.user.id,
           recipe_id: item.recipe_id || null,
@@ -57,7 +55,8 @@ export const useInsertGalleryItem = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-gallery"] });
+      //queryClient.invalidateQueries({ queryKey: ["user-gallery"] });
+      queryClient.invalidateQueries({ queryKey: ["v2_cookbook_recipes"] });
     },
   });
 };
@@ -68,10 +67,7 @@ export const useDeleteGalleryItem = () => {
 
   return useMutation({
     mutationFn: async (itemId: string) => {
-      const { error } = await supabase
-        .from("user_gallery")
-        .delete()
-        .eq("id", itemId);
+      const { error } = await supabase.from("user_gallery").delete().eq("id", itemId);
 
       if (error) throw error;
     },
