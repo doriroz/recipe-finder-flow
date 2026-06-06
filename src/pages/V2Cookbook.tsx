@@ -478,7 +478,7 @@ const V2Cookbook = () => {
                 key={f.key}
                 onClick={() => setFilter(f.key)}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors",
+                  "px-3.5 py-1.5 rounded-full text-base font-medium border transition-colors",
                   active
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-card/70 text-foreground border-border hover:bg-muted",
