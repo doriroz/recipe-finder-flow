@@ -5,7 +5,8 @@ import type { UserGalleryItem } from "@/types/recipe";
 // Fetch all gallery items for current user
 export const useUserGallery = () => {
   return useQuery({
-    queryKey: ["user-gallery"],
+    //queryKey: ["user-gallery"],
+    queryKey: ["v2_cookbook_recipes"],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) {
@@ -13,7 +14,8 @@ export const useUserGallery = () => {
       }
 
       const { data, error } = await supabase
-        .from("user_gallery")
+        //.from("user_gallery")
+        .from("v2_cookbook_recipes")
         .select(
           `
           *,
