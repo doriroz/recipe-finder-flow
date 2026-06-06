@@ -6,7 +6,7 @@ import type { UserGalleryItem } from "@/types/recipe";
 export const useUserGallery = () => {
   return useQuery({
     //queryKey: ["user-gallery"],
-    queryKey: ["v2_cookbook_recipes"],
+    queryKey: ["user_gallery"],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) {
@@ -15,7 +15,7 @@ export const useUserGallery = () => {
 
       const { data, error } = await supabase
         //.from("user_gallery")
-        .from("v2_cookbook_recipes")
+        .from("user_gallery")
         .select(
           `
           *,
@@ -43,7 +43,7 @@ export const useInsertGalleryItem = () => {
       }
       //.from("user_gallery")
       const { data, error } = await supabase
-        .from("v2_cookbook_recipes")
+        .from("user_gallery")
         .insert({
           user_id: session.session.user.id,
           recipe_id: item.recipe_id || null,
@@ -58,7 +58,7 @@ export const useInsertGalleryItem = () => {
     },
     onSuccess: () => {
       //queryClient.invalidateQueries({ queryKey: ["user-gallery"] });
-      queryClient.invalidateQueries({ queryKey: ["v2_cookbook_recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["user_gallery"] });
     },
   });
 };
