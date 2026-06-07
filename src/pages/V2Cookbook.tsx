@@ -457,7 +457,7 @@ const V2Cookbook = () => {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="חפשו מתכון, מצרך או מטבח..."
+            placeholder="חפשו מתכון..."
             className="pr-10 pl-9 h-11 rounded-2xl bg-card/80 backdrop-blur-sm border-border"
           />
           {search && (
@@ -474,16 +474,15 @@ const V2Cookbook = () => {
           {FILTERS.map((f) => {
             const active = filter === f.key;
             return (
-              
               <Button
               key={key}
               size="sm"
               variant={filterSource === key ? "default" : "outline"}
               className="rounded-full text-xs gap-1"
               onClick={() => setFilterSource(filterSource === key ? null : key)}
-            >
+              >
                  {f.emoji ? `${f.emoji} ${f.label}` : f.label}
-            </Button>
+              </Button>
             
               {/* 
               <button
