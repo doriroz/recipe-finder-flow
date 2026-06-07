@@ -27,7 +27,6 @@ import { cn } from "@/lib/utils";
 import { generateCookbookPDF } from "@/lib/generateCookbookPDF";
 import { cookbookThemes } from "@/types/cookbook";
 import type { UserGalleryItem } from "@/types/recipe";
-import { useGoBack } from "@/hooks/useGoBack";
 
 // ----- helpers -----
 
@@ -351,7 +350,6 @@ const FILTERS: { key: RecipeSource | "all"; label: string; emoji?: string }[] = 
 
 const V2Cookbook = () => {
   const navigate = useNavigate();
-  const goBack = useGoBack("/v2-dashboard");
   const { recipes, removeRecipe } = useV2Cookbook();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<RecipeSource | "all">("all");
@@ -433,7 +431,7 @@ const V2Cookbook = () => {
               variant="ghost"
               size="sm"
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={goBack}
+              onClick={() => navigate("/v2-dashboard")}
               aria-label="חזרה"
             >
               חזרה
@@ -476,6 +474,16 @@ const V2Cookbook = () => {
           {FILTERS.map((f) => {
             const active = filter === f.key;
             return (
+              <Button
+              key={key}
+              size="sm"
+              variant={filterSource === key ? "default" : "outline"}
+              className="rounded-full text-xs gap-1"
+              onClick={() => setFilterSource(filterSource === key ? null : key)}
+            >
+                 {f.emoji ? `${f.emoji} ${f.label}` : f.label}
+            </Button>
+              {/*
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
@@ -488,6 +496,7 @@ const V2Cookbook = () => {
               >
                 {f.emoji ? `${f.emoji} ${f.label}` : f.label}
               </button>
+              */}
             );
           })}
         </div>
