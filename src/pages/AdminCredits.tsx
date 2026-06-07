@@ -43,11 +43,11 @@ const AdminCredits = () => {
   useEffect(() => {
     if (authLoading || adminLoading) return;
     if (!user) {
-      navigate("/login");
+      navigate("/login", { replace: true });
       return;
     }
     if (!isAdmin) {
-      navigate("/");
+      navigate("/", { replace: true });
       return;
     }
     load();

@@ -78,7 +78,7 @@ const PostCooking = () => {
         description: "התחברו כדי לשמור מתכונים לגלריה",
         variant: "destructive",
       });
-      navigate("/login");
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -108,7 +108,7 @@ const PostCooking = () => {
         title: "נשמר בהצלחה!",
         description: "המנה נוספה לגלריה שלכם",
       });
-      navigate("/gallery");
+      navigate("/gallery", { replace: true });
     } catch (error) {
       console.error("Error saving to gallery:", error);
       toast({

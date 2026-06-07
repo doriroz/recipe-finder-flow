@@ -69,7 +69,7 @@ const AdminAnalytics = () => {
   useEffect(() => {
     if (adminLoading) return;
     if (!isAdmin) {
-      navigate("/");
+      navigate("/", { replace: true });
       return;
     }
     fetchAnalytics();

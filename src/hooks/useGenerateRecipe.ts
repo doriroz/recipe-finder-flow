@@ -38,7 +38,7 @@ export const useGenerateRecipe = () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) {
         toast.error("יש להתחבר כדי ליצור מתכון");
-        navigate("/login");
+        navigate("/login", { replace: true });
         return;
       }
 

@@ -42,7 +42,7 @@ const V2Dashboard = () => {
   const requireAuth = (path: string) => {
     if (!user) {
       toast("יש להתחבר כדי להמשיך 🔐");
-      navigate("/login", { state: { from: { pathname: path } } });
+      navigate("/login", { state: { from: { pathname: path } }, replace: true });
       return false;
     }
     return true;
