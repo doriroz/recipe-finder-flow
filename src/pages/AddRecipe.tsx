@@ -4,9 +4,11 @@ import { ArrowRight, Sparkles, Globe2, Heart, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeritageUploadDialog from "@/components/HeritageUploadDialog";
 import addRecipeBook from "@/assets/add-recipe-book.png";
+import { useGoBack } from "@/hooks/useGoBack";
 
 const AddRecipe = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack("/v2-cookbook");
   const [heritageOpen, setHeritageOpen] = useState(false);
 
   const options = [
@@ -61,7 +63,7 @@ const AddRecipe = () => {
               variant="ghost"
               size="sm"
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={() => navigate("/v2-cookbook")}
+              onClick={goBack}
               aria-label="חזרה"
             >
               חזרה

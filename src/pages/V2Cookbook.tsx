@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { generateCookbookPDF } from "@/lib/generateCookbookPDF";
 import { cookbookThemes } from "@/types/cookbook";
 import type { UserGalleryItem } from "@/types/recipe";
+import { useGoBack } from "@/hooks/useGoBack";
 
 // ----- helpers -----
 
@@ -431,7 +432,7 @@ const V2Cookbook = () => {
               variant="ghost"
               size="sm"
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={() => navigate("/v2-dashboard")}
+              onClick={goBack}
               aria-label="חזרה"
             >
               חזרה
