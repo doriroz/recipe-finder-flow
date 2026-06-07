@@ -19,6 +19,7 @@ import {
 import profileAvatar from "@/assets/profile-avatar.avif";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useGoBack } from "@/hooks/useGoBack";
 import { useUserGallery } from "@/hooks/useUserGallery";
 import { useUserRecipes } from "@/hooks/useRecipes";
 import { useAuth } from "@/hooks/useAuth";
@@ -100,6 +101,7 @@ const StatCard = ({
 
 const UserProfile = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const { user, loading: authLoading } = useAuth();
   const { data: galleryItems, isLoading: loadingGallery } = useUserGallery();
   const { data: recipes, isLoading: loadingRecipes } = useUserRecipes();
@@ -200,7 +202,7 @@ const UserProfile = () => {
               variant="ghost"
               size="sm"
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack()}
               aria-label="חזרה"
             >
               חזרה

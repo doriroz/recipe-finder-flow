@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
+import { useGoBack } from "@/hooks/useGoBack";
 import { ingredients as mockIngredients, type Ingredient } from "@/data/mockData";
 import { useCustomIngredients } from "@/hooks/useCustomIngredients";
 import { useGenerateRecipe } from "@/hooks/useGenerateRecipe";
@@ -70,6 +71,7 @@ const FIXED_CATEGORIES = ["חלבי", "ירקות", "פירות", "דגנים", 
 
 const SelectIngredients = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const isMobile = useIsMobile();
   const { isAdmin } = useIsAdmin();
   const { user } = useAuth();
@@ -498,7 +500,7 @@ const SelectIngredients = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack()}
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
             >
               <ArrowRight className="w-4 h-4" />

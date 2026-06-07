@@ -3,6 +3,7 @@ import { Camera, BookOpen, Home, ChefHat, Star, Loader2, X, ArrowRight } from "l
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useGoBack } from "@/hooks/useGoBack";
 import Confetti from "@/components/Confetti";
 import { useRecipe } from "@/hooks/useRecipes";
 import { useInsertGalleryItem } from "@/hooks/useUserGallery";
@@ -14,6 +15,7 @@ import { toast } from "@/hooks/use-toast";
 
 const PostCooking = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const [searchParams] = useSearchParams();
   const recipeId = searchParams.get("id");
   const { user } = useAuth();
@@ -155,7 +157,7 @@ const PostCooking = () => {
               variant="ghost"
               size="sm"
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack()}
               aria-label="חזרה"
             >
               חזרה

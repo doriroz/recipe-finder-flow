@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useGoBack } from "@/hooks/useGoBack";
 import { ArrowRight, RefreshCw, Plus, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +20,7 @@ type AdminUser = {
 
 const AdminCredits = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { toast } = useToast();
@@ -93,7 +95,7 @@ const AdminCredits = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-muted">
       <header className="bg-gradient-to-l from-primary to-secondary text-primary-foreground p-4 flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-primary-foreground">
+        <Button variant="ghost" size="sm" onClick={() => goBack()} className="text-primary-foreground">
           <ArrowRight className="ml-2 h-4 w-4" /> חזרה
         </Button>
         <h1 className="text-xl font-bold">ניהול קרדיטים</h1>
