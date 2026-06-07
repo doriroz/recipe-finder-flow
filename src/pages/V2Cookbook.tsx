@@ -474,6 +474,7 @@ const V2Cookbook = () => {
           {FILTERS.map((f) => {
             const active = filter === f.key;
             return (
+              {/*
               <Button
               key={key}
               size="sm"
@@ -483,7 +484,8 @@ const V2Cookbook = () => {
             >
                  {f.emoji ? `${f.emoji} ${f.label}` : f.label}
             </Button>
-              {/*
+            */}
+              
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
@@ -496,7 +498,7 @@ const V2Cookbook = () => {
               >
                 {f.emoji ? `${f.emoji} ${f.label}` : f.label}
               </button>
-              */}
+              
             );
           })}
         </div>
