@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight, ArrowLeft, X, ChefHat, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useGoBack } from "@/hooks/useGoBack";
 import CookingStep from "@/components/CookingStep";
 import StepProgress from "@/components/StepProgress";
 import IngredientReadinessCard from "@/components/IngredientReadinessCard";
@@ -11,6 +12,7 @@ import type { RecipeIngredient } from "@/types/recipe";
 
 const CookingMode = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const recipeId = searchParams.get("id");
@@ -74,7 +76,7 @@ const CookingMode = () => {
 
   const handleExit = () => {
     if (confirm("בטוח שאתם רוצים לצאת מהבישול?")) {
-      navigate(-1);
+      goBack();
     }
   };
 

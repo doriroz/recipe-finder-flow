@@ -4,6 +4,7 @@ import { Search, ArrowRight, X, Clock, ChefHat, Leaf, Loader2, SearchX, Sparkles
 import { cn } from "@/lib/utils";
 import { CUISINE_CATEGORIES, CuisineCategory, CategoryRecipe } from "@/data/categoryRecipes";
 import { useNavigate } from "react-router-dom";
+import { useGoBack } from "@/hooks/useGoBack";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useRecipeSearch, SearchRecipeResult } from "@/hooks/useRecipeSearch";
@@ -100,6 +101,7 @@ const CUISINE_SIDEBAR_DATA: Record<string, { spices: { name: string; emoji: stri
 
 const CategorySelection = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const [query, setQuery] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [showRecipeDialog, setShowRecipeDialog] = useState(false);
@@ -247,7 +249,7 @@ const CategorySelection = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack()}
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
             >
               <ArrowRight className="w-4 h-4" />

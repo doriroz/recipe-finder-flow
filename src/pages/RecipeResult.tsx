@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowRight, ChefHat, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useGoBack } from "@/hooks/useGoBack";
 import RecipeCard, { RecipeCardData } from "@/components/RecipeCard";
 import RecipeCarousel from "@/components/RecipeCarousel";
 import { useRecipe, useUserRecipes } from "@/hooks/useRecipes";
@@ -14,6 +15,7 @@ import SEO from "@/components/SEO";
 
 const RecipeResult = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const recipeId = searchParams.get("id");
@@ -119,7 +121,7 @@ const RecipeResult = () => {
                 variant="ghost"
                 size="sm"
                 className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-                onClick={() => navigate(-1)}
+                onClick={() => goBack()}
                 aria-label="חזרה"
               >
                 חזרה
@@ -138,7 +140,7 @@ const RecipeResult = () => {
         {/*<header className="bg-card border-b border-border sticky top-0 z-10">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => goBack()} className="flex items-center gap-2">
                 <ArrowRight className="w-5 h-5" />
                 חזרה
               </Button>
@@ -207,7 +209,7 @@ const RecipeResult = () => {
                 variant="ghost"
                 size="sm"
                 className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-                onClick={() => navigate(-1)}
+                onClick={() => goBack()}
                 aria-label="חזרה"
               >
                 חזרה
@@ -226,7 +228,7 @@ const RecipeResult = () => {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               {!cookingSessionActive && (
-                <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
+                <Button variant="ghost" onClick={() => goBack()} className="flex items-center gap-2">
                   <ArrowRight className="w-5 h-5" />
                   חזרה
                 </Button>
@@ -320,7 +322,7 @@ const RecipeResult = () => {
               variant="ghost"
               size="sm"
               className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack()}
               aria-label="חזרה"
             >
               חזרה
@@ -338,7 +340,7 @@ const RecipeResult = () => {
       {/*<header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => goBack()} className="flex items-center gap-2">
               <ArrowRight className="w-5 h-5" />
               חזרה
             </Button>

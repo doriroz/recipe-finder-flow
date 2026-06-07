@@ -87,7 +87,7 @@ const LandingPage = () => {
                     navigate("/categories");
                   } else {
                     toast("יש להתחבר כדי לחפש מתכונים 🔐");
-                    navigate("/login", { state: { from: { pathname: "/categories" } } });
+                    navigate("/login", { state: { from: { pathname: "/categories" } }, replace: true });
                   }
                 }}
                 className="text-lg px-6 py-6 h-auto rounded-full transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-soft group"
