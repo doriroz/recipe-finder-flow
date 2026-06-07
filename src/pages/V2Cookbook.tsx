@@ -351,6 +351,7 @@ const FILTERS: { key: RecipeSource | "all"; label: string; emoji?: string }[] = 
 
 const V2Cookbook = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack("/v2-dashboard");
   const { recipes, removeRecipe } = useV2Cookbook();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<RecipeSource | "all">("all");
