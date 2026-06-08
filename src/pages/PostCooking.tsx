@@ -6,7 +6,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useGoBack } from "@/hooks/useGoBack";
 import Confetti from "@/components/Confetti";
 import { useRecipe } from "@/hooks/useRecipes";
-import { useInsertGalleryItem } from "@/hooks/useUserGallery";
+import { useV2Cookbook } from "@/hooks/useV2Cookbook";
+import { SOURCE_BADGES } from "@/types/v2cookbook";
 import { useAuth } from "@/hooks/useAuth";
 import { useGalleryImageUpload } from "@/hooks/useGalleryImageUpload";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +30,7 @@ const PostCooking = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: recipe } = useRecipe(recipeId !== "mock" ? recipeId : null);
-  const insertGalleryItem = useInsertGalleryItem();
+  const { addRecipeForce } = useV2Cookbook();
   const { uploadImage, isUploading } = useGalleryImageUpload();
 
   const displayTitle = recipe?.title || mockRecipe.title;
@@ -100,17 +101,42 @@ const PostCooking = () => {
 
       const notesText = notes.trim() || `${displayTitle} - דירוג: ${rating} כוכבים`;
 
-      await insertGalleryItem.mutateAsync({
-        recipe_id: recipeId !== "mock" ? recipeId || undefined : undefined,
-        image_url: imageUrl,
-        user_notes: notesText,
+      const ingredientStrings: string[] = Array.isArray(recipe?.ingredients)
+        ? recipe!.ingredients.map((i: any) =>
+            typeof i === "string"
+              ? i
+              : [i.amount, i.unit, i.name].filter(Boolean).join(" ").trim(),
+          )
+        : (mockRecipe.ingredients as any[]).map((i) =>
+            typeof i === "string"
+              ? i
+              : [i.amount, i.unit, i.name].filter(Boolean).join(" ").trim(),
+          );
+
+      const instructions: string[] = Array.isArray(recipe?.instructions)
+        ? (recipe!.instructions as string[])
+        : (mockRecipe.instructions as any[]).map((s: any) =>
+            typeof s === "string" ? s : s.instruction || "",
+          );
+
+      await addRecipeForce({
+        id: (crypto as any).randomUUID ? crypto.randomUUID() : `${Date.now()}`,
+        title: displayTitle,
+        story: notesText,
+        ingredients: ingredientStrings,
+        instructions,
+        cookingTime: recipe?.cooking_time ?? undefined,
+        source: "ai",
+        sourceLabel: SOURCE_BADGES.ai.label,
+        heritageImageUrl: imageUrl,
+        createdAt: new Date(),
       });
 
       toast({
         title: "נשמר בהצלחה!",
-        description: "המנה נוספה לגלריה שלכם",
+        description: "המנה נוספה לספר המתכונים שלכם",
       });
-      navigate("/gallery", { replace: true });
+      navigate("/v2-cookbook", { replace: true });
     } catch (error) {
       console.error("Error saving to gallery:", error);
       toast({
