@@ -115,7 +115,7 @@ const PostCooking = () => {
 
       const instructions: string[] = Array.isArray(recipe?.instructions)
         ? (recipe!.instructions as string[])
-        : (mockRecipe.instructions as any[]).map((s: any) =>
+        : (mockRecipe.steps as any[]).map((s: any) =>
             typeof s === "string" ? s : s.instruction || "",
           );
 
