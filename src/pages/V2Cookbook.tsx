@@ -475,29 +475,14 @@ const V2Cookbook = () => {
             const active = filter === f.key;
             return (
               <Button
-              key={key}
-              size="sm"
-              variant={filterSource === key ? "default" : "outline"}
-              className="rounded-full text-xs gap-1"
-              onClick={() => setFilterSource(filterSource === key ? null : key)}
-              >
-                 {f.emoji ? `${f.emoji} ${f.label}` : f.label}
-              </Button>
-            
-              {/* 
-              <button
                 key={f.key}
+                size="sm"
+                variant={active ? "default" : "outline"}
+                className="rounded-full text-xs gap-1"
                 onClick={() => setFilter(f.key)}
-                className={cn(
-                  "px-3.5 py-1.5 rounded-full text-base font-medium border transition-colors",
-                  active
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card/70 text-foreground border-border hover:bg-muted",
-                )}
               >
                 {f.emoji ? `${f.emoji} ${f.label}` : f.label}
-              </button>
-              */}
+              </Button>
             );
           })}
         </div>
