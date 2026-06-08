@@ -459,7 +459,7 @@ const FILTERS: { key: RecipeSource | "all"; label: string; emoji?: string }[] = 
 
 const V2Cookbook = () => {
   const navigate = useNavigate();
-  const { recipes, removeRecipe } = useV2Cookbook();
+  const { recipes, removeRecipe, updateRecipe } = useV2Cookbook();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<RecipeSource | "all">("all");
   const [selected, setSelected] = useState<V2CookbookRecipe | null>(null);
@@ -517,6 +517,16 @@ const V2Cookbook = () => {
 
   const handleEdit = (recipe: V2CookbookRecipe) => {
     navigate("/add-recipe", { state: { editId: recipe.id, from: "/v2-cookbook" } });
+  };
+
+  const handleSave = async (id: string, patch: Partial<V2CookbookRecipe>) => {
+    try {
+      await updateRecipe(id, patch);
+      setSelected((cur) => (cur && cur.id === id ? { ...cur, ...patch } : cur));
+      toast.success("השינויים נשמרו");
+    } catch {
+      toast.error("שמירה נכשלה — נסו שוב");
+    }
   };
 
   return (
@@ -672,6 +682,7 @@ const V2Cookbook = () => {
           onDownload={() => handleDownload(selected)}
           onEdit={() => handleEdit(selected)}
           downloading={downloading}
+          onSave={(patch) => handleSave(selected.id, patch)}
         />
       )}
     </div>
