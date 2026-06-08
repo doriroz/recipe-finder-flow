@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useV2Cookbook } from "@/hooks/useV2Cookbook";
 import { SOURCE_BADGES } from "@/types/v2cookbook";
@@ -169,6 +170,7 @@ const V2RecipeModal = ({
   onDownload,
   onEdit,
   downloading,
+  onSave,
 }: {
   recipe: V2CookbookRecipe;
   onClose: () => void;
@@ -176,8 +178,19 @@ const V2RecipeModal = ({
   onDownload: () => void;
   onEdit: () => void;
   downloading: boolean;
+  onSave: (patch: Partial<V2CookbookRecipe>) => Promise<void>;
 }) => {
   const [checked, setChecked] = useState<Set<number>>(new Set());
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    title: recipe.title,
+    story: recipe.story ?? "",
+    cookingTime: recipe.cookingTime?.toString() ?? "",
+    ingredients: recipe.ingredients.join("\n"),
+    instructions: recipe.instructions.join("\n"),
+  });
+  const isHeritage = recipe.source === "heritage";
   const badge = SOURCE_BADGES[recipe.source];
   const rating = avgRating(recipe);
 
@@ -204,6 +217,27 @@ const V2RecipeModal = ({
       else next.add(i);
       return next;
     });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (isHeritage) {
+        const ct = form.cookingTime.trim();
+        await onSave({
+          title: form.title.trim() || recipe.title,
+          story: form.story.trim() || undefined,
+          cookingTime: ct === "" ? undefined : Number(ct),
+          ingredients: form.ingredients.split("\n").map((s) => s.trim()).filter(Boolean),
+          instructions: form.instructions.split("\n").map((s) => s.trim()).filter(Boolean),
+        });
+      } else {
+        await onSave({ story: form.story.trim() || undefined });
+      }
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -236,6 +270,66 @@ const V2RecipeModal = ({
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          {editing ? (
+            <div className="space-y-4">
+              {isHeritage && (
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">כותרת</label>
+                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} dir="rtl" />
+                </div>
+              )}
+              {isHeritage && (
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">זמן הכנה (דקות)</label>
+                  <Input
+                    type="number"
+                    value={form.cookingTime}
+                    onChange={(e) => setForm({ ...form, cookingTime: e.target.value })}
+                    dir="rtl"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1 block">
+                  {isHeritage ? "סיפור / רקע" : "מה החוויה שלך?"}
+                </label>
+                <Textarea
+                  value={form.story}
+                  onChange={(e) => setForm({ ...form, story: e.target.value })}
+                  className="min-h-24"
+                  dir="rtl"
+                />
+              </div>
+              {isHeritage && (
+                <>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1 block">מצרכים (שורה לכל מצרך)</label>
+                    <Textarea
+                      value={form.ingredients}
+                      onChange={(e) => setForm({ ...form, ingredients: e.target.value })}
+                      className="min-h-32"
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1 block">שלבי הכנה (שורה לכל שלב)</label>
+                    <Textarea
+                      value={form.instructions}
+                      onChange={(e) => setForm({ ...form, instructions: e.target.value })}
+                      className="min-h-40"
+                      dir="rtl"
+                    />
+                  </div>
+                </>
+              )}
+              {!isHeritage && (
+                <p className="text-xs text-muted-foreground">
+                  במתכון מסוג זה ניתן לערוך רק את הטקסט האישי שהוספת.
+                </p>
+              )}
+            </div>
+          ) : (
+          <>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-foreground leading-snug">{recipe.title}</h2>
 
@@ -312,27 +406,42 @@ const V2RecipeModal = ({
               <p className="text-xs text-foreground whitespace-pre-line leading-relaxed">{recipe.ocrText}</p>
             </section>
           )}
+          </>
+          )}
         </div>
 
         {/* Footer actions */}
         <div className="border-t border-border bg-card px-6 py-3 flex items-center justify-end gap-2 flex-wrap">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 className="w-4 h-4" />
-            מחק
-          </Button>
-          <Button variant="outline" size="sm" onClick={onEdit} className="gap-1.5">
-            <Pencil className="w-4 h-4" />
-            ערוך
-          </Button>
-          <Button size="sm" onClick={onDownload} disabled={downloading} className="gap-1.5">
-            <Download className="w-4 h-4" />
-            {downloading ? "מכין PDF..." : "הורד מתכון"}
-          </Button>
+          {editing ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(false)} disabled={saving}>
+                ביטול
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5">
+                {saving ? "שומר..." : "שמור שינויים"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDelete}
+                className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4" />
+                מחק
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1.5">
+                <Pencil className="w-4 h-4" />
+                ערוך
+              </Button>
+              <Button size="sm" onClick={onDownload} disabled={downloading} className="gap-1.5">
+                <Download className="w-4 h-4" />
+                {downloading ? "מכין PDF..." : "הורד מתכון"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
