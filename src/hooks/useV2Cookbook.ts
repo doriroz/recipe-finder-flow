@@ -215,9 +215,43 @@ export const useV2Cookbook = () => {
     [user],
   );
 
+  const updateRecipe = useCallback(
+    async (id: string, patch: Partial<V2CookbookRecipe>) => {
+      if (!user) {
+        const existing = loadLocalRecipes();
+        const updated = existing.map((r) => (r.id === id ? { ...r, ...patch } : r));
+        saveLocalRecipes(updated);
+        setRecipes(updated);
+        return;
+      }
+      const dbPatch: Record<string, unknown> = {};
+      if (patch.title !== undefined) dbPatch.title = patch.title;
+      if (patch.story !== undefined) dbPatch.story = patch.story;
+      if (patch.description !== undefined) dbPatch.description = patch.description;
+      if (patch.ingredients !== undefined) dbPatch.ingredients = patch.ingredients;
+      if (patch.instructions !== undefined) dbPatch.instructions = patch.instructions;
+      if (patch.cookingTime !== undefined) dbPatch.cooking_time = patch.cookingTime;
+      if (patch.heritageImageUrl !== undefined) dbPatch.heritage_image_url = patch.heritageImageUrl;
+      const { data, error } = await supabase
+        .from("v2_cookbook_recipes")
+        .update(dbPatch)
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .select()
+        .single();
+      if (error) {
+        console.error("[useV2Cookbook] update error:", error);
+        throw error;
+      }
+      const updated = rowToRecipe(data as DbRow);
+      setRecipes((prev) => prev.map((r) => (r.id === id ? updated : r)));
+    },
+    [user],
+  );
+
   const refresh = useCallback(() => {
     fetchRecipes();
   }, [fetchRecipes]);
 
-  return { recipes, loading, addRecipe, addRecipeForce, removeRecipe, refresh };
+  return { recipes, loading, addRecipe, addRecipeForce, removeRecipe, updateRecipe, refresh };
 };
