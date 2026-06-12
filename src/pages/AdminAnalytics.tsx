@@ -65,7 +65,19 @@ interface AnalyticsData {
     totalCreditsConsumed: number;
     recentLogs: AiLogEntry[];
   };
+  userStats?: {
+    activeUserIds7d: string[];
+    downloadsByUser: Record<string, number>;
+  };
 }
+
+type AdminUser = {
+  id: string;
+  email: string | null;
+  created_at: string;
+  last_sign_in_at: string | null;
+  credits: { credits_remaining: number; daily_ai_calls: number; total_ai_calls: number } | null;
+};
 
 const AdminAnalytics = () => {
   const navigate = useNavigate();
