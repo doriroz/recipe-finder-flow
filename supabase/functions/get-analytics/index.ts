@@ -121,6 +121,25 @@ Deno.serve(async (req) => {
       aiByAction[log.action_type] = (aiByAction[log.action_type] || 0) + 1;
     });
 
+    // ---- Per-user stats (Active 7d + downloads per user) ----
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentEvents } = await adminClient
+      .from("analytics_events")
+      .select("user_id, event_name, created_at")
+      .gte("created_at", sevenDaysAgo)
+      .limit(5000);
+
+    const activeUserIds7d = Array.from(
+      new Set((recentEvents || []).filter((e: any) => e.user_id).map((e: any) => e.user_id))
+    );
+
+    const downloadsByUser: Record<string, number> = {};
+    allEvents.forEach((e: any) => {
+      if (e.event_name === "cookbook_pdf_downloaded" && e.user_id) {
+        downloadsByUser[e.user_id] = (downloadsByUser[e.user_id] || 0) + 1;
+      }
+    });
+
     return new Response(
       JSON.stringify({
         disabled: false,
@@ -132,6 +151,10 @@ Deno.serve(async (req) => {
           byAction: aiByAction,
           totalCreditsConsumed,
           recentLogs: allAiLogs,
+        },
+        userStats: {
+          activeUserIds7d,
+          downloadsByUser,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
