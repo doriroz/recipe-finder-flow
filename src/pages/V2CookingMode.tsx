@@ -131,30 +131,23 @@ const V2CookingMode = () => {
           </Button>
           <div className="flex items-center gap-2">
             <ChefHat className="w-5 h-5 text-primary-foreground" />
-            <span className="font-bold text-primary-foreground truncate max-w-[60vw]">
-              {displayTitle}
-            </span>
+            <span className="font-bold text-primary-foreground truncate max-w-[60vw]">{displayTitle}</span>
           </div>
         </div>
       </header>
 
       {/* Body: sidebar + main */}
       <div className="flex flex-1 min-h-0">
-        <V2StepSidebar
-          totalSteps={totalSteps}
-          currentStep={currentStep}
-          onJump={(i) => setCurrentStep(i)}
-        />
+        <V2StepSidebar totalSteps={totalSteps} currentStep={currentStep} onJump={(i) => setCurrentStep(i)} />
 
         <main className="flex-1 flex flex-col min-w-0">
           {/* Top utility bar */}
           <div className="border-b border-border bg-card/40">
-            <div className="max-w-3xl mx-auto w-full px-6 py-3 flex items-center gap-6">
+            {/*py-3*/}
+            <div className="max-w-3xl mx-auto w-full px-6 pt-[0.75rem] pb-[1rem] flex items-center gap-6">
               <div className="flex-1 flex items-center gap-3">
                 <Progress value={progress} className="h-2" />
-                <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                  {progress}%
-                </span>
+                <span className="text-xs text-muted-foreground tabular-nums shrink-0">{progress}%</span>
               </div>
               <V2KeepAwakeToggle />
             </div>
@@ -173,10 +166,7 @@ const V2CookingMode = () => {
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                     className="bg-card rounded-2xl shadow-md border border-border/60 px-6 py-8 md:px-10 md:py-10"
                   >
-                    <MiseEnPlace
-                      ingredients={ingredients}
-                      onReady={() => setCurrentStep(1)}
-                    />
+                    <MiseEnPlace ingredients={ingredients} onReady={() => setCurrentStep(1)} />
                   </motion.div>
                 ) : (
                   <V2InstructionCard
@@ -217,12 +207,7 @@ const V2CookingMode = () => {
                 <ArrowRight className="w-5 h-5" />
                 הקודם
               </Button>
-              <Button
-                variant="hero"
-                size="lg"
-                className="flex-1 order-last relative"
-                onClick={handleNext}
-              >
+              <Button variant="hero" size="lg" className="flex-1 order-last relative" onClick={handleNext}>
                 {currentStep === totalSteps ? (
                   <>
                     סיימתי!
