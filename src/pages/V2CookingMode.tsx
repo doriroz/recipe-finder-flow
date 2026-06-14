@@ -145,7 +145,7 @@ const V2CookingMode = () => {
           <div className="border-b border-border bg-card/40">
             {/*py-3*/}
             <div className="max-w-3xl mx-auto w-full px-6 pt-[0.75rem] pb-[1rem] flex items-center gap-6">
-              <div className="flex-1 flex items-center gap-3">
+              <div className="flex-1 min-w-0 flex items-center gap-3">
                 <Progress value={progress} className="h-2" />
                 <span className="text-xs text-muted-foreground tabular-nums shrink-0">{progress}%</span>
               </div>
