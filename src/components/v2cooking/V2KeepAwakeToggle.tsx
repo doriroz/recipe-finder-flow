@@ -58,7 +58,7 @@ const V2KeepAwakeToggle = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -74,7 +74,7 @@ const V2KeepAwakeToggle = () => {
           </TooltipContent>
         </Tooltip>
         <span className="text-sm text-muted-foreground">השאר מסך דולק</span>
-        <Switch checked={enabled} onCheckedChange={setEnabled} />
+        <Switch checked={enabled} onCheckedChange={setEnabled} className="shrink-0" />
       </div>
     </TooltipProvider>
   );
