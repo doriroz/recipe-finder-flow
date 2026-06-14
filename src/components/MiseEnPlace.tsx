@@ -25,9 +25,7 @@ const MiseEnPlace = ({ ingredients, onReady }: MiseEnPlaceProps) => {
           <ClipboardCheck className="w-8 h-8 text-primary-foreground" />
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-2">שלב ההכנות</h2>
-        <p className="text-muted-foreground text-center">
-          רגע לפני שמתחילים - האם הכל מוכן?
-        </p>
+        <p className="text-muted-foreground text-center">רגע לפני שמתחילים - האם הכל מוכן?</p>
       </div>
 
       <div className="card-warm space-y-3 mb-6">
@@ -64,7 +62,7 @@ const MiseEnPlace = ({ ingredients, onReady }: MiseEnPlaceProps) => {
       <div className="text-center text-sm text-muted-foreground mb-4">
         {Object.values(checked).filter(Boolean).length} / {ingredients.length} פריטים מוכנים
       </div>
-
+      {/*
       <Button
         variant="hero"
         size="lg"
@@ -75,6 +73,7 @@ const MiseEnPlace = ({ ingredients, onReady }: MiseEnPlaceProps) => {
         יאללה, מתחילים לבשל!
         <ArrowLeft className="w-5 h-5" />
       </Button>
+      */}
     </div>
   );
 };
