@@ -1,4 +1,4 @@
-import { Lightbulb, Timer, Flame, Soup } from "lucide-react";
+import { Lightbulb, Timer, Leaf, Soup } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { parseTimersFromText, type ParsedTimer } from "@/lib/parseTimers";
@@ -32,7 +32,7 @@ const V2InstructionCard = ({
       className="relative"
     >
       {/* Floating top-right illustration */}
-      <Flame
+      <Leaf
         className="absolute -top-20 -right-20 w-16 h-16 text-primary/40 hidden md:block pointer-events-none animate-pulse"
         strokeWidth={1.5}
       />
