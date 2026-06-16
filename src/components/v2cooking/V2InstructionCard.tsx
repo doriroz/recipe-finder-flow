@@ -33,7 +33,7 @@ const V2InstructionCard = ({
     >
       {/* Floating top-right illustration */}
       <Leaf
-        className="absolute -top-20 -right-20 w-16 h-16 text-primary/40 hidden md:block pointer-events-none animate-pulse"
+        className="absolute top-8 -right-20 w-16 h-16 text-primary/40 hidden md:block pointer-events-none animate-pulse"
         strokeWidth={1.5}
       />
 
