@@ -1,4 +1,4 @@
-import { Lightbulb, Timer, Flame, Soup } from "lucide-react";
+import { Lightbulb, Timer, Leaf, Soup } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { parseTimersFromText, type ParsedTimer } from "@/lib/parseTimers";
