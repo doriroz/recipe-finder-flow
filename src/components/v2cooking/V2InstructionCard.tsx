@@ -1,4 +1,4 @@
-import { Lightbulb, Timer, Leaf, ChefHat } from "lucide-react";
+import { Lightbulb, Timer, Sparkles, Utensils } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { parseTimersFromText, type ParsedTimer } from "@/lib/parseTimers";
@@ -31,16 +31,16 @@ const V2InstructionCard = ({
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className="relative"
     >
-      {/* Floating top-left illustration */}
-      <Leaf
-        className="absolute -top-4 -left-4 w-8 h-8 text-primary/20 hidden md:block pointer-events-none"
-        strokeWidth={1.25}
+      {/* Floating top-right illustration */}
+      <Sparkles
+        className="absolute -top-10 -right-10 w-12 h-12 text-primary/40 hidden md:block pointer-events-none animate-pulse"
+        strokeWidth={1.5}
       />
 
-      {/* Floating bottom-right illustration */}
-      <ChefHat
-        className="absolute -bottom-4 -right-4 w-10 h-10 text-primary/20 hidden md:block pointer-events-none"
-        strokeWidth={1.25}
+      {/* Floating bottom-left illustration */}
+      <Utensils
+        className="absolute -bottom-10 -left-10 w-12 h-12 text-primary/40 hidden md:block pointer-events-none"
+        strokeWidth={1.5}
       />
 
       <article className="relative bg-card rounded-2xl shadow-md border border-border/60 px-8 py-10 md:px-12 md:py-12 overflow-hidden">
