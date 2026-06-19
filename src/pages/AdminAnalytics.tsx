@@ -309,15 +309,15 @@ const AdminCommandCenter = () => {
         <Tabs defaultValue="activity" className="w-full">
           <TabsList className="grid w-full grid-cols-3 h-auto">
             <TabsTrigger value="activity" className="py-2.5">
-              <Activity className="h-4 w-4 ml-2" />
+              <Activity className="h-4 w-4" />
               פעילות באתר
             </TabsTrigger>
             <TabsTrigger value="users" className="py-2.5">
-              <Users className="h-4 w-4 ml-2" />
+              <Users className="h-4 w-4" />
               ניהול משתמשים
             </TabsTrigger>
             <TabsTrigger value="credits" className="py-2.5">
-              <CreditCard className="h-4 w-4 ml-2" />
+              <CreditCard className="h-4 w-4" />
               ניהול קרדיטים
             </TabsTrigger>
           </TabsList>
@@ -329,7 +329,7 @@ const AdminCommandCenter = () => {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm">
-                    <ShieldOff className="h-4 w-4 ml-2" />
+                    <ShieldOff className="h-4 w-4" />
                     השבת דשבורד
                   </Button>
                 </AlertDialogTrigger>
@@ -576,7 +576,7 @@ const AdminCommandCenter = () => {
                             <TableCell className="text-right">{downloadsByUser[u.id] ?? 0}</TableCell>
                             <TableCell className="text-right">
                               <Button size="sm" variant="outline" onClick={() => copyEmail(u.email)}>
-                                <Copy className="ml-1 h-3 w-3" /> העתק
+                                <Copy className="h-3 w-3" /> העתק
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -630,7 +630,7 @@ const AdminCommandCenter = () => {
                               {(u.credits?.daily_ai_calls ?? 0)} / {(u.credits?.total_ai_calls ?? 0)}
                             </TableCell>
                             <TableCell className="text-right">
-                              <div className="flex items-center justify-start gap-2">
+                              <div className="flex items-center justify-end gap-2">
                                 <Input
                                   type="number"
                                   className="w-24 h-9"
@@ -639,10 +639,10 @@ const AdminCommandCenter = () => {
                                   placeholder="כמות"
                                 />
                                 <Button size="sm" variant="outline" onClick={() => updateCredits(u.id, "set")} disabled={creditBusy === u.id}>
-                                  <Save className="ml-1 h-3 w-3" /> קבע
+                                  <Save className="h-3 w-3" /> קבע
                                 </Button>
                                 <Button size="sm" onClick={() => updateCredits(u.id, "add")} disabled={creditBusy === u.id}>
-                                  <Plus className="ml-1 h-3 w-3" /> הוסף
+                                  <Plus className="h-3 w-3" /> הוסף
                                 </Button>
                               </div>
                             </TableCell>
