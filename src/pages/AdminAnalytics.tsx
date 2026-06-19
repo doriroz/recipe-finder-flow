@@ -272,19 +272,39 @@ const AdminCommandCenter = () => {
     !d ? "—" : new Date(d).toLocaleDateString("he-IL", { year: "numeric", month: "2-digit", day: "2-digit" });
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8" dir="rtl">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <BarChart3 className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">מרכז ניהול</h1>
+    <div
+      className="min-h-screen pb-20"
+      dir="rtl"
+      style={{ background: "linear-gradient(135deg, hsl(var(--cream)) 0%, hsl(36 40% 92%) 100%)" }}
+    >
+      {/* Header — consistent orange gradient pattern */}
+      <header
+        className="relative z-20"
+        style={{ background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)" }}
+      >
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-primary-foreground hover:bg-primary-foreground/20"
+              onClick={() => goBack()}
+              aria-label="חזרה"
+            >
+              חזרה
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-xl font-bold text-primary-foreground">מרכז הניהול</h1>
+            </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => goBack()} className="text-muted-foreground">
-            <ArrowRight className="h-4 w-4 ml-2" />
-            חזרה
-          </Button>
         </div>
+      </header>
+
+      <div className="container mx-auto px-4 md:px-8 py-6 max-w-6xl space-y-6">
 
         <Tabs defaultValue="activity" className="w-full">
           <TabsList className="grid w-full grid-cols-3 h-auto">
@@ -546,15 +566,15 @@ const AdminCommandCenter = () => {
                       ) : (
                         filteredUsers.map((u) => (
                           <TableRow key={u.id}>
-                            <TableCell>
+                            <TableCell className="text-right">
                               <div className="font-medium" dir="ltr">{u.email ?? "—"}</div>
                               <div className="text-xs text-muted-foreground" dir="ltr">{u.id.slice(0, 8)}…</div>
                             </TableCell>
-                            <TableCell className="text-sm">{fmtDate(u.created_at)}</TableCell>
-                            <TableCell className="text-sm">{fmtDate(u.last_sign_in_at)}</TableCell>
-                            <TableCell className="font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
-                            <TableCell>{downloadsByUser[u.id] ?? 0}</TableCell>
-                            <TableCell>
+                            <TableCell className="text-right text-sm">{fmtDate(u.created_at)}</TableCell>
+                            <TableCell className="text-right text-sm">{fmtDate(u.last_sign_in_at)}</TableCell>
+                            <TableCell className="text-right font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
+                            <TableCell className="text-right">{downloadsByUser[u.id] ?? 0}</TableCell>
+                            <TableCell className="text-right">
                               <Button size="sm" variant="outline" onClick={() => copyEmail(u.email)}>
                                 <Copy className="ml-1 h-3 w-3" /> העתק
                               </Button>
@@ -601,16 +621,16 @@ const AdminCommandCenter = () => {
                       ) : (
                         filteredForCredits.map((u) => (
                           <TableRow key={u.id}>
-                            <TableCell>
+                            <TableCell className="text-right">
                               <div className="font-medium" dir="ltr">{u.email ?? "—"}</div>
                               <div className="text-xs text-muted-foreground" dir="ltr">{u.id}</div>
                             </TableCell>
-                            <TableCell className="font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
+                            <TableCell className="text-right font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
+                            <TableCell className="text-right text-sm text-muted-foreground">
                               {(u.credits?.daily_ai_calls ?? 0)} / {(u.credits?.total_ai_calls ?? 0)}
                             </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-start gap-2">
                                 <Input
                                   type="number"
                                   className="w-24 h-9"
