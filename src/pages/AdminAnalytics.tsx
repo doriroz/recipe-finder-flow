@@ -566,15 +566,15 @@ const AdminCommandCenter = () => {
                       ) : (
                         filteredUsers.map((u) => (
                           <TableRow key={u.id}>
-                            <TableCell>
+                            <TableCell className="text-right">
                               <div className="font-medium" dir="ltr">{u.email ?? "—"}</div>
                               <div className="text-xs text-muted-foreground" dir="ltr">{u.id.slice(0, 8)}…</div>
                             </TableCell>
-                            <TableCell className="text-sm">{fmtDate(u.created_at)}</TableCell>
-                            <TableCell className="text-sm">{fmtDate(u.last_sign_in_at)}</TableCell>
-                            <TableCell className="font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
-                            <TableCell>{downloadsByUser[u.id] ?? 0}</TableCell>
-                            <TableCell>
+                            <TableCell className="text-right text-sm">{fmtDate(u.created_at)}</TableCell>
+                            <TableCell className="text-right text-sm">{fmtDate(u.last_sign_in_at)}</TableCell>
+                            <TableCell className="text-right font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
+                            <TableCell className="text-right">{downloadsByUser[u.id] ?? 0}</TableCell>
+                            <TableCell className="text-right">
                               <Button size="sm" variant="outline" onClick={() => copyEmail(u.email)}>
                                 <Copy className="ml-1 h-3 w-3" /> העתק
                               </Button>
@@ -621,16 +621,16 @@ const AdminCommandCenter = () => {
                       ) : (
                         filteredForCredits.map((u) => (
                           <TableRow key={u.id}>
-                            <TableCell>
+                            <TableCell className="text-right">
                               <div className="font-medium" dir="ltr">{u.email ?? "—"}</div>
                               <div className="text-xs text-muted-foreground" dir="ltr">{u.id}</div>
                             </TableCell>
-                            <TableCell className="font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
+                            <TableCell className="text-right font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
+                            <TableCell className="text-right text-sm text-muted-foreground">
                               {(u.credits?.daily_ai_calls ?? 0)} / {(u.credits?.total_ai_calls ?? 0)}
                             </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-start gap-2">
                                 <Input
                                   type="number"
                                   className="w-24 h-9"
