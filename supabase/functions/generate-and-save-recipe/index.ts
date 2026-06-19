@@ -645,6 +645,12 @@ No extra text.`,
 
     if (!response.ok) {
       console.error(`Creative fallback AI error: ${response.status}`);
+      if (response.status === 402) {
+        throw new Error("AI_QUOTA_EXHAUSTED");
+      }
+      if (response.status === 429) {
+        throw new Error("AI_RATE_LIMITED");
+      }
       return null;
     }
 
