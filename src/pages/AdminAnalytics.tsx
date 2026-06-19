@@ -309,15 +309,15 @@ const AdminCommandCenter = () => {
         <Tabs defaultValue="activity" className="w-full">
           <TabsList className="grid w-full grid-cols-3 h-auto">
             <TabsTrigger value="activity" className="py-2.5">
-              <Activity className="h-4 w-4 ml-2" />
+              <Activity className="h-4 w-4" />
               פעילות באתר
             </TabsTrigger>
             <TabsTrigger value="users" className="py-2.5">
-              <Users className="h-4 w-4 ml-2" />
+              <Users className="h-4 w-4" />
               ניהול משתמשים
             </TabsTrigger>
             <TabsTrigger value="credits" className="py-2.5">
-              <CreditCard className="h-4 w-4 ml-2" />
+              <CreditCard className="h-4 w-4" />
               ניהול קרדיטים
             </TabsTrigger>
           </TabsList>
