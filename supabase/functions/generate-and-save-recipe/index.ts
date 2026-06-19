@@ -645,6 +645,12 @@ No extra text.`,
 
     if (!response.ok) {
       console.error(`Creative fallback AI error: ${response.status}`);
+      if (response.status === 402) {
+        throw new Error("AI_QUOTA_EXHAUSTED");
+      }
+      if (response.status === 429) {
+        throw new Error("AI_RATE_LIMITED");
+      }
       return null;
     }
 
@@ -1100,12 +1106,30 @@ serve(async (req) => {
     console.log("Translated ingredients:", englishIngredients);
 
     // Generate recipe with AI
-    const aiRecipe = await generateCreativeFallback(englishIngredients, ingredientNames, LOVABLE_API_KEY);
+    let aiRecipe;
+    try {
+      aiRecipe = await generateCreativeFallback(englishIngredients, ingredientNames, LOVABLE_API_KEY);
+    } catch (err: any) {
+      if (err?.message === "AI_QUOTA_EXHAUSTED") {
+        return new Response(
+          JSON.stringify({ error: "מכסת ה-AI של המערכת הסתיימה. אנא פנו למנהל להוספת קרדיטים בארנק Lovable AI." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (err?.message === "AI_RATE_LIMITED") {
+        return new Response(
+          JSON.stringify({ error: "יותר מדי בקשות ל-AI. נסו שוב בעוד רגע." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.error("AI generation threw:", err);
+      aiRecipe = null;
+    }
     if (!aiRecipe) {
       // AI failure — do NOT charge the user
       return new Response(
         JSON.stringify({ error: "לא הצלחנו ליצור מתכון. נסו שוב." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
