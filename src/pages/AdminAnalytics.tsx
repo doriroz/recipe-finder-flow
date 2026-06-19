@@ -39,7 +39,6 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useGoBack } from "@/hooks/useGoBack";
-import { ChefHat } from "lucide-react";
 
 interface AiLogEntry {
   id: string;
