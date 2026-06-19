@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/V2Dashboard";
 import IngredientInput from "./pages/IngredientInput";
 import RecipeResult from "./pages/RecipeResult";
-import CookingMode from "./pages/CookingMode";
+import CookingMode from "./pages/V2CookingMode";
 import PostCooking from "./pages/PostCooking";
 import UserProfile from "./pages/UserProfile";
 import Gallery from "./pages/Gallery";
@@ -23,7 +23,6 @@ import SelectIngredients from "./pages/SelectIngredients";
 import V2Dashboard from "./pages/V2Dashboard";
 import V2Cookbook from "./pages/V2Cookbook";
 import AddRecipe from "./pages/AddRecipe";
-import V2CookingMode from "./pages/V2CookingMode";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -57,7 +56,6 @@ const App = () => (
             <Route path="/v2-dashboard" element={<V2Dashboard />} />
             <Route path="/v2-cookbook" element={<V2Cookbook />} />
             <Route path="/add-recipe" element={<AddRecipe />} />
-            <Route path="/v2-cooking-mode" element={<V2CookingMode />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
