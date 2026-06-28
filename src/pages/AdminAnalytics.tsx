@@ -546,8 +546,8 @@ const AdminCommandCenter = () => {
                   onChange={(e) => setUserFilter(e.target.value)}
                   className="bg-background"
                 />
-                <div className="rounded-lg border overflow-hidden">
-                  <Table>
+                <div className="rounded-lg border overflow-hidden" dir="rtl">
+                  <Table dir="rtl" className="[direction:rtl]">
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-right">אימייל</TableHead>
@@ -555,7 +555,7 @@ const AdminCommandCenter = () => {
                         <TableHead className="text-right">פעילות אחרונה</TableHead>
                         <TableHead className="text-right">קרדיטים</TableHead>
                         <TableHead className="text-right">הורדות</TableHead>
-                        <TableHead className="text-right">פעולות</TableHead>
+                        <TableHead className="text-left">פעולות</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -603,7 +603,7 @@ const AdminCommandCenter = () => {
                   onChange={(e) => setCreditFilter(e.target.value)}
                   className="bg-background"
                 />
-                <div className="rounded-lg border overflow-hidden">
+                <div className="rounded-lg border overflow-hidden" dir="rtl">
                   <Table dir="rtl" className="[direction:rtl]">
                     <TableHeader>
                       <TableRow>
