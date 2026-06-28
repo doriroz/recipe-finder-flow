@@ -306,7 +306,7 @@ const AdminCommandCenter = () => {
 
       <div className="container mx-auto px-4 md:px-8 py-6 max-w-6xl space-y-6">
 
-        <Tabs defaultValue="activity" className="w-full">
+        <Tabs defaultValue="activity" dir="rtl" className="w-full">
           <TabsList className="grid w-full grid-cols-3 h-auto">
             <TabsTrigger value="activity" className="py-2.5">
               <Activity className="h-4 w-4" />
