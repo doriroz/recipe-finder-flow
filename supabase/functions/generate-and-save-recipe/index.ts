@@ -684,6 +684,11 @@ No extra text.`,
     };
   } catch (err) {
     console.error("Creative fallback generation error:", err);
+    // Propagate quota / rate-limit sentinels so the caller can return the
+    // correct HTTP status (402 / 429) instead of a generic 502.
+    if (err instanceof Error && (err.message === "AI_QUOTA_EXHAUSTED" || err.message === "AI_RATE_LIMITED")) {
+      throw err;
+    }
     return null;
   }
 }
