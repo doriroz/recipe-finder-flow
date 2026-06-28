@@ -408,7 +408,7 @@ const AdminCommandCenter = () => {
               <Card>
                 <CardHeader><CardTitle className="text-foreground">פירוט אירועים</CardTitle></CardHeader>
                 <CardContent>
-                  <Table>
+                  <Table dir="rtl" className="[direction:rtl]">
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-right">שם אירוע</TableHead>
@@ -574,7 +574,7 @@ const AdminCommandCenter = () => {
                             <TableCell className="text-right text-sm">{fmtDate(u.last_sign_in_at)}</TableCell>
                             <TableCell className="text-right font-bold">{u.credits?.credits_remaining ?? 0}</TableCell>
                             <TableCell className="text-right">{downloadsByUser[u.id] ?? 0}</TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-left">
                               <Button size="sm" variant="outline" onClick={() => copyEmail(u.email)}>
                                 <Copy className="h-3 w-3" /> העתק
                               </Button>
@@ -604,13 +604,13 @@ const AdminCommandCenter = () => {
                   className="bg-background"
                 />
                 <div className="rounded-lg border overflow-hidden">
-                  <Table>
+                  <Table dir="rtl" className="[direction:rtl]">
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-right">אימייל</TableHead>
                         <TableHead className="text-right">יתרה</TableHead>
                         <TableHead className="text-right">בשימוש (יום/סה״כ)</TableHead>
-                        <TableHead className="text-right">פעולות</TableHead>
+                        <TableHead className="text-left">פעולות</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -629,7 +629,7 @@ const AdminCommandCenter = () => {
                             <TableCell className="text-right text-sm text-muted-foreground">
                               {(u.credits?.daily_ai_calls ?? 0)} / {(u.credits?.total_ai_calls ?? 0)}
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-left">
                               <div className="flex items-center justify-end gap-2">
                                 <Input
                                   type="number"
