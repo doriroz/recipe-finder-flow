@@ -155,42 +155,62 @@ const V2CookingMode = () => {
 
           {/* Content area, centered relative to right container */}
           <div className="flex-1 overflow-y-auto pb-32">
-            <div className="max-w-3xl mx-auto w-full px-6 py-10">
-              <AnimatePresence mode="wait">
-                {currentStep === 0 ? (
-                  <motion.div
-                    key="prep"
-                    initial={{ opacity: 0, x: -24 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 24 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="bg-card rounded-2xl shadow-md border border-border/60 px-6 py-8 md:px-10 md:py-10"
-                  >
-                    <MiseEnPlace ingredients={ingredients} onReady={() => setCurrentStep(1)} />
-                  </motion.div>
-                ) : (
-                  <V2InstructionCard
-                    key={`step-${currentStep}`}
-                    stepNumber={activeStep!.number}
-                    totalSteps={totalSteps}
-                    title={activeStep!.title}
-                    instruction={activeStep!.instruction}
-                    tip={activeStep!.tip}
-                    onStartTimer={(t) => setActiveTimer(t)}
-                  />
+            <div className="max-w-7xl mx-auto w-full px-6 py-10">
+              <div className="flex flex-row-reverse items-center justify-center gap-8 xl:gap-12 2xl:gap-16">
+                <div className="w-full max-w-lg xl:max-w-xl 2xl:max-w-2xl">
+                  <AnimatePresence mode="wait">
+                    {currentStep === 0 ? (
+                      <motion.div
+                        key="prep"
+                        initial={{ opacity: 0, x: -24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 24 }}
+                        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                        className="bg-card rounded-2xl shadow-md border border-border/60 px-6 py-8 md:px-10 md:py-10"
+                      >
+                        <MiseEnPlace ingredients={ingredients} onReady={() => setCurrentStep(1)} />
+                      </motion.div>
+                    ) : (
+                      <V2InstructionCard
+                        key={`step-${currentStep}`}
+                        stepNumber={activeStep!.number}
+                        totalSteps={totalSteps}
+                        title={activeStep!.title}
+                        instruction={activeStep!.instruction}
+                        tip={activeStep!.tip}
+                        onStartTimer={(t) => setActiveTimer(t)}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Inline timer widget — floats in the open space to the right of the card */}
+                {activeTimer && (
+                  <div className="hidden lg:block shrink-0 sticky top-10 z-10">
+                    <V2StickyTimer
+                      key={`inline-${activeTimer.label}-${activeTimer.durationSeconds}`}
+                      fixed={false}
+                      size="sm"
+                      durationSeconds={activeTimer.durationSeconds}
+                      label={activeTimer.label}
+                      onDismiss={() => setActiveTimer(null)}
+                    />
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
             </div>
           </div>
 
-          {/* Sticky timer */}
+          {/* Mobile/tablet sticky bottom timer */}
           {activeTimer && (
-            <V2StickyTimer
-              key={`${activeTimer.label}-${activeTimer.durationSeconds}`}
-              durationSeconds={activeTimer.durationSeconds}
-              label={activeTimer.label}
-              onDismiss={() => setActiveTimer(null)}
-            />
+            <div className="lg:hidden">
+              <V2StickyTimer
+                key={`${activeTimer.label}-${activeTimer.durationSeconds}`}
+                durationSeconds={activeTimer.durationSeconds}
+                label={activeTimer.label}
+                onDismiss={() => setActiveTimer(null)}
+              />
+            </div>
           )}
 
           {/* Bottom Nav: Next on LEFT, Prev on RIGHT (RTL layout) */}
