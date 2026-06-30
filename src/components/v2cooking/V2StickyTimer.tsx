@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw, Timer, X } from "lucide-react";
+import { Pause, Play, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -71,56 +71,104 @@ const V2StickyTimer = ({ durationSeconds, label, onDismiss }: V2StickyTimerProps
     setRunning(true);
   };
 
+  // Circular progress ring math
+  const size = 160;
+  const stroke = 10;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = durationSeconds > 0 ? remaining / durationSeconds : 0;
+  const dashOffset = circumference * (1 - progress);
+
   return (
     <div
       className={cn(
-        "fixed bottom-[72px] inset-x-0 z-30 px-4 pointer-events-none",
+        "fixed bottom-[88px] inset-x-0 z-30 px-4 pointer-events-none flex justify-center",
         "animate-fade-in",
       )}
     >
       <div
         className={cn(
-          "pointer-events-auto mx-auto max-w-3xl rounded-2xl shadow-lg border",
-          "flex items-center justify-between gap-4 px-4 py-3",
+          "pointer-events-auto relative rounded-full",
+          "flex items-center gap-6 ps-8 pe-4 py-4",
+          "border border-white/40 backdrop-blur-md",
+          "transition-all duration-500",
           finished
-            ? "bg-secondary text-secondary-foreground border-secondary animate-pulse"
-            : "bg-primary text-primary-foreground border-primary/50",
+            ? "animate-pulse"
+            : "",
         )}
+        style={{
+          background: finished
+            ? "linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary) / 0.85) 100%)"
+            : "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(28 95% 65%) 100%)",
+          boxShadow:
+            "0 20px 50px -12px hsl(var(--primary) / 0.55), 0 8px 20px -8px hsl(var(--primary) / 0.35)",
+          color: "hsl(var(--primary-foreground))",
+        }}
       >
-        <div className="flex items-center gap-3">
-          <Timer className="w-5 h-5" />
-          <div className="flex flex-col">
-            <span className="text-xs opacity-90">{label}</span>
-            <span className="font-mono text-xl font-bold tabular-nums">{fmt(remaining)}</span>
+        {/* Circular progress ring + countdown */}
+        <div className="relative shrink-0" style={{ width: size, height: size }}>
+          <svg width={size} height={size} className="-rotate-90">
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="hsl(0 0% 100% / 0.25)"
+              strokeWidth={stroke}
+            />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="hsl(0 0% 100%)"
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={dashOffset}
+              style={{ transition: "stroke-dashoffset 1s linear" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="font-mono font-bold tabular-nums leading-none text-[2.75rem] tracking-tight drop-shadow-sm">
+              {fmt(remaining)}
+            </span>
+            <span className="mt-2 text-[0.7rem] uppercase tracking-[0.18em] opacity-85">
+              {finished ? "⏰ הזמן נגמר" : label}
+            </span>
           </div>
-          {finished && <span className="text-sm font-semibold mr-2">⏰ הזמן נגמר!</span>}
         </div>
-        <div className="flex items-center gap-1">
+
+        {/* Controls */}
+        <div className="flex flex-col items-center gap-3 pe-2">
           {!finished && (
             <Button
               size="icon"
               variant="ghost"
-              className="text-current hover:bg-white/20 h-9 w-9"
+              className="text-current hover:bg-white/25 bg-white/10 h-12 w-12 rounded-full"
               onClick={() => setRunning((r) => !r)}
+              aria-label={running ? "השהה" : "המשך"}
             >
-              {running ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              {running ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </Button>
           )}
           <Button
             size="icon"
             variant="ghost"
-            className="text-current hover:bg-white/20 h-9 w-9"
+            className="text-current hover:bg-white/25 bg-white/10 h-12 w-12 rounded-full"
             onClick={reset}
+            aria-label="אפס"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-5 h-5" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
-            className="text-current hover:bg-white/20 h-9 w-9"
+            className="text-current hover:bg-white/25 bg-white/10 h-12 w-12 rounded-full"
             onClick={onDismiss}
+            aria-label="סגור"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
       </div>
