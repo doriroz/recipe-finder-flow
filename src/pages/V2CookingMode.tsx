@@ -186,7 +186,7 @@ const V2CookingMode = () => {
 
                 {/* Inline timer widget — absolutely positioned so it doesn't shift the card */}
                 {activeTimer && (
-                  <div className="hidden lg:block absolute top-0 left-full ml-8 xl:ml-12 z-10">
+                  <div className="hidden lg:block absolute top-28 left-full ml-8 xl:ml-12 z-10">
                     <V2StickyTimer
                       key={`inline-${activeTimer.label}-${activeTimer.durationSeconds}`}
                       fixed={false}
