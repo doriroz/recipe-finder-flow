@@ -49,7 +49,7 @@ const sizeConfig = {
     buttonSize: "h-8 w-8",
     iconSize: "w-3.5 h-3.5",
     gap: "gap-2",
-    padding: "ps-3 pe-2 py-2",
+    padding: "ps-3 pe-3 py-2",
     timeText: "text-[1.5rem]",
     labelText: "text-[0.55rem]",
   },
@@ -59,7 +59,7 @@ const sizeConfig = {
     buttonSize: "h-9 w-9",
     iconSize: "w-4 h-4",
     gap: "gap-3",
-    padding: "ps-4 pe-2 py-3",
+    padding: "ps-4 pe-3 py-3",
     timeText: "text-[2rem]",
     labelText: "text-[0.65rem]",
   },
@@ -69,7 +69,7 @@ const sizeConfig = {
     buttonSize: "h-11 w-11",
     iconSize: "w-5 h-5",
     gap: "gap-4",
-    padding: "ps-5 pe-3 py-3",
+    padding: "ps-5 pe-4 py-3",
     timeText: "text-[2.25rem]",
     labelText: "text-[0.68rem]",
   },
@@ -79,7 +79,7 @@ const sizeConfig = {
     buttonSize: "h-12 w-12",
     iconSize: "w-5 h-5",
     gap: "gap-6",
-    padding: "ps-8 pe-4 py-4",
+    padding: "ps-8 pe-5 py-4",
     timeText: "text-[2.75rem]",
     labelText: "text-[0.7rem]",
   },
@@ -199,7 +199,7 @@ const V2StickyTimer = ({
             size="icon"
             variant="ghost"
             className={cn(
-              "text-current hover:bg-white/25 bg-white/10 rounded-full",
+              "text-current hover:bg-white/25 bg-white/10 rounded-full mt-1",
               config.buttonSize,
             )}
             onClick={() => setRunning((r) => !r)}
@@ -228,7 +228,7 @@ const V2StickyTimer = ({
           size="icon"
           variant="ghost"
           className={cn(
-            "text-current hover:bg-white/25 bg-white/10 rounded-full",
+            "text-current hover:bg-white/25 bg-white/10 rounded-full mb-1",
             config.buttonSize,
           )}
           onClick={onDismiss}
