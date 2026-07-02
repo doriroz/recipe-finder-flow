@@ -156,8 +156,8 @@ const V2CookingMode = () => {
           {/* Content area, centered relative to right container */}
           <div className="flex-1 overflow-y-auto pb-32">
             <div className="max-w-7xl mx-auto w-full px-6 py-10">
-              <div className="flex flex-row-reverse items-center justify-center gap-8 xl:gap-12 2xl:gap-16">
-                <div className="w-full max-w-lg xl:max-w-xl 2xl:max-w-2xl">
+              <div className="relative mx-auto w-full max-w-lg xl:max-w-xl 2xl:max-w-2xl">
+                <div className="w-full">
                   <AnimatePresence mode="wait">
                     {currentStep === 0 ? (
                       <motion.div
@@ -184,13 +184,13 @@ const V2CookingMode = () => {
                   </AnimatePresence>
                 </div>
 
-                {/* Inline timer widget — floats in the open space to the right of the card */}
+                {/* Inline timer widget — absolutely positioned so it doesn't shift the card */}
                 {activeTimer && (
-                  <div className="hidden lg:block shrink-0 sticky top-10 z-10">
+                  <div className="hidden lg:block absolute top-0 left-full ml-8 xl:ml-12 z-10">
                     <V2StickyTimer
                       key={`inline-${activeTimer.label}-${activeTimer.durationSeconds}`}
                       fixed={false}
-                      size="sm"
+                      size="xs"
                       durationSeconds={activeTimer.durationSeconds}
                       label={activeTimer.label}
                       onDismiss={() => setActiveTimer(null)}
