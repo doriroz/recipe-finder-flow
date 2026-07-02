@@ -8,7 +8,7 @@ interface V2StickyTimerProps {
   label: string;
   onDismiss: () => void;
   fixed?: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 }
 
 const playChime = () => {
@@ -43,6 +43,16 @@ const fmt = (s: number) => {
 };
 
 const sizeConfig = {
+  xs: {
+    ring: 110,
+    stroke: 7,
+    buttonSize: "h-8 w-8",
+    iconSize: "w-3.5 h-3.5",
+    gap: "gap-2",
+    padding: "ps-3 pe-2 py-2",
+    timeText: "text-[1.5rem]",
+    labelText: "text-[0.55rem]",
+  },
   sm: {
     ring: 150,
     stroke: 8,
