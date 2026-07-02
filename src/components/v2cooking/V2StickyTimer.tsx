@@ -199,7 +199,7 @@ const V2StickyTimer = ({
             size="icon"
             variant="ghost"
             className={cn(
-              "text-current hover:bg-white/25 bg-white/10 rounded-full",
+              "text-current hover:bg-white/25 bg-white/10 rounded-full mt-1",
               config.buttonSize,
             )}
             onClick={() => setRunning((r) => !r)}
@@ -228,7 +228,7 @@ const V2StickyTimer = ({
           size="icon"
           variant="ghost"
           className={cn(
-            "text-current hover:bg-white/25 bg-white/10 rounded-full",
+            "text-current hover:bg-white/25 bg-white/10 rounded-full mb-1",
             config.buttonSize,
           )}
           onClick={onDismiss}
